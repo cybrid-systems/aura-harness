@@ -1,0 +1,235 @@
+;; aura-harness control plane. The harness (5 mutable policy defines + 4 protected boundary defines) lives in this
+;; Aura process's workspace. The host (aura_harness/control.py) runs the task environment and the frozen model,
+;; and asks this process for harness decisions, for guarded mutations, and for trials in forked worldlines.
+;;
+;; Protocol: one request per stdin line (tab-separated), one response per stdout line: "R " + JSON.
+;;   TABLE                         materialised decision table of the live harness (every define over its finite domain)
+;;   D comp a b                    one decision (route|compress|retry|ttl|delegate|budget|maxsteps), for latency
+;;   APPLY ts name body why actor  guarded mutation of the live harness (no gate): snapshot, rebind, eval, postcheck
+;;   TRIAL mode ts n {name body why}*   one forked worldline per candidate; mode = ws (workspace :create child, the
+;;                                 live root is never touched) | snap (ast:snapshot / mutate / ast:restore on root).
+;;                                 -> per candidate: blocked reason, or its decision table
+;;   VERDICT ts chosen scores why  KEEP candidate #chosen (re-applied to the root through the guard) or ROLLBACK (-1)
+;;   SOURCE | FIND name | LOG | VERSION | GUARD | PING | QUIT
+;;
+;; Scope guard (outside the workspace, so no proposal can rebind it):
+;;   1. name must be in *mutable*; protected or unknown names are rejected
+;;   2. body must be a single (lambda ...) whose tokens use no protected name and no reflective/mutating primitive
+;;   3. after the rebind + eval-current, the whole decision table must materialise, every value must be in range,
+;;      every routed tool must be in (allowed-tools), and the protected values must equal those captured at startup;
+;;      otherwise the change is undone (ast:restore, or the child worldline is dropped)
+;; Every attempt, blocked or not, is appended to the audit log with actor, reason and harness version.
+
+(define *seed-path* (if (getenv "AURA_HARNESS_SEED") (getenv "AURA_HARNESS_SEED") "aura/harness_seed.aura"))
+
+(define needs (list "search" "read" "edit" "test" "query-db" "logs"))
+(define kinds (list "search-results" "code-file" "test-log" "service-log" "sql-rows" "patch-result" "config"))
+(define tools (list "grep" "rg-json" "lsp-find" "cat" "sed" "apply-patch" "pytest" "pytest-q" "sql" "journal"))
+(define errs (list "timeout" "rate-limit" "bad-args" "not-found"))
+(define facts (list "test-cmd" "repo-layout" "db-schema"))
+(define tkinds (list "bugfix" "feature" "data" "triage" "refactor"))
+(define nsubs (list 1 2 3 4 5 6 7))
+(define strategies (list "none" "head" "tail" "head-tail" "grep-errors" "summarize"))
+
+(define *mutable* (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate"))
+(define *protected* (list "context-budget" "max-steps" "allowed-tools" "sandbox-level"))
+(define *banned* (list "set-code" "eval-current" "eval" "set!" "define" "load" "read-file" "write-file" "getenv"
+                       "system" "shell" "exit" "current-source" "query" "lambda-rebind" "apply" "string->symbol"))
+(define *banned-prefixes* (list "mutate:" "ast:" "workspace" "agent:" "fiber:" "query:" "file:" "net:" "process:"))
+
+(define (n->s n) (number->string n))
+(define (join xs sep) (if (null? xs) "" (if (null? (cdr xs)) (car xs) (string-append (car xs) sep (join (cdr xs) sep)))))
+(define (now-ms) (current-time-ms))
+(define (starts-with? s p) (and (>= (string-length s) (string-length p)) (equal? (substring s 0 (string-length p)) p)))
+(define (any? pred xs) (if (null? xs) #f (if (pred (car xs)) #t (any? pred (cdr xs)))))
+(define (all? pred xs) (if (null? xs) #t (if (pred (car xs)) (all? pred (cdr xs)) #f)))
+
+;; ---------------------------------------------------------------- decisions (live workspace defines)
+(define (safe thunk) (try (thunk) (catch (e) "__error__")))
+(define (materialize)
+  (let ((route (hash)) (comp (hash)) (retry (hash)) (ttl (hash)) (dele (hash)))
+    (for-each (lambda (n) (hash-set! route n (safe (lambda () (route-tool n))))) needs)
+    (for-each (lambda (k) (hash-set! comp k (safe (lambda () (compress k))))) kinds)
+    (for-each (lambda (t) (for-each (lambda (e) (hash-set! retry (string-append t "|" e) (safe (lambda () (retry-limit t e))))) errs)) tools)
+    (for-each (lambda (f) (hash-set! ttl f (safe (lambda () (memory-ttl f))))) facts)
+    (for-each (lambda (k) (for-each (lambda (n) (hash-set! dele (string-append k "|" (n->s n)) (safe (lambda () (delegate k n))))) nsubs)) tkinds)
+    (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele
+          "budget" (safe (lambda () (context-budget))) "max_steps" (safe (lambda () (max-steps)))
+          "allowed" (safe (lambda () (allowed-tools))) "sandbox" (safe (lambda () (sandbox-level))))))
+
+;; ---------------------------------------------------------------- scope guard
+(define *boundary* #f)          ;; protected values captured right after the seed loads
+(define (boundary) (list (safe (lambda () (context-budget))) (safe (lambda () (max-steps)))
+                         (safe (lambda () (allowed-tools))) (safe (lambda () (sandbox-level)))))
+(define (tokens body)
+  (filter (lambda (t) (not (equal? t "")))
+          (string-split (string-replace (string-replace (string-replace (string-replace body "(" " ") ")" " ") "'" " ") "`" " ") " ")))
+(define (bad-token t)
+  (or (member t *protected*) (member t *banned*) (any? (lambda (p) (starts-with? t p)) *banned-prefixes*)))
+;; static check -> #f if fine, else a reason string
+(define (static-check name body)
+  (cond ((member name *protected*) (string-append "protected define: " name))
+        ((not (member name *mutable*)) (string-append "not in mutation allowlist: " name))
+        ((not (starts-with? body "(lambda (")) "body is not a lambda")
+        (else (let ((bad (filter bad-token (tokens body))))
+                (if (null? bad) #f (string-append "forbidden token in body: " (car bad)))))))
+(define (in-range? v lo hi) (and (number? v) (integer? v) (>= v lo) (<= v hi)))
+(define (hash-vals h ks) (map (lambda (k) (hash-ref h k "__error__")) ks))
+(define (keys-of2 as bs sep) (apply append (map (lambda (a) (map (lambda (b) (string-append a sep (if (string? b) b (n->s b)))) bs)) as)))
+;; post check on a materialised table -> #f if fine, else a reason string
+(define (post-check tb)
+  (let ((allowed (list-ref *boundary* 2)) (budget (list-ref *boundary* 0)))
+    (cond ((not (equal? (boundary) *boundary*)) "protected boundary value changed")
+          ((not (all? (lambda (t) (and (string? t) (member t allowed))) (hash-vals (hash-ref tb "route" #f) needs)))
+           "routes to a tool outside allowed-tools")
+          ((not (all? (lambda (c) (and (list? c) (= (length c) 2) (member (car c) strategies) (in-range? (cadr c) 50 budget)))
+                      (hash-vals (hash-ref tb "compress" #f) kinds)))
+           "compress value out of range")
+          ((not (all? (lambda (r) (in-range? r 0 5)) (hash-vals (hash-ref tb "retry" #f) (keys-of2 tools errs "|"))))
+           "retry-limit out of range [0,5]")
+          ((not (all? (lambda (r) (in-range? r 0 1000)) (hash-vals (hash-ref tb "ttl" #f) facts)))
+           "memory-ttl out of range [0,1000]")
+          ((not (all? (lambda (d) (member d (list "delegate" "inline"))) (hash-vals (hash-ref tb "delegate" #f) (keys-of2 tkinds nsubs "|"))))
+           "delegate value not delegate|inline")
+          (else #f))))
+
+;; ---------------------------------------------------------------- audit log + version
+(define *version* 0)
+(define *log* (list))           ;; newest first
+(define *seq* 0)
+(define (log! ts op name why actor reason extra)
+  (set! *seq* (+ *seq* 1))
+  (set! *log* (cons (hash "seq" *seq* "ts" ts "op" op "name" name "why" why "actor" actor "reason" reason
+                          "version" *version* "extra" extra)
+                    *log*)))
+(define *blocked* 0)
+
+;; rebind on the ACTIVE workspace + eval-current; -> #f if fine, else reason
+(define (raw-apply name body why)
+  (let ((r (try (begin (mutate:rebind name body why) (eval-current) #t) (catch (e) (list "error" e)))))
+    (if (eq? r #t) #f "rebind/eval failed")))
+
+;; guarded apply on the root with snapshot rollback -> (list ok? reason table ms)
+(define (guarded-root-apply! name body why)
+  (let ((t0 (now-ms)) (sr (static-check name body)))
+    (if sr (list #f sr #f (- (now-ms) t0))
+        (let* ((snap (ast:snapshot (string-append "pre-" name)))
+               (ar (raw-apply name body why))
+               (tb (if ar #f (materialize)))
+               (pr (if ar ar (post-check tb))))
+          (if pr
+              (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+              (list #t "" tb (- (now-ms) t0)))))))
+
+;; ---------------------------------------------------------------- trials (forked worldlines)
+(define *trials* (list))        ;; (name body why) of the last TRIAL, in order
+(define *wcount* 0)
+;; ws mode: one child workspace per candidate; the root stays live and untouched
+(define (trial-ws name body why)
+  (let ((t0 (now-ms)) (sr (static-check name body)))
+    (if sr (list #f sr #f 0)
+        (begin
+          (set! *wcount* (+ *wcount* 1))
+          (let* ((w (workspace :create (string-append "trial-" (n->s *wcount*)))))
+            (workspace :switch w)
+            (let* ((ar (raw-apply name body why))
+                   (tb (if ar #f (materialize)))
+                   (pr (if ar ar (post-check tb))))
+              (workspace :switch 0)
+              (eval-current)
+              (workspace :delete w)
+              (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))))
+;; snap mode: ast:snapshot, mutate the root, materialise, ast:restore
+(define (trial-snap name body why)
+  (let ((t0 (now-ms)) (sr (static-check name body)))
+    (if sr (list #f sr #f 0)
+        (let* ((snap (ast:snapshot "trial"))
+               (ar (raw-apply name body why))
+               (tb (if ar #f (materialize)))
+               (pr (if ar ar (post-check tb))))
+          (ast:restore snap) (eval-current)
+          (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))
+
+(define (trial-reply r i)
+  (hash "i" i "ok" (car r) "reason" (cadr r) "table" (caddr r) "ms" (list-ref r 3)))
+
+;; ---------------------------------------------------------------- protocol
+(define (reply h) (display "R ") (display (json-encode h)) (newline))
+(define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
+(define (fnum fs i) (string->number (field fs i)))
+(define (take-trials fs i n acc)
+  (if (= n 0) (reverse acc)
+      (take-trials fs (+ i 3) (- n 1) (cons (list (field fs i) (field fs (+ i 1)) (field fs (+ i 2))) acc))))
+
+(define (do-trials mode ts cands actor)
+  (let loop ((cs cands) (i 0) (acc (list)))
+    (if (null? cs) (reverse acc)
+        (let* ((c (car cs))
+               (r (if (equal? mode "snap") (trial-snap (car c) (cadr c) (caddr c)) (trial-ws (car c) (cadr c) (caddr c)))))
+          (if (not (car r))
+              (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" (car c) (caddr c) actor (cadr r) (cadr c)))
+              (log! ts (string-append "trial-" mode) (car c) (caddr c) actor "" (cadr c)))
+          (loop (cdr cs) (+ i 1) (cons (trial-reply r i) acc))))))
+
+(define (decide fs)
+  (let ((c (field fs 1)) (a (field fs 2)) (b (field fs 3)))
+    (cond ((equal? c "route") (route-tool a))
+          ((equal? c "compress") (compress a))
+          ((equal? c "retry") (retry-limit a b))
+          ((equal? c "ttl") (memory-ttl a))
+          ((equal? c "delegate") (delegate a (string->number b)))
+          ((equal? c "budget") (context-budget))
+          ((equal? c "maxsteps") (max-steps))
+          (else "__unknown__"))))
+
+(define (handle fs)
+  (let ((cmd (field fs 0)))
+    (cond
+      ((equal? cmd "D") (reply (hash "v" (decide fs))))
+      ((equal? cmd "TABLE") (reply (hash "table" (materialize) "version" *version*)))
+      ((equal? cmd "APPLY")
+       (let* ((ts (fnum fs 1)) (name (field fs 2)) (body (field fs 3)) (why (field fs 4)) (actor (field fs 5))
+              (r (guarded-root-apply! name body why)))
+         (if (car r)
+             (begin (set! *version* (+ *version* 1)) (log! ts "keep-ungated" name why actor "" body)
+                    (reply (hash "ok" #t "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+             (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" name why actor (cadr r) body)
+                    (reply (hash "ok" #f "blocked" #t "reason" (cadr r) "version" *version* "ms" (list-ref r 3)))))))
+      ((equal? cmd "TRIAL")
+       (let* ((mode (field fs 1)) (ts (fnum fs 2)) (actor (field fs 3)) (n (fnum fs 4))
+              (cands (take-trials fs 5 n (list))) (t0 (now-ms)))
+         (set! *trials* cands)
+         (let ((rs (do-trials mode ts cands actor)))
+           (reply (hash "trials" rs "ms" (- (now-ms) t0) "version" *version*)))))
+      ((equal? cmd "VERDICT")
+       (let* ((ts (fnum fs 1)) (chosen (fnum fs 2)) (scores (field fs 3)) (why (field fs 4)) (actor (field fs 5)))
+         (if (and (>= chosen 0) (< chosen (length *trials*)))
+             (let* ((c (list-ref *trials* chosen)) (r (guarded-root-apply! (car c) (cadr c) (caddr c))))
+               (if (car r)
+                   (begin (set! *version* (+ *version* 1)) (log! ts "keep" (car c) why actor scores (cadr c))
+                          (reply (hash "verdict" "KEEP" "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+                   (begin (log! ts "rollback" (car c) why actor (string-append "re-apply failed: " (cadr r)) scores)
+                          (reply (hash "verdict" "ROLLBACK" "version" *version* "reason" (cadr r))))))
+             (begin (log! ts "rollback" "" why actor scores "")
+                    (reply (hash "verdict" "ROLLBACK" "version" *version*))))))
+      ((equal? cmd "SOURCE") (reply (hash "source" (current-source :workspace) "version" *version*)))
+      ((equal? cmd "FIND")
+       (reply (hash "name" (field fs 1) "node" (let ((r (try (query :find (field fs 1)) (catch (e) #f)))) (if (number? r) r #f)))))
+      ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
+      ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked*)))
+      ((equal? cmd "GUARD") (reply (hash "mutable" *mutable* "protected" *protected* "boundary" *boundary*)))
+      ((equal? cmd "PING") (reply (hash "pong" #t "version" *version*)))
+      (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
+
+(define (serve)
+  (let ((line (read-line)))
+    (if (or (eof-object? line) (equal? line "QUIT"))
+        #t
+        (begin (handle (string-split line "\t")) (serve)))))
+
+(set-code (read-file *seed-path*))
+(eval-current)
+(set! *boundary* (boundary))
+(define *seed-snap* (ast:snapshot "seed"))
+(reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary*))
+(serve)
