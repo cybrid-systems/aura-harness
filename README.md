@@ -143,19 +143,19 @@ Failure modes, as a share of all tasks:
 
 Findings:
 
-* **The loop rediscovers sensible harness engineering.** On all 5 seeds it learned to route edits to `apply-patch` instead of `sed`, compress service logs with `grep-errors`, and carry `test-cmd` and `repo-layout` for 40 tasks. On 4 of 5 seeds it also learned to keep the tail of test logs and to retry `sql` rate-limits 3 times, and on 3 to delegate refactors with many subtasks. [`results/example-aura-gated-seed0/`](results/example-aura-gated-seed0) has every verdict with base vs candidate held-out scores, the full audit log (77 entries) and the final harness source.
+* **The loop rediscovers sensible harness engineering.** On all 5 seeds it learned to route edits to `apply-patch` instead of `sed`, compress service logs with `grep-errors`, and carry `test-cmd` and `repo-layout` for 40 tasks. On 4 of 5 seeds it also learned to keep the tail of test logs and to retry `sql` rate-limits 3 times. On all 5 it kept some delegation threshold for refactors (≥2 on 3 seeds, ≥4 or ≥6 on the others). [`results/example-aura-gated-seed0/`](results/example-aura-gated-seed0) has every verdict with base vs candidate held-out scores, the full audit log (77 entries) and the final harness source.
 * **Recovery after the shift is partial.** Success dips from 76% to 56% and recovers to 68%. One reason is visible in the log: the gate window straddles the shift. Right after task 200, `route search->lsp-find` (the best post-shift tool) is replayed on pre-shift tasks where it isn't installed, and it loses (16/42 held-out vs 31/42 for `rg-json`). The loop then settles on `rg-json`, or on more grep retries.
 * **The gate matters.**
   - With clean diagnoses, the ungated loop keeps every first candidate. It oscillates (for example `compress service-log tail/1600` ↔ `head-tail/1600`, 35 keeps across seeds), spends more tokens (9.2k vs 8.4k per task) and scores 7.9 points lower.
   - With 30% of diagnoses mis-attributed: gated 62.9%, ungated 52.6% (`results/noise30.md`).
-  - With **every** diagnosis mis-attributed (`results/noise100.md`): gated 37.8%, ungated 29.5%, frozen 24.1%. The gate rolled back 20 of 28 proposals per stream and kept only the random edits that helped on held-out tasks.
+  - With **every** diagnosis mis-attributed (`results/noise100.md`): gated 37.8%, ungated 29.5%, frozen 24.1%. The gate rolled back 20 of 28 proposals per stream and kept only the random edits that helped on held-out tasks. It won on 4 of 5 seeds; on seed 2 it lost (27.3% vs 29.5%).
 * **Tokens go up where they buy success.** The adaptive harness spends more per task after the shift (9.8k vs 7.4k frozen), mostly on longer compression limits and delegation overhead. The KEEP rule only prefers cheaper when success is tied.
 * **Scope guard.** The naive budget raise was proposed and blocked once per stream (it is then remembered and never re-proposed). The context budget stayed at 4000 on every stream. Step-limit failures never occurred, so `max-steps` was never targeted in the bench; the attack suite covers it.
 
 ### Worldlines
 
 * **Workspace children vs snapshot/restore** give identical verdicts and success on all 5 seeds (`results/snap.md`). Per-candidate trial cost is also about the same: 67.8 ms (child workspace) vs 69.8 ms (snapshot) in-process.
-* **Parallel replays.** Candidate replays in a 4-process pool give the same verdicts. The gate is not faster: p50 215 ms vs 191 ms sequential, because a replay of ~80 tasks takes only tens of ms (`results/parallel.txt`). Worldlines are created one after another inside one Aura process; `agent:spawn` is not available on the pin.
+* **Parallel replays.** Candidate replays in a 4-process pool give the same verdicts. The gate is not faster: p50 215 ms vs 191 ms sequential, because replaying ~80 simulated tasks is cheap next to process start-up (`results/parallel.txt`). Worldlines are created one after another inside one Aura process; `agent:spawn` is not available on the pin.
 
 ### Latency: Aura in-process vs file-edit + reload
 
@@ -182,7 +182,7 @@ Host round trips (Python ↔ process over pipes):
 | one decision | 1.43 ms (0.39 ms in the #4585 ablation) | 0.017 ms (plain dict lookup in the decision process) |
 | one guarded change | 69 ms | 28.6 ms (write `harness_live.py` + restart; restart alone 20.9 ms) |
 | one trial, per candidate | 71.6 ms (child workspace) / 74.1 ms (snapshot) | 28.7 ms (copy dir + edit + start a throwaway process) |
-| blocked attempt | 2.8 ms | <0.1 ms (name check before any edit) |
+| blocked attempt | 2.8 ms | not timed (a Python name check before any edit) |
 | during the bench: change / whole gate / stream wall time | 56 ms / 246 ms / 5.6 s | 22 ms / 113 ms / 2.5 s |
 
 How to read this:
@@ -249,7 +249,7 @@ It also reports a regression in which the evolved harness exposed a run-configur
 * **Latency is from a shared box** (other agents' builds were running), and it is pinned to one Aura commit with known slow paths (aura#4585, and interpreter speed in general).
 * **The worldlines are sequential.** Child workspaces are created and evaluated one by one in a single process; `agent:spawn` is unbound on the pin. Parallelism here is only in host-side replays, and it didn't help.
 * **The guard is a denylist plus post-conditions,** not a capability sandbox. The sandbox is off (aura#4575).
-* **5 seeds.** Gated beats ungated on every seed in all three noise settings, and adaptive beats frozen on every seed.
+* **5 seeds.** Adaptive beats frozen on every seed. Gated beats ungated on every seed with clean diagnoses and at 30% noise. At 100% noise it wins on 4 of 5 seeds (seed 2: 27.3% vs 29.5%).
 
 ## Known Aura issues
 
@@ -259,7 +259,7 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4585 | host code ~9× slower after `set-code`, which makes the guard and decisions slow (65 ms vs 11.5 ms per guarded change) | materialised decision table, fetched once per version; static check uses native `string-index` instead of `string-split` | `acceptance/4585` (FAIL), `results/latency.json` ablation |
 | cybrid-systems/aura#4583 | repeated `mutate:rebind` next to a self-recursive workspace define blows up | harness bodies are flat `cond`s, no recursion | `acceptance/4583` (FAIL) |
 | cybrid-systems/aura#4584 | a sibling passing a procedure to `filter`/`map` makes a workspace call dispatch to the wrong define | no `filter`/`map` in the workspace; all list work is in `server.aura` | `acceptance/4584` (FAIL) |
-| cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks are swallowed | decisions are wrapped in `try` one by one, never inside a `map` callback | `acceptance/4586` (FAIL) |
+| cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks are swallowed | each decision gets its own `try` inside the loop body (checked: an erroring define yields `__error__` and fails the post-check) | `acceptance/4586` (FAIL) |
 | cybrid-systems/aura#4575 | Soft sandbox blocks `set-code` / `mutate:rebind` from a local program | `AURA_SANDBOX=off` + container memory cap | – |
 
 `python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
