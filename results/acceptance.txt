@@ -1,0 +1,12 @@
+PASS  harness-cycle aura-harness: child-workspace trial + snapshot trial leave the root byte-identical; keep
+      got: OK
+FAIL  4583          10 rebinds next to a self-recursive define stay flat (no 4x-per-rebind blow-up)
+      got: (bounded #f)
+FAIL  4584          2nd call of a workspace define whose sibling uses filter runs the right define
+      got: (call2 (8 8))
+FAIL  4585          a host-program loop is not >3x slower after one set-code
+      got: (ratio<3 #f)
+FAIL  4586          an error inside a map callback reaches try
+      got: (<unknown>)
+FAIL  merge         workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)
+      got: PARENT-KEPT f(2)=3
