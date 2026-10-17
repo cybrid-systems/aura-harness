@@ -81,10 +81,10 @@ class _Pipe:
 class AuraHarness:
     kind = "aura"
 
-    def __init__(self, worldlines: str = "ws"):
+    def __init__(self, worldlines: str = "ws", server: str | None = None):
         aura, env = aura_env()
         t0 = time.perf_counter()
-        self.pipe = _Pipe([aura, str(ROOT / "aura" / "server.aura")], env=env, cwd=str(ROOT))
+        self.pipe = _Pipe([aura, server or str(ROOT / "aura" / "server.aura")], env=env, cwd=str(ROOT))
         r = self.pipe.read()
         if not r.get("ready"):
             raise RuntimeError(f"aura control plane failed to start: {r}")
