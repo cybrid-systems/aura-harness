@@ -76,6 +76,12 @@ class _Pipe:
             self.p.wait(timeout=10)
         except Exception:
             self.p.kill()
+            self.p.wait()
+        for fh in (self.p.stdin, self.p.stdout, self.p.stderr):
+            try:
+                fh.close()
+            except Exception:
+                pass
 
 
 class AuraHarness:
