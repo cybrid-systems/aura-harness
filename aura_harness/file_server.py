@@ -1,6 +1,6 @@
 """Decision server for the file-edit baseline: imports harness_live.py + limits.py from a directory and answers
 TABLE / D over pipes (same framing as server.aura). Restarting this process is the "reload"."""
-import importlib.util
+import types
 import json
 import sys
 
@@ -8,9 +8,12 @@ from .harness import ERRS, FACTS, KINDS, NEEDS, NSUBS, TKINDS, TOOLS
 
 
 def _load(path, name):
-    spec = importlib.util.spec_from_file_location(name, path)
-    m = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(m)
+    # Read and exec the source text. Importing it would go through __pycache__, whose mtime+size check returns
+    # STALE bytecode when an edit keeps the file size within the same second (e.g. "summarize" -> "head-tail"):
+    # a real hazard of edit-file-and-reload harnesses, found by this repo's backend-equivalence check.
+    m = types.ModuleType(name)
+    with open(path) as fh:
+        exec(compile(fh.read(), path, "exec"), m.__dict__)
     return m
 
 
