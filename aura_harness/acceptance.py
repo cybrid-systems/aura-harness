@@ -1,7 +1,7 @@
 """Acceptance checks for the Aura build in AURA_BIN.
 
 Each acceptance/<name>/repro.aura runs from its own directory; the last non-empty stdout line must equal expect.txt.
-Issue repros (#4583 #4584 copied from aura-coder; #4585 #4586) FAIL while the issue is open on that build;
+Issue repros (#4583 #4584 #4585 #4586 copied from aura-memory; #4589 merge, filed from here) FAIL while the issue is open on that build;
 harness-cycle is aura-harness's own snapshot / rebind / restore shape and must PASS.
 """
 from __future__ import annotations
