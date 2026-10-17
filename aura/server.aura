@@ -61,18 +61,26 @@
 (define *boundary* #f)          ;; protected values captured right after the seed loads
 (define (boundary) (list (safe (lambda () (context-budget))) (safe (lambda () (max-steps)))
                          (safe (lambda () (allowed-tools))) (safe (lambda () (sandbox-level)))))
-(define (tokens body)
-  (filter (lambda (t) (not (equal? t "")))
-          (string-split (string-replace (string-replace (string-replace (string-replace body "(" " ") ")" " ") "'" " ") "`" " ") " ")))
-(define (bad-token t)
-  (or (member t *protected*) (member t *banned*) (any? (lambda (p) (starts-with? t p)) *banned-prefixes*)))
+;; native string-index search for every banned symbol at a token boundary: "(w " "(w)" " w " " w)" "'w".
+;; (A string literal such as "query-db" never matches: a quote, not a boundary, precedes it.)
+(define (has? body pat) (>= (string-index body pat) 0))
+(define (uses-symbol? body w)
+  (or (has? body (string-append "(" w " ")) (has? body (string-append "(" w ")")) (has? body (string-append " " w " "))
+      (has? body (string-append " " w ")")) (has? body (string-append "'" w))))
+(define (uses-prefix? body p)
+  (or (has? body (string-append "(" p)) (has? body (string-append " " p)) (has? body (string-append "'" p))))
+(define (first-bad body)
+  (let ((ws (filter (lambda (w) (uses-symbol? body w)) (append *protected* *banned*))))
+    (if (not (null? ws)) (car ws)
+        (let ((ps (filter (lambda (p) (uses-prefix? body p)) *banned-prefixes*)))
+          (if (null? ps) #f (car ps))))))
 ;; static check -> #f if fine, else a reason string
 (define (static-check name body)
   (cond ((member name *protected*) (string-append "protected define: " name))
         ((not (member name *mutable*)) (string-append "not in mutation allowlist: " name))
         ((not (starts-with? body "(lambda (")) "body is not a lambda")
-        (else (let ((bad (filter bad-token (tokens body))))
-                (if (null? bad) #f (string-append "forbidden token in body: " (car bad)))))))
+        (else (let ((bad (first-bad body)))
+                (if bad (string-append "forbidden symbol in body: " bad) #f)))))
 (define (in-range? v lo hi) (and (number? v) (integer? v) (>= v lo) (<= v hi)))
 (define (hash-vals h ks) (map (lambda (k) (hash-ref h k "__error__")) ks))
 (define (keys-of2 as bs sep) (apply append (map (lambda (a) (map (lambda (b) (string-append a sep (if (string? b) b (n->s b)))) bs)) as)))
@@ -153,6 +161,31 @@
 (define (trial-reply r i)
   (hash "i" i "ok" (car r) "reason" (cadr r) "table" (caddr r) "ms" (list-ref r 3)))
 
+;; ---------------------------------------------------------------- in-process latency (BENCH n)
+;; Aura only has a millisecond clock, so each step is looped and averaged. Runs on the live process; every step that
+;; changes the harness is undone, and the version/log are restored afterwards.
+(define (times n thunk) (if (<= n 0) #t (begin (thunk n) (times (- n 1) thunk))))
+(define (us-per n thunk) (let ((t0 (now-ms))) (times n thunk) (/ (* 1000.0 (- (now-ms) t0)) n)))
+(define bench-a "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 3) (else 1)))")
+(define bench-b "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 2) (else 1)))")
+(define (bench n)
+  (let* ((v0 *version*) (l0 *log*) (s0 (ast:snapshot "bench-base"))
+         (r-call (us-per (* 50 n) (lambda (i) (retry-limit "sql" "rate-limit"))))
+         (r-mat (us-per n (lambda (i) (materialize))))
+         (r-static (us-per (* 10 n) (lambda (i) (static-check "retry-limit" bench-a))))
+         (r-rebind (us-per n (lambda (i) (mutate:rebind "retry-limit" (if (even? i) bench-a bench-b) "bench") (eval-current))))
+         (r-snap (us-per n (lambda (i) (ast:snapshot "bench"))))
+         (r-restore (us-per n (lambda (i) (ast:restore s0) (eval-current))))
+         (r-apply (us-per n (lambda (i) (guarded-root-apply! "retry-limit" (if (even? i) bench-a bench-b) "bench"))))
+         (r-ws (us-per n (lambda (i) (trial-ws "retry-limit" bench-a "bench"))))
+         (r-snapt (us-per n (lambda (i) (trial-snap "retry-limit" bench-a "bench"))))
+         (r-block (us-per (* 10 n) (lambda (i) (static-check "context-budget" "(lambda () 8000)")))))
+    (ast:restore s0) (eval-current)
+    (set! *version* v0) (set! *log* l0)
+    (hash "n" n "decision_call_us" r-call "materialize_table_us" r-mat "static_check_us" r-static
+          "rebind_eval_us" r-rebind "snapshot_us" r-snap "restore_eval_us" r-restore
+          "guarded_apply_us" r-apply "trial_ws_us" r-ws "trial_snap_us" r-snapt "blocked_check_us" r-block)))
+
 ;; ---------------------------------------------------------------- protocol
 (define (reply h) (display "R ") (display (json-encode h)) (newline))
 (define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
@@ -218,6 +251,7 @@
       ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
       ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked*)))
       ((equal? cmd "GUARD") (reply (hash "mutable" *mutable* "protected" *protected* "boundary" *boundary*)))
+      ((equal? cmd "BENCH") (reply (bench (fnum fs 1))))
       ((equal? cmd "PING") (reply (hash "pong" #t "version" *version*)))
       (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
 

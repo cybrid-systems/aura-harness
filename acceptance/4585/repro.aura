@@ -1,0 +1,11 @@
+;; cybrid-systems/aura#4585 (repro from the issue): host-program calls must not get >3x slower after one set-code.
+(define N 300)
+(define (times n thunk) (if (<= n 0) #t (begin (thunk) (times (- n 1) thunk))))
+(define (us thunk) (let ((t0 (current-time-ms))) (times N thunk) (/ (* 1000.0 (- (current-time-ms) t0)) N)))
+(define (inc x) (+ x 1))
+(define (four) (inc (inc (inc (inc 0)))))
+(define before (max 1.0 (us four)))
+(set-code "(define w (lambda (x) x))")
+(eval-current)
+(define after (us four))
+(display (list "ratio<3" (< after (* 3 before)))) (newline)

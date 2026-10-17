@@ -1,0 +1,3 @@
+;; cybrid-systems/aura#4586: an error raised inside a map callback must reach try (not become <unknown>).
+(define (boom c) (list-ref c 3))
+(display (try (map (lambda (c) (boom c)) (list (list 1 2 3))) (catch (e) "caught"))) (newline)

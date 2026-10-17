@@ -40,7 +40,7 @@ def better(s, b, tol=0.97) -> bool:
 
 
 def run_stream(mode: str, seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3,
-               noise: float = 0.0, worldlines: str = "ws", jobs: int = 1, backend=None) -> dict:
+               noise: float = 0.0, worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20) -> dict:
     from .control import AuraHarness, FileHarness
     from .harness import seed_table
     kind, learn, gate = MODES[mode]
@@ -65,6 +65,10 @@ def run_stream(mode: str, seed: int, n: int = 400, shift: int = 200, window: int
             cands = prop.observe(ep, tb)
             if not cands:
                 continue
+            start = max(0, (t.id + 1 - window) // 10 * 10)
+            tasks = stream[start:t.id + 1]
+            if gate and sum(x.heldout for x in tasks) < min_heldout:
+                continue                     # too few held-out tasks to judge yet; evidence keeps accumulating
             if hasattr(prop, "source"):
                 prop.source = h.source()
             sig = cands[0].sig
@@ -84,8 +88,6 @@ def run_stream(mode: str, seed: int, n: int = 400, shift: int = 200, window: int
                                  "candidates": [c.desc for c in cands], "blocked": blocked, "why": cands[0].why})
                 continue
             g0 = time.perf_counter()
-            start = max(0, (t.id + 1 - window) // 10 * 10)
-            tasks = stream[start:t.id + 1]
             mem0 = ckpts[start]
             trials = h.trial(t.id, cands)
             blocked = [cands[r["i"]].desc for r in trials if not r["ok"]]

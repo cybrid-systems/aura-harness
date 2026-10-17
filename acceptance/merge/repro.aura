@@ -1,0 +1,12 @@
+;; cybrid-systems/aura#4589. workspace :merge child: documented as "child definitions override parent for conflicting symbols".
+;; Expected: after merging a child that rebinds f, the root's f is the child's f.
+(set-code "(define f (lambda (x) (+ x 1)))") (eval-current)
+(define w (workspace :create "cand"))
+(workspace :switch w)
+(mutate:rebind "f" "(lambda (x) (* x 10))" "child edit") (eval-current)
+(display (list "child f(2) =" (f 2))) (newline)                      ;; 20
+(workspace :switch 0)
+(display (list "merge ->" (workspace :merge w))) (newline)           ;; (("f" . "merged"))
+(display (list "root source:" (current-source :workspace))) (newline) ;; parent + child begin, f defined twice
+(eval-current)
+(display (if (= (f 2) 20) "MERGED" (string-append "PARENT-KEPT f(2)=" (number->string (f 2))))) (newline)
