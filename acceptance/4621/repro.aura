@@ -1,0 +1,7 @@
+;; aura#4621 (filed from aura-harness): rest parameters in workspace defines.
+(set-code "(define w-rest (lambda (a . r) r))\n(define w-all (lambda xs xs))\n")
+(eval-current)
+(define (t th) (try (th) (catch (e) "ERR")))
+(display (list (t (lambda () (w-rest 1 2))) (t (lambda () (w-rest 1 2 3))) (t (lambda () (w-rest 1 (list 2))))
+               (t (lambda () (w-rest 1))) (t (lambda () (w-all 1 2))) (t (lambda () (w-all (list 1))))))
+(newline)

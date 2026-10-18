@@ -1,0 +1,8 @@
+;; aura#4620 (filed from aura-harness): unbounded non-tail recursion in a workspace (IR) define raises a catchable
+;; "recursion depth" error instead of growing the heap until the process is killed. The acceptance runner caps this
+;; check's address space (1.5 GB) so an unfixed build fails fast (allocation failure) instead of taking the host down.
+(set-code "(define f (lambda (n) (if (= n 0) 0 (+ 1 (f (- n 1))))))\n")
+(eval-current)
+(define r (try (begin (f 100000000) "returned") (catch (e) e)))
+(display (if (and (string? r) (>= (string-index r "depth") 0)) "depth-error" (list "other" r)))
+(newline)

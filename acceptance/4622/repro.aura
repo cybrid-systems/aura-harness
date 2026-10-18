@@ -1,0 +1,3 @@
+(display (list (char->integer #\() 1))
+(newline)
+;; aura#4622 (filed from here): a #\( char literal in the first form must not make the file runner refuse the file

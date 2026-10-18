@@ -1,0 +1,41 @@
+{
+ "ablation_4585_no_set_code_in_process_us": {
+  "guarded_apply_us": 8450,
+  "static_check_us": 1065,
+  "n": 20,
+  "admit_us": 1140,
+  "decision_call_us": 6,
+  "snapshot_us": 200,
+  "materialize_table_us": 4550,
+  "trial_snap_us": 10500,
+  "restore_eval_us": 400,
+  "blocked_check_us": 10,
+  "trial_ws_us": 9250,
+  "rebind_eval_us": 700
+ },
+ "ablation_4585_no_set_code_decision_rt_ms": 0.1806880027288571,
+ "aura_in_process_us": {
+  "guarded_apply_us": 9000,
+  "static_check_us": 1150,
+  "n": 20,
+  "admit_us": 1020,
+  "decision_call_us": 6,
+  "snapshot_us": 150,
+  "materialize_table_us": 4650,
+  "trial_snap_us": 9500,
+  "restore_eval_us": 450,
+  "blocked_check_us": 10,
+  "trial_ws_us": 8900,
+  "rebind_eval_us": 650
+ },
+ "aura_decision_rt_ms": 0.21550000019487925,
+ "aura_guarded_change_rt_ms": 10.097508002218092,
+ "aura_trial_ws_per_candidate_ms": 10.527654666172262,
+ "aura_trial_snap_per_candidate_ms": 12.876648333379611,
+ "aura_blocked_attempt_rt_ms": 0.48255200090352446,
+ "aura_startup_s": 0.052473974999884376,
+ "file_decision_rt_ms": 0.020698000298580155,
+ "file_change_edit_restart_ms": 31.993212000088533,
+ "file_restart_only_ms": 24.067288999503944,
+ "file_trial_copy_per_candidate_ms": 29.908790998888435
+}

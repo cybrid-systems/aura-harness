@@ -1,0 +1,8 @@
+;; aura#4619 (filed from aura-harness): an error raised in a while body or in a non-final when/unless form reaches try.
+;; (The while-test case of the issue loops forever on an unfixed build, so it is not run here.)
+(define (t th) (try (begin (th) "returned") (catch (e) "caught")))
+(display (list (t (lambda () (when #t (raise "w") 1)))
+               (t (lambda () (unless #f (raise "u") 1)))
+               (t (lambda () (let ((i 0)) (while (< i 3) (set! i (+ i 1)) (raise "x")))))
+               (t (lambda () (let ((i 0)) (while (< i 2) (set! i (+ i 1)) (car 5)))))))
+(newline)

@@ -1,0 +1,29 @@
+;; aura#4618 (filed from aura-harness): the issue's repro; last line lists the rows that are wrong.
+(define hostv 0)
+(define (file-counter) (let ((n 0)) (lambda () (set! n (+ n 1)) n)))
+(define fc (file-counter))
+(define (file-bump) (set! hostv (+ hostv 1)) hostv)
+(set-code (string-append
+  "(define wsv 0)\n"
+  "(define bump-ws (lambda () (set! wsv (+ wsv 1)) wsv))\n"
+  "(define bump-host (lambda () (set! hostv (+ hostv 1)) hostv))\n"
+  "(define counter (let ((n 0)) (lambda () (set! n (+ n 1)) n)))\n"
+  "(define neg? (let ((n 0)) (lambda () (set! n (- n 1)) (< n 0))))\n"
+  "(define local (lambda () (let ((x 0)) (set! x (+ x 1)) x)))\n"
+  "(define g (lambda () 0))\n"))
+(eval-current)
+(mutate:rebind "g" "(lambda () (set! wsv (+ wsv 10)) wsv)" "r")
+(eval-current)
+(define *wrong* (list))
+(define (row what expected actual) (if (not (equal? expected actual)) (set! *wrong* (cons what *wrong*))))
+(row "ws define: set! ws global, 2 calls" (list 1 2) (list (bump-ws) (bump-ws)))
+(row "ws define: set! host global, 2 calls" (list 1 2) (list (bump-host) (bump-host)))
+(row "  host global after those" 2 hostv)
+(row "ws define: let-over-lambda counter, 2 calls" (list 1 2) (list (counter) (counter)))
+(row "ws define: (< n 0) after set! n -1" #t (neg?))
+(row "ws define: set! of a let local" 1 (local))
+(row "rebound ws define: set! ws global" 10 (g))
+(row "file define: let-over-lambda counter" (list 1 2) (list (fc) (fc)))
+(row "file define: set! host global" 1 (begin (set! hostv 0) (file-bump)))
+(display (list "wrong" (length *wrong*)))
+(newline)

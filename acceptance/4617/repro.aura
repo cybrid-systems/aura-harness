@@ -1,0 +1,12 @@
+;; aura#4617 (filed from aura-harness): a workspace define calling a file-level function by name must not lose heap
+;; objects held only by its own frame. Last line: wrong-result counts (allocating callee, no-op callee) over 1000 calls.
+(define *junk* #f)
+(define (host-alloc) (set! *junk* (list 1 2 3 4 5 6 7 8)) #f)
+(define (host-nop) #f)
+(set-code (string-append
+  "(define keep-a (lambda () (let ((v (vector 1 2 3)) (l (list 10 20 30))) (host-alloc) (list (vector-length v) (cadr l)))))\n"
+  "(define keep-n (lambda () (let ((v (vector 1 2 3)) (l (list 10 20 30))) (host-nop) (list (vector-length v) (cadr l)))))\n"))
+(eval-current)
+(define (bad keep n) (let loop ((i 0) (b 0)) (if (= i n) b (loop (+ i 1) (if (equal? (try (keep) (catch (e) #f)) (list 3 20)) b (+ b 1))))))
+(display (list (bad keep-a 1000) (bad keep-n 1000)))
+(newline)

@@ -77,7 +77,8 @@ The guard is host code in `server.aura`, outside the workspace, so no proposal c
 
 1. **Name check.** The name must be one of the 5 mutable defines. Protected or unknown names (including `static-check`, the guard itself) are rejected.
 2. **Body check.** The body must be a `(lambda (...) ...)` that uses no protected name and no reflective or mutating primitive (`mutate:*`, `ast:*`, `workspace*`, `set-code`, `eval-current`, `eval`, `set!`, `define`, `current-source`, `query`, `getenv`, file/net/process, …) at a token boundary.
-3. **Post-conditions.** After rebind + `eval-current` (in the trial worldline), the whole decision table must materialise. Every value must be in range, every route must be in `allowed-tools`, and the four protected values must equal the ones captured at startup. Otherwise the change is undone.
+3. **Admission and fuel** (`AURA_HARNESS_FUEL`, default 100000 steps; 0 turns this stage off). The body is parsed by a small reader in `server.aura` and walked with scopes. Every free symbol must be on an allowlist of pure primitives plus the domain constants. Std-lib functions (`iota`, `assoc`, `make-list`, `string-join`, …) are excluded, because they are tree-walked Aura code that corrupts workspace locals (aura#4617), and so are clocks, `try`/`raise`/`call/cc` and anything starting with `%`. Then the body is instrumented. Each lambda, named-let and `do` body starts with a `(%tick)`, `while` is rewritten to a ticking named let (aura#4619), and `make-vector`, `string-append` and `append` calls are charged by result size. Fuel is refilled at every host entry, and a body that runs out fails with "fuel exhausted".
+4. **Post-conditions.** After rebind + `eval-current` (in the trial worldline), the whole decision table must materialise. Every value must be in range, every route must be in `allowed-tools`, and the four protected values must equal the ones captured at startup. Otherwise the change is undone.
 
 The proposer is deliberately naive about scope. On a context overflow, its first candidate is "raise `context-budget` to 8000", and on a step-limit failure it is "raise `max-steps`". Those are exactly the changes that would help a struggling agent, and exactly what must not happen.
 
@@ -233,6 +234,59 @@ How to read this:
 * **The file-edit baseline is the most favourable case for file edits.** It restarts a 40-line decision server, not an agent. It also exposed a real hazard of file-reload harnesses. The first version imported the edited module, and Python's `__pycache__` served **stale bytecode** whenever an edit kept the file size within the same second (`"summarize"` → `"head-tail"`). The backend-equivalence check caught the resulting divergence; the server now `exec`s the source.
 * **Per-decision latency through the pipe is still Aura's weak spot** (0.15 ms vs 0.02 ms), almost all of it pipe + JSON. That is why the host fetches a materialised table once per harness version instead of calling per step.
 
+Numbers above are with the fuel stage off. Its cost is below, under Runaway proposals.
+
+### Runaway proposals (`scripts/runaway.py`)
+
+A proposed body is arbitrary Lisp that runs inside the control plane. Aura has no step budget or preemption: `fiber:*` is cooperative, and `orch:parallel`'s timeout still joins every fiber. Before this round, the static guard only looked at tokens, so one non-terminating body hung the control plane and one allocating body got it OOM-killed. `scripts/runaway.py` runs 24 bodies × 3 entry points (APPLY, TRIAL ws, TRIAL snap): 16 runaways or forbidden constructs and 8 legitimate bodies. Each run is a fresh control plane in its own process group, with a 20 s wall limit (`--timeout 20`) and a 4 GB container. The table shows the worst of the three entry points (`results/runaway/fuel-{on,off}.json`, `scripts/runaway_table.py`):
+
+| body | expect | before (token guard only) | after (fuel 100000) |
+|---|---|---|---|
+| `loop` | reject | hang (>20 s) | fuel exhausted (610 ms) |
+| `rec` | reject | **killed** (OOM, 4.5 s) | fuel exhausted (736 ms) |
+| `mutual` | reject | hang (>20 s) | fuel exhausted (608 ms) |
+| `omega` | reject | hang (>20 s) | fuel exhausted (613 ms) |
+| `do` | reject | hang (>20 s) | fuel exhausted (692 ms) |
+| `while` | reject | hang (>20 s) | fuel exhausted (526 ms) |
+| `cons-bomb` | reject | hang (>20 s) | fuel exhausted (818 ms) |
+| `str-double` | reject | **killed** (OOM, 7.6 s) | fuel exhausted (13 ms) |
+| `str-alias` | reject | **killed** (OOM, 4.2 s) | rejected: allocator used as a value (call it directly): string-append (6 ms) |
+| `append-many` | pass | applied (12 ms) | applied (16 ms) |
+| `strapp-3` | pass | applied (12 ms) | applied (15 ms) |
+| `vec-huge` | reject | **killed** (OOM, 2.0 s) | fuel exhausted (12 ms) |
+| `iota-huge` | reject | hang (>20 s) | rejected: symbol not allowed: iota (5 ms) |
+| `slow-3M` | reject | applied (5368 ms) | fuel exhausted (568 ms) |
+| `mech-cycle` | reject | hang (>20 s) | fuel exhausted (471 ms) |
+| `catch-fuel` | reject | rejected: token: try (3 ms) | rejected: token: try (3 ms) |
+| `shadow-tick` | reject | rejected: token: % (3 ms) | rejected: token: % (3 ms) |
+| `clock` | reject | applied (13 ms) | rejected: symbol not allowed: current-time-ms (5 ms) |
+| `comment` | reject | rejected: token: set-code (4 ms) | rejected: token: set-code (3 ms) |
+| `busy-50k` | pass | applied (152 ms) | applied (1598 ms) |
+| `vec-20k` | pass | applied (12 ms) | applied (17 ms) |
+| `stdlib-fn` | reject | applied (12 ms) | rejected: symbol not allowed: assoc (8 ms) |
+| `case-table` | pass | applied (11 ms) | applied (18 ms) |
+| `helpers` | pass | applied (16 ms) | applied (20 ms) |
+
+**Before: 27 of 72 runs correct, 24 hangs, 12 OOM kills, 9 runaways applied.** `slow-3M` (5.4 s per decision) and `stdlib-fn` were applied as if harmless. **After: 72 of 72 correct.** Every runaway is rejected within 0.82 s, and the control plane stays alive and keeps serving. Legitimate bodies still apply, with harness source and audit log unchanged. `SOURCE` (what a proposer reads) strips the instrumentation: across seeds 0–4 the final harness text is byte-identical to a fuel-off run.
+
+Cost, from `results/runaway/latency-fuel-*.json` and `bench-fuel.md`:
+
+| | fuel off | fuel 100000 |
+|---|---|---|
+| one decision (in-process) | 6 µs | 6 µs |
+| admission (static check + parse + walk + instrument), 100-char body | 1.0 ms | 3.5 ms |
+| guarded change, in-process / round trip | 9.0 / 10.1 ms | 13.1 / 17.5 ms |
+| trial per candidate (ws / snap), in-process | 8.9 / 9.5 ms | 15.5 / 16.2 ms |
+| bench, seeds 0–4: change / gate / trial call p50 | 8.5 / 67 / 26 ms | 10.2 / 81 / 38 ms |
+| bench outcome (success, verdicts, kept mutations) | 63.4% | identical, per seed |
+| tight loop in a body, 50k iterations | 152 ms | 1.6 s |
+
+Two findings from tuning this:
+* **A tick costs ~5 µs,** made up of host-vector ops plus a workspace call. The cheap version, an inline `set!` counter, doesn't work in a workspace define: the `set!` of a global is dropped, and a comparison after a captured-cell `set!` is constant-folded (aura#4618). Calling a host function from the tick instead let the tree-walker reclaim objects the IR frame still held (aura#4617). So table-shaped bodies pay one tick per decision, and loop-heavy bodies are ~10× slower.
+* **The first tokenizer cost 9.4 ms per admission.** File-level Aura loops cost ~3–4 µs per iteration, and the std-lib `string-split`/`string-join` are such loops (~4 µs per character); the pad/split/join tokenizer made 9 passes. The fix is one pass over `string->list` with `substring` slices, plus a single native `apply string-append` in the emitter. A differential test over 61 bodies gave identical results; the only difference is a more precise reason for an escaped quote. Admission dropped to 3.5 ms.
+
+Other Aura issues found on the way, all filed with repros: an error in a `while`/`when`/`unless` body is discarded, and an error in the `while` test loops forever (aura#4619); the IR call stack is unbounded, so deep recursion in a workspace define is OOM-killed instead of raising (aura#4620); rest parameters don't work in workspace defines (aura#4621); `#\(` / `#\)` / `#\"` literals confuse the file runner's top-level form splitter: a file whose first form has one is refused, and later ones print a spurious warning (aura#4622). A guard-side workaround applies to each: the `while` rewrite, the 100000-step budget (well below the ~5M frames that 4 GB allows), list-argument wrappers, and char codes in `server.aura`.
+
 ### Scope guard
 
 `python3 -m aura_harness guard` (`results/guard.txt`) runs 13 attempts against the live harness:
@@ -247,7 +301,7 @@ How to read this:
 
 All 13 are **BLOCKED** with a reason. The harness source is byte-identical afterwards, `context-budget` is still 4000, the audit log holds 13 `blocked` entries, and a legitimate change still applies. The unit test `test_proposer_cannot_raise_its_own_budget` drives the real proposer through three context-overflow failures. It checks that the proposer's first candidate is the budget raise, that the candidate is blocked in its trial and logged with actor `proposer`, and that it is never proposed again.
 
-The guard is a denylist plus post-conditions, not a sandbox. A body that computes a symbol at runtime would get past step 2; `string->symbol` and `apply` are denied, but that is not a proof. Real enforcement belongs in Aura's capability sandbox, which this repo can't use yet. #4575 added a scoped Soft auto-grant (`aura soft`), but under it `mutate:rebind` is refused with `commit-not-ready` (**aura#4609**), so everything still runs with `AURA_SANDBOX=off` in a memory-capped container.
+The guard is an allowlist, a step budget and post-conditions, not a sandbox. With fuel off, it falls back to the old token denylist, where a body that computes a symbol at runtime could get past step 2. With fuel on, `string->symbol`, `apply` and `eval` aren't on the allowlist. Still, a reader in Lisp is not a proof. Real enforcement belongs in Aura's capability sandbox, which this repo can't use yet. #4575 added a scoped Soft auto-grant (`aura soft`), but under it `mutate:rebind` is refused with `commit-not-ready` (**aura#4609**), so everything still runs with `AURA_SANDBOX=off` in a memory-capped container.
 
 ## Published harness self-evolution work, mapped to Aura primitives
 
@@ -290,7 +344,8 @@ It also reports a regression in which the evolved harness exposed a run-configur
 * **"Same logic" is literal.** The file-edit baseline shares the proposer and gate, so end-to-end success is identical by construction. The only measured differences are latency and the stale-bytecode hazard. It restarts a toy decision server, not a real agent.
 * **Latency is from a shared box** (other agents' builds were running), and it is pinned to one Aura commit.
 * **The worldlines are sequential.** Child workspaces are created and evaluated one by one in a single process; `agent:spawn` is unbound in file mode on the pin. Parallelism here is only in host-side replays, and it didn't help.
-* **The guard is a denylist plus post-conditions,** not a capability sandbox. The sandbox is off (`aura soft` refuses rebinds: aura#4609).
+* **Fuel counts steps, not time or bytes.** A tick sits on every function entry and loop iteration, so a single primitive call can still be slow: `make-vector`/`string-append`/`append` are charged by size, but a `sort` of a long list is one step. Memory is bounded only through the allocation wrappers and the container cap. The fuel costs ~10× in tight loops (see Runaway proposals).
+* **The guard is an allowlist, a step budget and post-conditions,** not a capability sandbox. The sandbox is off (`aura soft` refuses rebinds: aura#4609).
 * **5 seeds.** Adaptive beats frozen on every seed. Gated beats ungated on every seed with clean diagnoses and at 30% noise. At 100% noise it wins on 4 of 5 seeds (seed 2: 27.3% vs 29.5%).
 
 ## Known Aura issues
@@ -305,22 +360,29 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4583 (reopened from here) | every `mutate:rebind` pays for the workspace's rebind history (time and memory) | none; see Long runs | `scripts/longrun.py` |
 | cybrid-systems/aura#4610 (new, filed from here) | deleted child workspaces keep their rebind cost and memory; later rebinds everywhere slow down | none; restart the process periodically | `scripts/longrun.py --mix trial-rollback` |
 | cybrid-systems/aura#4615 (new, filed from here) | rebinding a define is O(B²) in the basic blocks of each define that calls it; a flat 4000-call aggregator made every knob APPLY 534 ms | knobs read through 16-knob chunk callers (`AURA_HARNESS_KNOB_CHUNK`) | `acceptance/4615`, `scripts/size_sweep.py --chunk 0` |
+| cybrid-systems/aura#4617 (new, filed from here) | calling a file-level function from a workspace define lets the tree-walker reclaim heap objects held only by the IR frame | the fuel tick and allocation wrappers are workspace code (prelude), with the counter in a host vector; std-lib functions are off the allowlist | `acceptance/4617` |
+| cybrid-systems/aura#4618 (new, filed from here) | in a workspace define, `set!` of a global is dropped, and a comparison after a captured-cell `set!` is constant-folded | counter in a host vector (`vector-set!`) | `acceptance/4618` |
+| cybrid-systems/aura#4619 (new, filed from here) | an error raised in a `while`/`when`/`unless` body is discarded; an error in the `while` test loops forever | `while` rewritten to a named let at admission | `acceptance/4619` |
+| cybrid-systems/aura#4620 (new, filed from here) | the IR call stack is unbounded (≥64 slots / ~0.77 KB per frame): deep recursion in a workspace define is OOM-killed instead of raising | fuel (100000 steps) | `acceptance/4620` (1.5 GB address-space cap) |
+| cybrid-systems/aura#4621 (new, filed from here) | rest parameters (`(lambda args …)`, `(a . r)`) don't work in workspace defines | allocation wrappers take one list argument, built at the call site | `acceptance/4621` |
+| cybrid-systems/aura#4622 (new, filed from here) | `#\(` `#\)` `#\"` literals confuse the file runner's top-level form splitter: a file whose first form has one is refused ("no complete S-expression"); later ones give a spurious warning | char codes in `server.aura` | `acceptance/4622` |
 | cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
-`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610` and `4615` FAIL while those issues are open. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
+`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610`, `4615` and `4617`–`4622` FAIL while those issues are open. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 17 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 23 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
 scripts/in-docker.sh 'python3 -m aura_harness source'                           # the seed harness as Aura sees it
 AURA_HARNESS_MEM=8g scripts/in-docker.sh 'python3 scripts/longrun.py --steps 2000'  # long-run growth (~4 min)
 scripts/in-docker.sh 'python3 scripts/size_sweep.py --knobs 0,50,200,500,1000'       # harness-size sweep (~30 s)
+scripts/in-docker.sh 'python3 scripts/runaway.py --out runs/runaway.json'            # runaway bodies, fuel on + off (~15 min, mostly fuel-off hangs at --timeout 30)
 ```
 
 `--docker` runs inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`, `AURA_SANDBOX=off` and `AURA_PIPELINE_STRICT=0`. One 400-task stream takes about 5 s (Aura) or 2.5 s (file-edit).
@@ -328,7 +390,7 @@ scripts/in-docker.sh 'python3 scripts/size_sweep.py --knobs 0,50,200,500,1000'  
 ## Layout
 
 ```
-aura/server.aura          control plane: harness decisions, scope guard, worldline trials, verdicts, audit log, BENCH
+aura/server.aura          control plane: harness decisions, scope guard (allowlist + fuel), worldline trials, verdicts, audit log, BENCH
 aura/harness_seed.aura    seed harness: 5 mutable + 4 protected workspace defines
 aura_harness/env.py       simulated task environment + frozen seeded model
 aura_harness/harness.py   decision tables <-> Lisp / Python compilers, post-conditions, seed table
@@ -337,9 +399,9 @@ aura_harness/control.py   Aura backend and file-edit + reload backend (file_serv
 aura_harness/agent.py     solver / proposer / held-out gate loop, metrics
 aura_harness/{bench,latency,guard,acceptance,__main__}.py
 acceptance/               Aura issue repros + harness-cycle
-results/                  committed bench / ablations / latency / guard outputs + one example audit log
-scripts/                  longrun.py, size_sweep.py, parallel_replay.py, in-docker / test / bench wrappers
-tests/                    unit tests (knob size stress, compile equivalence, trials, keep/rollback, budget raise blocked, guard, backend equivalence)
+results/                  committed runaway (fuel on/off, latency, bench) / bench / ablations / latency / guard outputs + one example audit log
+scripts/                  longrun.py, size_sweep.py, parallel_replay.py, runaway.py (+ runaway_table.py), in-docker / test / bench wrappers
+tests/                    unit tests (knob size stress, compile equivalence, trials, keep/rollback, budget raise blocked, guard, backend equivalence, runaway containment)
 ```
 
 ## Next steps
@@ -348,6 +410,7 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 * Make the gate shift-aware: weight recent held-out tasks, or split the window at detected shifts. This would let `lsp-find`-style post-shift tools win.
 * Let the proposer write new mechanisms, not just table edits. Wire the LLM hook, keep the guard and gate, and measure how often the guard fires on real model output.
 * Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
+* Make the tick cheap once aura#4617/#4618 are fixed (an inline counter instead of a workspace call), or drop it for an Aura-native step budget / preemptible fiber if one lands.
 * Replace the simulated environment with a small real tool-use suite.
 
 ## License

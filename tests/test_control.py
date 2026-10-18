@@ -205,3 +205,92 @@ class KnobTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class RunawayTests(unittest.TestCase):
+    """Runaway containment (fuel metering): runaway bodies fail their trial, the process survives, legitimate loops
+    still pass with the right value."""
+
+    def setUp(self):
+        from aura_harness.control import AuraHarness
+        self.h = AuraHarness("ws")
+
+    def tearDown(self):
+        self.h.close()
+
+    def cand(self, name, body):
+        from aura_harness.harness import Candidate
+        return Candidate(name, None, "test", "test", "test", raw_aura=body)
+
+    def test_runaway_bodies_fail_and_process_survives(self):
+        from aura_harness.harness import normalize, seed_table
+        for body in ["(lambda (need) (let loop ((i 0)) (loop (+ i 1))))",
+                     "(lambda (need) (letrec ((f (lambda (n) (+ 1 (f (+ n 1)))))) (f 0)))",
+                     '(lambda (need) (let loop ((s "x")) (loop (string-append s s))))',
+                     "(lambda (need) (while #t 1))"]:
+            r = self.h.apply(1, self.cand("route-tool", body))
+            self.assertFalse(r["ok"], body)
+            self.assertTrue(r["reason"].startswith("fuel exhausted"), r["reason"])
+            t = self.h.trial(1, [self.cand("route-tool", body)])[0]
+            self.h.verdict(1, -1, [0], "test")
+            self.assertFalse(t["ok"])
+        self.assertEqual(j(self.h.table()), j(normalize(seed_table())))
+
+    def test_meter_dodges_rejected_statically(self):
+        for body, why in [('(lambda (need) (try (let loop () (loop)) (catch (e) "grep")))', "forbidden symbol in body: try"),
+                          ("(lambda (need) (let ((%tick (lambda () #f))) (let loop () (loop))))", "forbidden symbol in body: %"),
+                          ('(lambda (need) (let ((sa string-append)) (sa "g" "rep")))', "allocator used as a value"),
+                          ('(lambda (need) (if (assoc need (list (list "search" 1))) "grep" "cat"))', "symbol not allowed: assoc"),
+                          ('(lambda (need) (if (> (current-time-ms) 0) "grep" "cat"))', "symbol not allowed: current-time-ms"),
+                          ('(lambda (need) "grep") ; x', "unsupported syntax: ;")]:
+            r = self.h.pipe.call("ADMIT", "route-tool", body)
+            self.assertIn(why, r["reason"] or "", body)
+
+    def test_legit_loops_pass_with_right_value(self):
+        # a vector filled in a loop and read afterwards: wrong on ~1 call in 40 while %tick was a file-level function
+        # (aura#4617); also while -> named let, and the list-argument allocator wrappers (aura#4621)
+        for body, want in [("(lambda (fact) (let ((v (vector 0))) (let lp ((k 0)) (if (< k 3) (begin (vector-set! v 0 (+ k 1)) (lp (+ k 1))) #f)) (vector-ref v 0)))", 3),
+                           ("(lambda (fact) (let ((v (make-vector 1 0))) (while (< (vector-ref v 0) 4) (vector-set! v 0 (+ (vector-ref v 0) 1))) (vector-ref v 0)))", 4),
+                           ("(lambda (fact) (length (append (list 1) (list 2 3) (list (list 4)))))", 4),
+                           ('(lambda (fact) (string-length (string-append "a" "bc" (string-append "d" "e"))))', 5),
+                           ("(lambda (fact) (do ((i 0 (+ i 1)) (s 0 (+ s i))) ((= i 4) s)))", 6)]:
+            for _ in range(2):
+                r = self.h.apply(1, self.cand("memory-ttl", body))
+                self.assertTrue(r["ok"], (body, r.get("reason")))
+                self.assertTrue(all(v == want for v in r["table"]["ttl"].values()), body)
+
+    def test_source_is_clean_raw_is_instrumented(self):
+        self.h.apply(1, self.cand("memory-ttl", '(lambda (fact) (string-length (string-append "a" "b")))'))
+        src, raw = self.h.source(), self.h.pipe.call("SOURCE", "raw")["source"]
+        self.assertNotIn("%", src)
+        self.assertIn("(string-append \"a\" \"b\")", src)
+        self.assertIn("(define %tick", raw)
+        self.assertIn("(%tick)", raw)
+
+    def test_compaction_keeps_the_meter(self):
+        self.h.apply(1, self.cand("memory-ttl", "(lambda (fact) 3)"))
+        self.h.pipe.call("COMPACT")
+        r = self.h.apply(2, self.cand("route-tool", "(lambda (need) (let loop () (loop)))"))
+        self.assertFalse(r["ok"])
+        self.assertTrue(r["reason"].startswith("fuel exhausted"))
+        self.assertEqual(self.h.decide("ttl", "repo-layout"), 3)
+
+
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class FuelOffTests(unittest.TestCase):
+    def test_fuel_zero_is_the_token_guard(self):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_FUEL"] = "0"
+        try:
+            h = AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_FUEL", None)
+        try:
+            body = "(lambda (fact) (let lp ((i 0)) (if (< i 3) (lp (+ i 1)) i)))"
+            r = h.pipe.call("ADMIT", "memory-ttl", body)
+            self.assertEqual(r["fuel"], 0)
+            self.assertEqual(r["body"], body)
+            self.assertNotIn("(define %tick", h.pipe.call("SOURCE", "raw")["source"])
+        finally:
+            h.close()
