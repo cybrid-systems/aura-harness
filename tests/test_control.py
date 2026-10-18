@@ -151,5 +151,57 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(a["cost_per_task"], f["cost_per_task"])
 
 
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class KnobTests(unittest.TestCase):
+    """AURA_HARNESS_KNOBS=N: N extra mutable defines, range-checked by the same guard."""
+    N = 6
+
+    def setUp(self):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_KNOBS"] = str(self.N)
+        try:
+            self.h = AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_KNOBS", None)
+
+    def tearDown(self):
+        self.h.close()
+
+    def k(self, i, body):
+        from aura_harness.harness import Candidate
+        return Candidate(f"knob-{i}", None, "t", "t", f"knob-{i}", raw_aura=body)
+
+    def test_seed_table_has_knobs_and_base_unchanged(self):
+        from aura_harness.harness import normalize, seed_table
+        tb = self.h.table()
+        self.assertEqual(tb.pop("knobs"), [[10] * 4] * self.N)
+        self.assertEqual(j(tb), j(normalize(seed_table())))
+
+    def test_knob_apply_guarded(self):
+        r = self.h.apply(1, self.k(3, "(lambda (x) (cond ((equal? x 1) 77) (else 10)))"))
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["table"]["knobs"][3], [10, 77, 10, 10])
+        r = self.h.apply(2, self.k(4, "(lambda (x) (cond (else 101)))"))
+        self.assertFalse(r["ok"])
+        self.assertIn("knob value out of range", r["reason"])
+        self.assertEqual(self.h.table()["knobs"][4], [10] * 4)
+
+    def test_knobs_all_not_mutable(self):
+        from aura_harness.harness import Candidate
+        r = self.h.apply(1, Candidate("knobs-all", None, "t", "t", "x", raw_aura="(lambda () (list))"))
+        self.assertFalse(r["ok"])
+
+    def test_knob_trials_leave_root_untouched(self):
+        src0 = self.h.source()
+        for mode in ("ws", "snap"):
+            self.h.worldlines = mode
+            r = self.h.trial(1, [self.k(0, "(lambda (x) (cond (else 42)))"), self.k(1, "(lambda (x) (cond (else -1)))")])
+            self.assertTrue(r[0]["ok"])
+            self.assertEqual(r[0]["table"]["knobs"][0], [42] * 4)
+            self.assertFalse(r[1]["ok"])
+            self.h.verdict(1, -1, {"base": [0]}, "rollback")
+            self.assertEqual(self.h.source(), src0, mode)
+
+
 if __name__ == "__main__":
     unittest.main()

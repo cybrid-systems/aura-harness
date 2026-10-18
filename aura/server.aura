@@ -34,7 +34,36 @@
 (define nsubs (list 1 2 3 4 5 6 7))
 (define strategies (list "none" "head" "tail" "head-tail" "grep-errors" "summarize"))
 
-(define *mutable* (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate"))
+;; Size stress (AURA_HARNESS_KNOBS=N, default 0): N extra MUTABLE defines knob-0 .. knob-N-1, each a tool-parameter
+;; table over x in {0,1,2,3} with values in [0,100], appended to the seed. They don't affect the task environment;
+;; they make the harness (and so every snapshot / rebind / restore / post-check) N defines bigger. knobs-all (not
+;; mutable) returns every knob's 4 values, so materialize / post-check can read them without eval.
+(define *nknobs* (let ((v (getenv "AURA_HARNESS_KNOBS"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define knob-domain (list 0 1 2 3))
+(define (knob-name i) (string-append "knob-" (number->string i)))
+(define knob-names (let loop ((i (- *nknobs* 1)) (acc (list))) (if (< i 0) acc (loop (- i 1) (cons (knob-name i) acc)))))
+;; knobs-all reads every knob through chunk defines of *knob-chunk* knobs each: rebinding a knob dirties only its
+;; (small) chunk caller. One flat aggregator calling all N knobs makes every knob rebind O(N^2) in Aura's IR dirty
+;; cascade (cybrid-systems/aura#4615); AURA_HARNESS_KNOB_CHUNK=0 restores that flat shape for comparison.
+(define *knob-chunk* (let ((v (getenv "AURA_HARNESS_KNOB_CHUNK"))) (if (and (string? v) (string->number v)) (string->number v) 16)))
+(define (knob-row n) (string-append "(list (" n " 0) (" n " 1) (" n " 2) (" n " 3)) "))
+(define (take-drop xs k) (let loop ((xs xs) (k k) (acc (list))) (if (or (= k 0) (null? xs)) (cons (reverse acc) xs) (loop (cdr xs) (- k 1) (cons (car xs) acc)))))
+(define (chunks xs k) (if (null? xs) (list) (let ((td (take-drop xs k))) (cons (car td) (chunks (cdr td) k)))))
+(define (knobs-src)
+  (if (= *nknobs* 0) ""
+      (string-append
+       "\n;; ---- mutable size-stress knobs (AURA_HARNESS_KNOBS)\n"
+       (apply string-append (map (lambda (n) (string-append "(define " n " (lambda (x) (cond (else 10))))\n")) knob-names))
+       (if (= *knob-chunk* 0)
+           (string-append "(define knobs-all (lambda () (list " (apply string-append (map knob-row knob-names)) ")))\n")
+           (let loop ((cs (chunks knob-names *knob-chunk*)) (j 0) (defs "") (calls ""))
+             (if (null? cs)
+                 (string-append defs "(define knobs-all (lambda () (append " calls ")))\n")
+                 (let ((cn (string-append "knobs-chunk-" (number->string j))))
+                   (loop (cdr cs) (+ j 1)
+                         (string-append defs "(define " cn " (lambda () (list " (apply string-append (map knob-row (car cs))) ")))\n")
+                         (string-append calls "(" cn ") ")))))))))
+(define *mutable* (append (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate") knob-names))
 (define *protected* (list "context-budget" "max-steps" "allowed-tools" "sandbox-level"))
 (define *banned* (list "set-code" "eval-current" "eval" "set!" "define" "load" "read-file" "write-file" "getenv"
                        "system" "shell" "exit" "current-source" "query" "lambda-rebind" "apply" "string->symbol"))
@@ -56,9 +85,11 @@
     (for-each (lambda (t) (for-each (lambda (e) (hash-set! retry (string-append t "|" e) (safe (lambda () (retry-limit t e))))) errs)) tools)
     (for-each (lambda (f) (hash-set! ttl f (safe (lambda () (memory-ttl f))))) facts)
     (for-each (lambda (k) (for-each (lambda (n) (hash-set! dele (string-append k "|" (n->s n)) (safe (lambda () (delegate k n))))) nsubs)) tkinds)
-    (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele
-          "budget" (safe (lambda () (context-budget))) "max_steps" (safe (lambda () (max-steps)))
-          "allowed" (safe (lambda () (allowed-tools))) "sandbox" (safe (lambda () (sandbox-level))))))
+    (let ((tb (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele
+                    "budget" (safe (lambda () (context-budget))) "max_steps" (safe (lambda () (max-steps)))
+                    "allowed" (safe (lambda () (allowed-tools))) "sandbox" (safe (lambda () (sandbox-level))))))
+      (if (> *nknobs* 0) (hash-set! tb "knobs" (safe (lambda () (knobs-all)))))
+      tb)))
 
 ;; ---------------------------------------------------------------- scope guard
 (define *boundary* #f)          ;; protected values captured right after the seed loads
@@ -102,6 +133,11 @@
            "memory-ttl out of range [0,1000]")
           ((not (all? (lambda (d) (member d (list "delegate" "inline"))) (hash-vals (hash-ref tb "delegate" #f) (keys-of2 tkinds nsubs "|"))))
            "delegate value not delegate|inline")
+          ((and (> *nknobs* 0)
+                (let ((ks (hash-ref tb "knobs" #f)))
+                  (not (and (list? ks) (= (length ks) *nknobs*)
+                            (all? (lambda (row) (and (list? row) (all? (lambda (v) (in-range? v 0 100)) row))) ks)))))
+           "knob value out of range [0,100]")
           (else #f))))
 
 ;; ---------------------------------------------------------------- audit log + version
@@ -317,9 +353,9 @@
           (if (member (field fs 0) (list "APPLY" "TRIAL" "VERDICT")) (note-root-mut!))
           (serve)))))
 
-(set-code (read-file *seed-path*))
+(set-code (string-append (read-file *seed-path*) (knobs-src)))
 (eval-current)
 (set! *boundary* (boundary))
 (define *seed-snap* (ast:snapshot "seed"))
-(reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary*))
+(reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary* "knobs" *nknobs*))
 (serve)

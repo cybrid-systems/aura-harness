@@ -185,6 +185,20 @@ One operation repeated 600 times (RSS at step 200 / 400 / 600; TRIAL p50 at step
 
 The harness's own state is small: the audit log has 4,668 entries after 2000 steps, and DECIDE stays at ~0.4 ms throughout. Until these are fixed, a long-lived aura-harness process should be restarted periodically, carrying the current source and the audit log over. The compaction knob (`AURA_HARNESS_COMPACT_EVERY`, `COMPACT` command, off by default) stays for re-measuring once they are.
 
+### Harness size: hundreds of mutable defines (`scripts/size_sweep.py`)
+
+The seed harness has 9 defines. Real harnesses grow. `AURA_HARNESS_KNOBS=N` appends N extra **mutable** defines `knob-i` (a tool-parameter table over x ∈ {0..3}, values range-checked to [0,100] by the same post-check) plus `knobs-all`, which reads them for the materialised table. `knobs-all` isn't mutable. The knobs don't change the task environment; they make every rebind, snapshot, restore and post-check run over a bigger workspace. `scripts/size_sweep.py` starts one control plane per N and times 20 rounds of each protocol operation over the real pipe (p50 ms, main e50951bff; raw rows in `results/size/`):
+
+| N knobs | source chars | startup s | RSS MB | TABLE | APPLY (knob) | TRIAL ws (2) | TRIAL snap (2) | VERDICT |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 691 | 0.05 | 108 | 4.8 | 8.6 | 16.5 | 17.1 | 0.5 |
+| 50 | 5,668 | 0.07 | 220 | 5.3 | 17.1 | 42.9 | 48.6 | 0.7 |
+| 200 | 19,959 | 0.11 | 146 | 5.9 | 22.9 | 45.5 | 53.2 | 0.7 |
+| 500 | 48,999 | 0.21 | 232 | 9.3 | 45.5 | 92.0 | 107.7 | 1.0 |
+| 1000 | 97,359 | 0.42 | 520 | 16.4 | 87.3 | 187.5 | 211.1 | 1.4 |
+
+With `knobs-all` as **one flat define calling all N knobs** (`--chunk 0`), the same sweep is superlinear: knob APPLY 163 ms at N=500 and **534 ms at N=1000**, TRIAL ws 1,078 ms, startup 1.26 s. A `retry-limit` APPLY in the same process costs 88 ms. gdb put 33 of 40 samples in Aura's IR dirty cascade (`IRCacheEntry::mark_body_only_dirty → cascade_block_to_instructions`). Rebinding `f` re-marks every basic block of each define that calls `f`, and each block mark recomputes prefix sums over all blocks, so it is O(B²) in the caller's size. A standalone repro costs 5 / 20 / 69 / 252 ms per rebind for callers with 500 / 1000 / 2000 / 4000 call sites. Filed as **aura#4615**. The harness now reads the knobs through `knobs-chunk-j` callers of 16 knobs each (`AURA_HARNESS_KNOB_CHUNK`, default 16), which makes a knob APPLY cost the same as any other APPLY (88 ms at N=1000). What remains is linear in workspace size. That's aura#4598: every rebind+eval, snapshot and restore walks the whole workspace (BENCH at N=1000: rebind+eval 10 ms, snapshot 4 ms, restore+eval 26 ms, materialize 15 ms). DECIDE stays at ~0.3 ms at every size.
+
 ### Latency: Aura in-process vs file-edit + reload
 
 All numbers are from `results/latency.json` (p50, measured inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`).
@@ -290,20 +304,23 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks were swallowed | fixed upstream. Each decision keeps its own `try` (an erroring define yields `__error__` and fails the post-check); that is the guard's semantics, not a workaround | `acceptance/4586` (PASS) |
 | cybrid-systems/aura#4583 (reopened from here) | every `mutate:rebind` pays for the workspace's rebind history (time and memory) | none; see Long runs | `scripts/longrun.py` |
 | cybrid-systems/aura#4610 (new, filed from here) | deleted child workspaces keep their rebind cost and memory; later rebinds everywhere slow down | none; restart the process periodically | `scripts/longrun.py --mix trial-rollback` |
+| cybrid-systems/aura#4615 (new, filed from here) | rebinding a define is O(B²) in the basic blocks of each define that calls it; a flat 4000-call aggregator made every knob APPLY 534 ms | knobs read through 16-knob chunk callers (`AURA_HARNESS_KNOB_CHUNK`) | `acceptance/4615`, `scripts/size_sweep.py --chunk 0` |
+| cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
-`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear` and `4610` FAIL while those issues are open. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
+`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610` and `4615` FAIL while those issues are open. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 13 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 17 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
 scripts/in-docker.sh 'python3 -m aura_harness source'                           # the seed harness as Aura sees it
 AURA_HARNESS_MEM=8g scripts/in-docker.sh 'python3 scripts/longrun.py --steps 2000'  # long-run growth (~4 min)
+scripts/in-docker.sh 'python3 scripts/size_sweep.py --knobs 0,50,200,500,1000'       # harness-size sweep (~30 s)
 ```
 
 `--docker` runs inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`, `AURA_SANDBOX=off` and `AURA_PIPELINE_STRICT=0`. One 400-task stream takes about 5 s (Aura) or 2.5 s (file-edit).
@@ -321,7 +338,8 @@ aura_harness/agent.py     solver / proposer / held-out gate loop, metrics
 aura_harness/{bench,latency,guard,acceptance,__main__}.py
 acceptance/               Aura issue repros + harness-cycle
 results/                  committed bench / ablations / latency / guard outputs + one example audit log
-tests/                    unit tests (env, compile equivalence, trials, keep/rollback, budget raise blocked, guard, backend equivalence)
+scripts/                  longrun.py, size_sweep.py, parallel_replay.py, in-docker / test / bench wrappers
+tests/                    unit tests (knob size stress, compile equivalence, trials, keep/rollback, budget raise blocked, guard, backend equivalence)
 ```
 
 ## Next steps

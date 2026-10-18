@@ -19,6 +19,7 @@ CHECKS = {
     "4586": "an error inside a map callback reaches try",
     "4583-linear": "rebind 1001-1500 of the same body costs < 1.5x rebind 1-500 (aura#4583, reopened from here)",
     "4610": "1000 deleted child-workspace trials leave root rebind cost < 1.5x (aura#4610, filed from here)",
+    "4615": "rebind of f with a 4x bigger caller of f costs < 8x (aura#4615, filed from here)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
 }
 

@@ -1,0 +1,13 @@
+;; cybrid-systems/aura#4615 (filed from aura-harness): rebinding f is O(B^2) in the basic blocks of a define that
+;; calls f. PASS when a 4x bigger caller costs < 8x (linear ~4x; quadratic ~12x).
+(define (calls k) (let loop ((i 0) (acc "")) (if (= i k) acc (loop (+ i 1) (string-append acc "(f " (number->string i) ") ")))))
+(define (cost k)
+  (set-code (string-append "(define f (lambda (x) (+ x 1)))\n(define caller (lambda () (list " (calls k) ")))\n"))
+  (eval-current)
+  (let ((t0 (current-time-ms)))
+    (let loop ((r 0)) (if (< r 3) (begin (mutate:rebind "f" (string-append "(lambda (x) (+ x " (number->string (+ r 2)) "))") "a") (loop (+ r 1))) #f))
+    (max 1 (- (current-time-ms) t0))))
+(define c1 (cost 1000))
+(define c4 (cost 4000))
+(display (if (< c4 (* 8 c1)) "ok" (string-append "superlinear " (number->string c1) "ms -> " (number->string c4) "ms")))
+(newline)
