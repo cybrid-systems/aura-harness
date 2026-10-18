@@ -8,5 +8,9 @@ PASS  4585          a host-program loop is not >3x slower after one set-code
       got: (ratio<3 #t)
 PASS  4586          an error inside a map callback reaches try
       got: caught
+FAIL  4583-linear   rebind 1001-1500 of the same body costs < 1.5x rebind 1-500 (aura#4583, reopened from here)
+      got: (flat #f)
+FAIL  4610          1000 deleted child-workspace trials leave root rebind cost < 1.5x (aura#4610, filed from here)
+      got: (flat #f)
 PASS  merge         workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)
       got: MERGED

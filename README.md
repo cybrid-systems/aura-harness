@@ -157,6 +157,34 @@ Findings:
 * **Workspace children vs snapshot/restore** give identical verdicts and success on all 5 seeds (`results/snap.md`). Per-candidate trial cost is also about the same: 7.9 ms (child workspace) vs 8.2 ms (snapshot) in-process.
 * **Parallel replays.** Candidate replays in a 4-process pool give the same verdicts, and now help a little: gate p50 36 ms vs 54 ms sequential (on `c8ad457c9` the pool was slower, 215 vs 191 ms; `results/parallel.txt`). Worldlines are created one after another inside one Aura process; `agent:spawn` is not available in file mode.
 
+### Long runs: one process, thousands of changes (`scripts/longrun.py`)
+
+The bench streams make about 20 proposals each. A real harness that keeps evolving makes thousands, all in one Aura process. `scripts/longrun.py` drives random valid edits of the 5 mutable components through the real protocol. Each step is a guarded APPLY, or a 2-candidate TRIAL followed by a KEEP or ROLLBACK VERDICT. Every 200 steps it records p50 latency (host-measured) and the control-plane RSS. `results/longrun/` has the raw rows.
+
+ws worldlines, 2000 steps (mix: apply / trial+keep / trial+rollback in turn). The last column is the same run with the root reloaded from its own source every 100 root mutations (`AURA_HARNESS_COMPACT_EVERY=100`):
+
+| step | APPLY p50 ms | TRIAL p50 ms | DECIDE p50 ms | RSS MB | with compaction: APPLY / TRIAL / RSS |
+|---|---|---|---|---|---|
+| 200 | 11.47 | 26.58 | 0.34 | 204 | 11.91 / 28.3 / 205 |
+| 600 | 27.87 | 72.88 | 0.44 | 613 | 26.43 / 69.73 / 584 |
+| 1000 | 41.98 | 108.34 | 0.44 | 1,125 | 42.21 / 102.66 / 1,129 |
+| 1400 | 58.4 | 158.7 | 0.48 | 1,546 | 61.36 / 161.34 / 1,539 |
+| 2000 | 97.0 | 264.97 | 0.45 | 2,279 | 96.08 / 269.08 / 2,295 |
+
+One operation repeated 600 times (RSS at step 200 / 400 / 600; TRIAL p50 at step 200 → 600):
+
+| repeated operation | ws worldlines | snapshot worldlines |
+|---|---|---|
+| guarded APPLY on the root | 177 / 304 / 438 MB, APPLY 12 → 23 ms | – |
+| TRIAL (2 candidates) + ROLLBACK | 147 / 207 / 265 MB, 21 → 41 ms | 147 / 205 / 266 MB, 22 → 44 ms |
+| TRIAL (2 candidates) + KEEP | 297 / 645 / 989 MB, 33 → 85 ms | 474 / 1,405 / 2,727 MB, 40 → 192 ms |
+
+**Every operation that rebinds anything gets slower with the process's mutation history, and memory never comes back.** At step 2000 a guarded change costs 10× what it did at step 100 (97 vs 10 ms), and the process holds 2.3 GB for a ~3 KB harness. Micro-repros isolated two Aura causes, both filed or reopened from here:
+- **aura#4583 (reopened):** every `mutate:rebind` pays for all earlier rebinds of that workspace. 4000 rebinds of the same 2-clause body go from ~1 ms to 7 ms each and reach ~1 GB. `ast:restore` doesn't release it, which is why snapshot worldlines are the worse mode in a long run. Reloading the workspace from its own source resets the time (not the memory) in a fresh process.
+- **aura#4610 (new):** a trial in a child workspace (create → switch → rebind → eval → switch back → delete) keeps ~140 KB after the child is deleted. Every later rebind, in the root too, gets slower. This is what ws worldlines pay, and it is why the compaction knob doesn't help here (compare the last column).
+
+The harness's own state is small: the audit log has 4,668 entries after 2000 steps, and DECIDE stays at ~0.4 ms throughout. Until these are fixed, a long-lived aura-harness process should be restarted periodically, carrying the current source and the audit log over. The compaction knob (`AURA_HARNESS_COMPACT_EVERY`, `COMPACT` command, off by default) stays for re-measuring once they are.
+
 ### Latency: Aura in-process vs file-edit + reload
 
 All numbers are from `results/latency.json` (p50, measured inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`).
@@ -257,12 +285,14 @@ It also reports a regression in which the evolved harness exposed a run-configur
 |---|---|---|---|
 | cybrid-systems/aura#4589 (filed from here) | `workspace :merge child` reported every define "merged" but the root kept the parent's definition (child source appended; the first define won) | fixed upstream; KEEP in ws mode now promotes with `workspace :merge` (the guarded re-apply workaround is gone) | `acceptance/merge` (PASS) |
 | cybrid-systems/aura#4585 | host code ~9× slower after `set-code` (65 ms vs 11.5 ms per guarded change) | fixed upstream: guarded change 6.9 ms in-process. The materialised table (fetched once per version) and the native `string-index` symbol scan stay; they are cheaper anyway | `acceptance/4585` (PASS), `results/latency.json` |
-| cybrid-systems/aura#4583 | repeated `mutate:rebind` next to a self-recursive workspace define blew up | fixed upstream. Harness bodies stay flat `cond`s because the proposer compiles them from tables | `acceptance/4583` (PASS) |
+| cybrid-systems/aura#4583 (4× part) | repeated `mutate:rebind` next to a self-recursive workspace define blew up | the 4× doubling is fixed upstream (the linear part is reopened, below). Harness bodies stay flat `cond`s because the proposer compiles them from tables | `acceptance/4583` (PASS) |
 | cybrid-systems/aura#4584 | a sibling passing a procedure to `filter`/`map` made a workspace call dispatch to the wrong define | fixed upstream | `acceptance/4584` (PASS) |
 | cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks were swallowed | fixed upstream. Each decision keeps its own `try` (an erroring define yields `__error__` and fails the post-check); that is the guard's semantics, not a workaround | `acceptance/4586` (PASS) |
+| cybrid-systems/aura#4583 (reopened from here) | every `mutate:rebind` pays for the workspace's rebind history (time and memory) | none; see Long runs | `scripts/longrun.py` |
+| cybrid-systems/aura#4610 (new, filed from here) | deleted child workspaces keep their rebind cost and memory; later rebinds everywhere slow down | none; restart the process periodically | `scripts/longrun.py --mix trial-rollback` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
-`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
+`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear` and `4610` FAIL while those issues are open. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
@@ -273,6 +303,7 @@ scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode 
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
 scripts/in-docker.sh 'python3 -m aura_harness source'                           # the seed harness as Aura sees it
+AURA_HARNESS_MEM=8g scripts/in-docker.sh 'python3 scripts/longrun.py --steps 2000'  # long-run growth (~4 min)
 ```
 
 `--docker` runs inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`, `AURA_SANDBOX=off` and `AURA_PIPELINE_STRICT=0`. One 400-task stream takes about 5 s (Aura) or 2.5 s (file-edit).

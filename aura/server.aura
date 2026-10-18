@@ -11,7 +11,9 @@
 ;;                                 -> per candidate: blocked reason, or its decision table
 ;;   VERDICT ts chosen scores why  KEEP candidate #chosen (ws: `workspace :merge` of its trial child + root post-check;
 ;;                                 snap: re-applied to the root through the guard) or ROLLBACK (-1)
-;;   SOURCE | FIND name | LOG | VERSION | GUARD | PING | QUIT
+;;   SOURCE | FIND name | LOG | VERSION | GUARD | COMPACT | PING | QUIT
+;;   (APPLY / TRIAL / VERDICT count as root mutations; every AURA_HARNESS_COMPACT_EVERY of them the root is
+;;    reloaded from its own source after the reply, see compact!)
 ;;
 ;; Scope guard (outside the workspace, so no proposal can rebind it):
 ;;   1. name must be in *mutable*; protected or unknown names are rejected
@@ -112,6 +114,25 @@
                           "version" *version* "extra" extra)
                     *log*)))
 (define *blocked* 0)
+
+;; ---------------------------------------------------------------- compaction (cybrid-systems/aura#4583)
+;; Every mutate:rebind on a workspace pays for all earlier ones (time and memory grow with the rebind history;
+;; aura#4583, reopened). Reloading the root from its own current source (set-code + eval-current) drops that
+;; history: per-rebind cost goes back to the fresh-process level. The harness keeps its own audit log, so nothing it
+;; needs is lost. COMPACT_EVERY root mutations (env AURA_HARNESS_COMPACT_EVERY; default 0 = never). Measured: it resets the
+;; per-workspace history of #4583, but not the leak left by deleted trial children (aura#4610), which dominates
+;; a long ws-mode run, so it is off by default.
+(define *compact-every*
+  (let ((v (getenv "AURA_HARNESS_COMPACT_EVERY")))
+    (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *root-muts* 0)
+(define *compactions* 0)
+(define (compact!)
+  (set-code (current-source :workspace)) (eval-current)
+  (set! *root-muts* 0) (set! *compactions* (+ *compactions* 1)))
+(define (note-root-mut!)
+  (set! *root-muts* (+ *root-muts* 1))
+  (if (and (> *compact-every* 0) (>= *root-muts* *compact-every*)) (compact!)))
 
 ;; rebind on the ACTIVE workspace + eval-current; -> #f if fine, else reason
 (define (raw-apply name body why)
@@ -279,7 +300,9 @@
       ((equal? cmd "FIND")
        (reply (hash "name" (field fs 1) "node" (let ((r (try (query :find (field fs 1)) (catch (e) #f)))) (if (number? r) r #f)))))
       ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
-      ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked*)))
+      ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked* "compactions" *compactions*
+                                            "root_muts" *root-muts* "compact_every" *compact-every*)))
+      ((equal? cmd "COMPACT") (compact!) (reply (hash "ok" #t "compactions" *compactions*)))
       ((equal? cmd "GUARD") (reply (hash "mutable" *mutable* "protected" *protected* "boundary" *boundary*)))
       ((equal? cmd "BENCH") (reply (bench (fnum fs 1))))
       ((equal? cmd "PING") (reply (hash "pong" #t "version" *version*)))
@@ -289,7 +312,10 @@
   (let ((line (read-line)))
     (if (or (eof-object? line) (equal? line "QUIT"))
         #t
-        (begin (handle (string-split line "\t")) (serve)))))
+        (let ((fs (string-split line "\t")))
+          (handle fs)
+          (if (member (field fs 0) (list "APPLY" "TRIAL" "VERDICT")) (note-root-mut!))
+          (serve)))))
 
 (set-code (read-file *seed-path*))
 (eval-current)

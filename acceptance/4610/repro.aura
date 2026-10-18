@@ -1,0 +1,20 @@
+;; cybrid-systems/aura#4610: deleted child workspaces must not slow later rebinds. Root rebind+eval cost before vs
+;; after 1000 child trial cycles (create -> switch -> rebind -> eval -> switch 0 -> delete); PASS below 1.5x.
+(set-code "(define f (lambda (x) (cond ((equal? x \"a\") 1) (else 0))))\n(define g (lambda (x) (f x)))")
+(eval-current)
+(define body-a "(lambda (x) (cond ((equal? x \"a\") 1) (else 0)))")
+(define (root-rb n)
+  (let ((t0 (current-time-ms)))
+    (let loop ((i 1)) (if (<= i n) (begin (mutate:rebind "f" body-a "m") (eval-current) (loop (+ i 1)))))
+    (max 1 (- (current-time-ms) t0))))
+(define (cycles n)
+  (let loop ((i 1)) (if (<= i n) (begin
+      (let ((w (workspace :create "t")))
+        (workspace :switch w) (mutate:rebind "f" body-a "m") (eval-current)
+        (workspace :switch 0) (eval-current) (workspace :delete w))
+      (loop (+ i 1))))))
+(define before (root-rb 100))
+(cycles 1000)
+(define after (root-rb 100))
+(display (list "before-ms" before "after-ms" after "workspaces" (length (workspace :list)))) (newline)
+(display (list "flat" (< (/ after before) 1.5))) (newline)
