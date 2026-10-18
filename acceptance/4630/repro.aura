@@ -1,0 +1,15 @@
+;; cybrid-systems/aura#4630 (filed from aura-harness): workspace compile cost is exponential in call-chain depth when
+;; each define calls the one below at 2 sites. PASS when depth 12 costs < 2.5x depth 10 (linear ~1.2x; now ~5x).
+(define (chain d)
+  (let loop ((j 1) (acc "(define k0 (lambda (x) (+ x 1)))\n"))
+    (if (> j d) acc
+        (loop (+ j 1) (string-append acc "(define k" (number->string j) " (lambda (x) (+ (k" (number->string (- j 1))
+                                     " x) (k" (number->string (- j 1)) " (+ x 1)))))\n")))))
+(define (cost d)
+  (let ((t0 (current-time-ms)))
+    (set-code (chain d)) (eval-current)
+    (max 1 (- (current-time-ms) t0))))
+(define c10 (cost 10))
+(define c12 (cost 12))
+(display (if (< c12 (* 2.5 c10)) "ok" (string-append "exponential " (number->string c10) "ms -> " (number->string c12) "ms")))
+(newline)

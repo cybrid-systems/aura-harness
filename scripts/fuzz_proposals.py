@@ -1,4 +1,4 @@
-"""Differential fuzzing of proposed harness code (Round 7).
+"""Differential fuzzing of proposed harness code (Rounds 7, 9, 11).
 
 Generates random, well-typed, terminating bodies for a mutable knob define (knob-0: x in {0,1,2,3} -> [0,100])
 in the guard's allowed subset: integer arithmetic, if / cond / case / and / or / not, let / let* / letrec, named-let
@@ -15,7 +15,14 @@ Round 9: --gen 2 adds strings and vector loops; --shrink N reduces up to N misma
 body that is still wrong the same way (greedy subterm replacement, reference re-derived per step; file-path bodies that
 only fail after earlier defines are re-run behind a reduced context).
 
+Round 11: --multi M fuzzes a sequence of N changes over knob-0..knob-(M-1) in one live harness. A body for knob-j may
+call (knob-i E) for i < j (no cycles), so every change also re-checks all downstream knobs. Each step compares the
+whole M x 4 decision table with the reference, records APPLY latency, RSS of the harness process and (--table-ms) the
+TABLE fetch latency; guard blocks for fuel or call-path weight (AURA_HARNESS_PATH_MAX, aura#4630) skip the step in the
+reference too. --no-kcall turns off cross-knob calls; --keep-going skips any blocked step instead of stopping (profiling).
+
   python3 scripts/fuzz_proposals.py --n 300 --seed 1 --out runs/fuzz/seed1.json
+  python3 scripts/fuzz_proposals.py --multi 8 --n 300 --seed 3 --paths apply,file --table-ms --out runs/fuzz/m8-s3.json
   python3 scripts/fuzz_proposals.py --n 300 --seed 1 --gen 2 --shrink 5 --out runs/fuzz/v2-s1.json
 """
 from __future__ import annotations
@@ -29,14 +36,15 @@ from aura_harness.control import AuraHarness, aura_env  # noqa: E402
 from aura_harness.harness import Candidate  # noqa: E402
 
 FALSE = False
+KNOBS: dict = {}     # multi-knob mode: knob index -> current body AST (absent = the seed's constant 10)
 
 
 class Gen:
     """v1: the Round 7 grammar (default; seeds reproduce). v2 adds strings (built by append / substring / reverse /
     named-let accumulation, read back by length / digit / comparison), vectors filled by vector-set! in a loop,
     vector<->list round trips and equal? on lists."""
-    def __init__(self, r: random.Random, max_depth=5, v=1):
-        self.r, self.max_depth, self.k, self.v = r, max_depth, 0, v
+    def __init__(self, r: random.Random, max_depth=5, v=1, knobs=()):
+        self.r, self.max_depth, self.k, self.v, self.knobs = r, max_depth, 0, v, list(knobs)
 
     def fresh(self, p):
         self.k += 1
@@ -49,8 +57,10 @@ class Gen:
             return ("var", r.choice(ivars)) if ivars and r.random() < 0.6 else ("num", r.randint(-20, 20))
         c = r.choice(["arith", "arith", "mul", "div", "abs", "minmax", "if", "cond", "case", "let", "let*", "loop",
                       "len", "ref", "vec", "strlen", "lam", "letrec", "last"]
-                     + (["slen", "sdigit", "sdigit", "vloop", "vloop"] if self.v >= 2 else []))
+                     + (["slen", "sdigit", "sdigit", "vloop", "vloop"] if self.v >= 2 else [])
+                     + (["kcall"] * 3 if self.knobs else []))
         n = lambda: self.int_(env, d + 1)
+        if c == "kcall": return ("kcall", r.choice(self.knobs), n())
         if c == "arith": return (r.choice(["+", "-"]), n(), n())
         if c == "mul": return ("modulo", ("*", n(), n()), ("num", 9973))
         if c == "div": return (r.choice(["quotient", "remainder", "modulo"]), n(), ("+", ("num", 1), ("abs", n())))
@@ -169,6 +179,7 @@ def to_aura(e) -> str:
         return (f"(let (({v} (make-vector {k} 0))) (let loop (({i} 0)) (if (< {i} {k}) (begin (vector-set! {v} {i} {to_aura(E)}) (loop (+ {i} 1)))"
                 f" (vector-ref {v} (modulo {to_aura(N)} {k})))))")
     if t == "v2l": return f"(vector->list (list->vector {to_aura(e[1])}))"
+    if t == "kcall": return f"(knob-{e[1]} {to_aura(e[2])})"
     if t == "list": return "(list" + "".join(" " + to_aura(x) for x in e[1]) + ")"
     if t == "vector": return "(vector " + " ".join(to_aura(x) for x in e[1:]) + ")"
     return "(" + t + "".join(" " + to_aura(x) for x in e[1:]) + ")"
@@ -231,6 +242,9 @@ def ev(e, env):
     if t == "vector-ref": return [E(x) for x in e[1][1:]][E(e[2])]
     if t == "string-length": v = E(e[1]); return len(v if isinstance(v, str) else str(v))
     if t == "number->string": return str(E(e[1]))
+    if t == "kcall":
+        kb = KNOBS.get(e[1])
+        return 10 if kb is None else ev(kb, {"x": E(e[2])})
     if t == "list": return [E(x) for x in e[1]]
     if t == "sdigit":
         sv = E(e[2]); j = E(e[3]) % len(sv); return int(sv[j])
@@ -402,6 +416,126 @@ def file_run(bodies, aura, env):
     return out
 
 
+def knob_table(n):
+    return [[10 if KNOBS.get(j) is None else ev(KNOBS[j], {"x": x}) for x in range(4)] for j in range(n)]
+
+
+def multi_main(a):
+    """--multi M: M knobs; step i rebinds a random knob t with a body that may call knob-0 .. knob-(t-1). After every
+    step the whole M x 4 table must equal the reference (catches callers that keep a stale callee after a rebind)."""
+    r = random.Random(a.seed)
+    M = a.multi
+    steps = []
+    KNOBS.clear()
+    for i in range(a.n):                 # the reference sequence assumes every step is accepted
+        t = r.randrange(M)
+        for _ in range(50):
+            e = ("modulo", ("abs", Gen(r, v=a.gen, knobs=() if a.no_kcall else range(t)).int_([("x", "int")], 0)), ("num", 101))
+            try:
+                KNOBS[t], old = e, KNOBS.get(t)
+                want = knob_table(M)
+            except RecursionError:
+                KNOBS[t] = old; continue
+            if len(body_src(e)) < 3000: break
+            KNOBS[t] = old
+        steps.append((t, body_src(e), want, e))
+    paths = a.paths.split(",")
+    res, times, step_ms = {p: {} for p in paths}, {}, {}
+    wants = {p: {i: st[2] for i, st in enumerate(steps)} for p in paths}     # file path: every step accepted
+    fuel_skips, table_ms, rss_mb, path_skips = {}, {}, {}, {}
+    os.environ["AURA_HARNESS_KNOBS"] = str(M)
+    for p in [p for p in paths if p in ("apply", "nofuel")]:
+        if p == "nofuel": os.environ["AURA_HARNESS_FUEL"] = "0"
+        h = AuraHarness("ws"); os.environ.pop("AURA_HARNESS_FUEL", None)
+        t0 = time.perf_counter()
+        KNOBS.clear()
+        fuel_skips[p] = []
+        for i, (t, src, _, e) in enumerate(steps):
+            # this path's reference: every earlier step it accepted (a fuel-blocked step is a correct guard decision:
+            # the knob keeps its old body)
+            old = KNOBS.get(t); KNOBS[t] = e
+            want = knob_table(M); wants[p][i] = want
+            c = Candidate(f"knob-{t}", None, "fuzz", "fuzz", f"multi {i}", raw_aura=src)
+            try:
+                ts0 = time.perf_counter()
+                ap_ = h.apply(i, c)
+                step_ms.setdefault(p, []).append(round((time.perf_counter() - ts0) * 1000, 1))
+                try:
+                    with open(f"/proc/{h.pipe.p.pid}/status") as fh_:
+                        rss_mb.setdefault(p, []).append(round(int([l for l in fh_ if l.startswith("VmRSS")][0].split()[1]) / 1024))
+                except Exception:
+                    pass
+                if a.table_ms:            # evaluation alone (TABLE, no rebind): splits apply into rebind vs evaluate
+                    ts1 = time.perf_counter(); h.table()
+                    table_ms.setdefault(p, []).append(round((time.perf_counter() - ts1) * 1000, 1))
+            except Exception as ex:
+                res[p][i] = ("crash", str(ex)[:200]); break       # later steps depend on this one: stop the path
+            if not ap_.get("ok"):
+                reason = str(ap_.get("reason"))
+                if "fuel exhausted" in reason or "call-path weight" in reason or a.keep_going:
+                    if "call-path weight" in reason: path_skips.setdefault(p, []).append(i)
+                    if old is None: KNOBS.pop(t)
+                    else: KNOBS[t] = old
+                    fuel_skips[p].append(i); res[p][i] = want
+                    continue
+                res[p][i] = ("blocked", ap_.get("reason")); break
+            k = ap_["table"].get("knobs") if isinstance(ap_.get("table"), dict) else None
+            res[p][i] = [list(x) if isinstance(x, (list, tuple)) else x for x in k] if k else None
+        times[p] = round(time.perf_counter() - t0, 2)
+        try: h.close()
+        except Exception: pass
+    if "file" in paths:
+        aura, env = aura_env()
+        t0 = time.perf_counter()
+        with tempfile.NamedTemporaryFile("w", suffix=".aura", delete=False, dir=str(ROOT / "runs" / "fuzz")) as fh:
+            for j in range(M): fh.write(f"(define knob-{j} (lambda (x) (cond (else 10))))\n")
+            row = " ".join(f"(list (knob-{j} 0) (knob-{j} 1) (knob-{j} 2) (knob-{j} 3))" for j in range(M))
+            fh.write(f"(define knobs-all (lambda () (list {row})))\n")
+            for i, (t, src, *_) in enumerate(steps):
+                fh.write(f"(define knob-{t} {src})\n(display (list \"MK\" {i} (knobs-all))) (newline)\n")
+            path = fh.name
+        pr = subprocess.run([aura, path], capture_output=True, text=True, env=env, timeout=600, errors="replace")
+        os.unlink(path)
+        for line in pr.stdout.splitlines():
+            if line.startswith("(MK "):
+                try:
+                    body = line[1:-1].split(None, 2)
+                    res["file"][int(body[1])] = json.loads(body[2].replace("(", "[").replace(")", "]").replace(" ", ","))
+                except Exception:
+                    res["file"][int(line.split()[1])] = line[:200]
+        times["file"] = round(time.perf_counter() - t0, 2)
+    first_bad, stale = {}, {}
+    for p in paths:
+        for i, (t, src, *_) in enumerate(steps):
+            want = wants[p][i]
+            got = res[p].get(i)
+            if got != want:
+                first_bad[p] = {"i": i, "knob": t, "want": want, "got": got, "src": src}
+                # stale: a knob that this step didn't rebind but that (transitively) calls knob t changed in the reference
+                if isinstance(got, list) and len(got) == M:
+                    stale[p] = [j for j in range(M) if got[j] != want[j]]
+                break
+    summ = {"mode": "multi", "knobs": M, "n": a.n, "seed": a.seed, "gen": a.gen, "times_s": times,
+            "ok_steps": {p: (first_bad[p]["i"] if p in first_bad else a.n) for p in paths},
+            "wrong_knobs_at_first_bad": stale,
+            "kcalls": sum(st[1].count("(knob-") for st in steps),
+            "guard_blocked": {p: len(v) for p, v in fuel_skips.items()},
+            "path_blocked": {p: len(v) for p, v in path_skips.items()},
+            "rss_mb_last": {p: (v[-1] if v else None) for p, v in rss_mb.items()}}
+    for p, ms in step_ms.items():      # apply latency by step decile: does a rebind pay for the earlier ones?
+        q = max(1, len(ms) // 10)
+        summ.setdefault("apply_ms_by_decile", {})[p] = [round(sorted(ms[k:k + q])[len(ms[k:k + q]) // 2], 1) for k in range(0, len(ms), q)]
+    for p, ms in table_ms.items():
+        q = max(1, len(ms) // 10)
+        summ.setdefault("table_ms_by_decile", {})[p] = [round(sorted(ms[k:k + q])[len(ms[k:k + q]) // 2], 1) for k in range(0, len(ms), q)]
+    print(json.dumps(summ))
+    for p, b in first_bad.items():
+        print(json.dumps({"path": p, **{k: b[k] for k in ("i", "knob", "want", "got")}})[:700])
+    if a.out:
+        Path(a.out).write_text(json.dumps({"summary": summ, "first_bad": first_bad, "steps": [st[:3] for st in steps],
+                                           "step_ms": step_ms, "table_ms": table_ms, "rss_mb": rss_mb, "fuel_skips": fuel_skips}, indent=1))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=200)
@@ -412,7 +546,13 @@ def main():
     ap.add_argument("--gen", type=int, default=1, help="generator version (1 = Round 7 grammar, 2 = + strings / vector loops / equal?)")
     ap.add_argument("--shrink", type=int, default=0, help="shrink up to this many mismatching bodies per path")
     ap.add_argument("--shrink-budget", type=int, default=200, help="max candidate runs per shrunk body")
+    ap.add_argument("--keep-going", action="store_true", help="multi mode: skip any blocked step instead of stopping (profiling runs)")
+    ap.add_argument("--no-kcall", action="store_true", help="multi mode: bodies never call other knobs (control run)")
+    ap.add_argument("--table-ms", action="store_true", help="multi mode: also time a TABLE read after each apply")
+    ap.add_argument("--multi", type=int, default=0, help="M knobs whose bodies call lower knobs; check the whole table after every rebind")
     a = ap.parse_args()
+    if a.multi:
+        return multi_main(a)
     r = random.Random(a.seed)
     bodies = [make_body(r, a.gen) for _ in range(a.n)]
     paths = a.paths.split(",")

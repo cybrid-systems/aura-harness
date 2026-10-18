@@ -208,6 +208,37 @@ if __name__ == "__main__":
 
 
 @unittest.skipUnless(HAVE, "needs AURA_BIN")
+class PathWeightTests(unittest.TestCase):
+    """AURA_HARNESS_PATH_MAX: knob bodies calling lower knobs at many sites are rejected before the rebind (aura#4630)."""
+
+    def setUp(self):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_KNOBS"] = "4"
+        try:
+            self.h = AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_KNOBS", None)
+
+    def tearDown(self):
+        self.h.close()
+
+    def k(self, i, body):
+        from aura_harness.harness import Candidate
+        return Candidate(f"knob-{i}", None, "t", "t", f"knob-{i}", raw_aura=body)
+
+    def test_heavy_call_paths_rejected_light_ones_pass(self):
+        many = lambda j: "(lambda (x) (modulo (+ " + " ".join([f"(knob-{j} x)"] * 40) + ") 101))"
+        self.assertTrue(self.h.apply(1, self.k(1, many(0)))["ok"])            # weight 41
+        r = self.h.apply(2, self.k(2, many(1)))                                # weight 1641 > 1024
+        self.assertFalse(r["ok"])
+        self.assertIn("call-path weight 1641", r["reason"])
+        ok = self.h.apply(3, self.k(2, "(lambda (x) (modulo (+ (knob-1 x) (knob-1 1)) 101))"))   # weight 83
+        self.assertTrue(ok["ok"])
+        self.assertEqual(ok["table"]["knobs"][1], [97, 97, 97, 97])           # 40 * 10 mod 101
+        self.assertEqual(ok["table"]["knobs"][2], [93, 93, 93, 93])           # (97 + 97) mod 101
+
+
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
 class HofWrapTests(unittest.TestCase):
     """map / filter / for-each in proposed code run as workspace loops (%map ...): with the native primitives, two
     callbacks from sibling expressions of one workspace define get an invalid closure (aura#4626)."""

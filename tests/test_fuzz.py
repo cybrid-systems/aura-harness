@@ -25,6 +25,28 @@ class FuzzGenTests(unittest.TestCase):
         self.assertIn("vector-set! vv1 i2", fz.to_aura(v))
 
 
+class MultiKnobTests(unittest.TestCase):
+    def tearDown(self):
+        fz.KNOBS.clear()
+
+    def test_knob_calls_follow_the_latest_callee(self):
+        fz.KNOBS.clear()
+        k1 = ("modulo", ("abs", ("+", ("kcall", 0, ("var", "x")), ("num", 1))), ("num", 101))
+        fz.KNOBS[1] = k1
+        self.assertEqual(fz.knob_table(2), [[10] * 4, [11] * 4])          # knob-0 is the seed's constant 10
+        fz.KNOBS[0] = ("modulo", ("abs", ("*", ("var", "x"), ("num", 3))), ("num", 101))
+        self.assertEqual(fz.knob_table(2), [[0, 3, 6, 9], [1, 4, 7, 10]])  # the caller sees the rebound callee
+        self.assertEqual(fz.to_aura(("kcall", 0, ("num", 2))), "(knob-0 2)")
+
+    def test_generator_only_calls_lower_knobs(self):
+        r = random.Random(4)
+        for _ in range(50):
+            e = fz.Gen(r, knobs=range(2)).int_([("x", "int")], 0)
+            src = fz.to_aura(e)
+            self.assertNotIn("(knob-2", src)
+            self.assertNotIn("(knob-3", src)
+
+
 class ShrinkTests(unittest.TestCase):
     def test_shrinks_to_the_offending_form(self):
         r = random.Random(1)

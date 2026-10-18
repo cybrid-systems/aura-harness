@@ -35,6 +35,7 @@ CHECKS = {
     "4627": "(equal? (list 1 2) want) in a tail-call loop is never #f (aura#4627, c6a18e8a5 regression, filed from here)",
     "4626-sibcall": "one inline filter callback in a workspace define called 4x from a sibling list (the knob table) keeps the element every time (aura#4626 comment)",
     "4629-vec": "a fresh (vector x 0 0) in a map callback keeps its length across 10 hot-loop calls (aura#4629 comment, c6a18e8a5 regression)",
+    "4630": "workspace compile at call-chain depth 12 (2 call sites per level) costs < 2.5x depth 10 (aura#4630, filed from here)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
 }
 

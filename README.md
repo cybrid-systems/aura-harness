@@ -332,6 +332,24 @@ The wraps cost time: on seed 1, `apply` went from 49.5 to 57.7 s for 300 bodies 
 - **The shrinker turns nofuel mismatches into ~70-char repros in 50–200 runs.** `(lambda (x) (let ((l1 (map (lambda (y7) 0) (list 1)))) (last l1)))` is the #4617 family. `(lambda (x) (length (filter (lambda (y11) (= 0 0)) (list 1))))` (1650 → 62 chars) gives `[0, 0, 0, 1]` instead of `[1, 1, 1, 1]`. That case widened **aura#4626**: one inline callback is enough when another workspace define calls its define several times. The knob table's `(list (knob-0 0) … (knob-0 3))` is exactly that, so only the last call is right; with sequential `let*` calls only the first is right. The `%map`/`%filter` wraps already cover it. `acceptance/4626-sibcall`.
 - **Main's file-path failures are #4629 heap corruption.** Most only fail inside the 300-define batch. Any context cut makes them pass, so the trigger is allocation shape rather than a particular earlier define. One fails alone from its 4th hot call. The shrinker plus a hand pass gave a 2-line repro: a fresh `(vector x 0 0)` in a `map` callback reads back with length 0 in a 10-call loop, on `c6a18e8a5`, `9f82bede1` and `39595edd4`, and is correct on the pin. Posted on **aura#4629**; `acceptance/4629-vec`.
 
+**Round 11: knobs that call knobs (`--multi M`).** One live harness takes a sequence of 300 random changes over `knob-0`…`knob-(M-1)`. A body for `knob-j` may call `(knob-i E)` for any `i < j`, so a rebind of a low knob changes every knob above it. After each change the fuzzer compares the whole M×4 decision table with the reference and records APPLY latency, the harness process's RSS and (with `--table-ms`) the TABLE read latency. The file path re-`define`s the knobs in the same order in one batch file.
+
+| pin `e50951bff`, 300 changes, `--paths apply,file` | apply correct | apply time | file |
+|---|---|---|---|
+| M=4, seeds 1/2/3 | **300/300** each | 219 / 162 / 193 s | 300/300 |
+| M=8, seed 1 | **300/300** | 590 s | 300/300 |
+| M=8, seed 2 (before fuel blocks were skipped) | 76, then a legitimate fuel block | 215 s | 300/300 |
+| M=8, seed 3 | 130, then OOM-killed (4 GB) | 191 s; APPLY deciles up to 3.1 s, steps up to 10 s, TABLE 5–64 ms | 300/300 |
+| + path-weight guard | the same (max weight 242 < 1024) | 190 s | 300/300 |
+| + `knob-row4` | **293**, then OOM-killed at 3.0 GB | 443 s for 2.25× the steps; APPLY deciles 0.1–2.1 s | 300/300 |
+| M=4, seed 1 + `knob-row4` | **300/300** | **106 s** (was 219 s); RSS 1.9 GB at the end | 300/300 |
+
+- **No wrong value in any multi-knob run.** Every step that was applied gave the right 4×M table (about 2,000 checked rebinds). Cross-knob calls go through the guard's `%` wraps and fuel like everything else.
+- **The cost is aura#4630 (filed from here).** Workspace `set-code`, `eval-current` and `mutate:rebind` compile in time exponential in call-chain depth when each define calls the one below it at 2 sites: 20 / 78 / 385 / 1,844 ms at depths 8 / 10 / 12 / 14. A rebind of the top define, which nothing calls, pays it too. File level is flat at ~54 ms. Call sites count; value references don't. TABLE reads stay at 5–64 ms, so the time goes to compiling, not running. `acceptance/4630` FAILs on the pin (80 → 264 ms from depth 10 to 12) and on `39595edd4` (84 → 315 ms).
+- **The harness's own chunk caller was the multiplier.** The 16-knob chunk caller (the #4615 workaround) calls each knob at 4 sites, one per input, so every knob-to-knob call added a factor of 4 rather than 2. A trivial rebind standalone cost 54 ms without the chunk, 824 ms with it, and **232 ms** with `knob-row4`: the chunk passes each knob as a value to `(knob-row4 f)`, which calls `f` on 0..3, and value references cost nothing in #4630. `AURA_HARNESS_KNOB_ROW4` defaults to 1, and TABLE output is byte-identical.
+- **Path-weight guard.** At admission, `path-check` counts the call sites from the new body to each workspace define it calls, using the current source and native `string-index`, and multiplies along every path. A body whose heaviest path is over `AURA_HARNESS_PATH_MAX` (default 1024) is blocked with "call-path weight N … exceeds AURA_HARNESS_PATH_MAX (aura#4630)". It never fired in the fuzz runs, because the random bodies reach weights ≤ 242. It is there to stop a deliberately deep proposal from stalling the control plane. Unit tests: a weight-41 body is accepted, a weight-1641 body is blocked, and a weight-83 body gives the right table.
+- **What remains is memory.** RSS grows 6–10 MB per rebind on the pin (101 MB → 3.0 GB over 293 steps). That is the rebind-history growth of aura#4583, fixed on main in a398f78a7 but not adopted here because of #4623, #4627 and #4629. The workaround is the existing one: restart the control plane periodically (`scripts/longrun.py`).
+
 ### Scope guard
 
 `python3 -m aura_harness guard` (`results/guard.txt`) runs 13 attempts against the live harness:
@@ -416,17 +434,18 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4626 (new, filed from here) | two callbacks handed to native `map`/`filter`/`for-each` from sibling expressions of one workspace define: one is an invalid closure, and `map`/`filter` swallow it into `()`. R9 comment: one callback is enough if another workspace define calls the define more than once (the knob-table row) | proposals' HOFs run as workspace loops (`%map`/`%filter`/`%for-each`) | `acceptance/4626`, `acceptance/4626-sibcall` (FAIL on the pin and main) |
 | cybrid-systems/aura#4627 (new, filed from here) | regression in c6a18e8a5, still on main 39595edd4: `(equal? (list 1 2) want)` is `#f` on every 66th iteration of a tail-call loop | stay on e50951bff | `acceptance/4627` (PASS on the pin) |
 | cybrid-systems/aura#4629 (filed from aura-memory) | regression in c6a18e8a5, still on 39595edd4: freshly allocated pairs/vectors in hot loops get clobbered (self-referential list cells; a `(vector x 0 0)` with length 0). The fuzzer sees it in 42/1800 plain file-level bodies on main, 0 on the pin | stay on e50951bff | `acceptance/4629-vec` (PASS on the pin) |
+| cybrid-systems/aura#4630 (new, filed from here) | workspace compile (`set-code`/`eval-current`/`mutate:rebind`) is exponential in call-chain depth with 2 call sites per level; multi-knob fuzz APPLY rose to 3–10 s and the control plane was OOM-killed | knob chunk passes knobs as values (`knob-row4`, `AURA_HARNESS_KNOB_ROW4`); admission blocks call-path weight > `AURA_HARNESS_PATH_MAX` (1024) | `acceptance/4630` (FAIL on the pin and 39595edd4) |
 | cybrid-systems/aura#4628 (filed from aura-memory) | `member` compares pairs, vectors and floats with `eq?` | the guard compares strings only; the fuzzer's `member` is on ints | – |
 | cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
-`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610`, `4615`, `4617`–`4622`, `4617-last`, `4624` and `4626` FAIL on the pin. `results/acceptance-9f82bede1.txt` and `results/acceptance-39595edd4.txt` are the same suite on main: `4583-linear` and `4610` PASS there; `4623`, `4623-reader` and `4627` FAIL. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
+`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610`, `4615`, `4617`–`4622`, `4617-last`, `4624`, `4626` and `4630` FAIL on the pin. `results/acceptance-9f82bede1.txt`, `results/acceptance-39595edd4.txt` and `results/acceptance-a99ee9571.txt` (a JIT-only fix; same results as 39595edd4) are the same suite on main: `4583-linear` and `4610` PASS there; `4623`, `4623-reader`, `4627` and `4629-vec` FAIL. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 31 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 34 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
@@ -464,8 +483,9 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 * Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
 * Re-pin to main once aura#4623 and aura#4627 are fixed (still open on 39595edd4). 9f82bede1 already fixes the rebind-history growth (aura#4583) and the deleted-workspace leak (aura#4610), which would retire the compaction knob and the periodic restarts.
 * Make the tick cheap once aura#4617/#4618 are fixed (an inline counter instead of a workspace call), or drop it for an Aura-native step budget / preemptible fiber if one lands.
-* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to multi-knob bodies (knobs calling knobs) and hash tables.
+* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to hash tables.
 * Re-pin past `e50951bff` once aura#4629 (heap corruption; also hits 2.3% of plain file-level fuzz bodies on `39595edd4`), #4623 and #4627 are fixed. `results/acceptance-39595edd4.txt` tracks them.
+* Drop `knob-row4` and the path-weight guard once aura#4630 is fixed (memoised callee compile), and lower or drop the M=8 restarts once the pin includes the aura#4583 history fix.
 * Replace the simulated environment with a small real tool-use suite.
 
 ## License
