@@ -1,0 +1,7 @@
+;; aura#4626 comment: ONE inline filter callback in a workspace define, called 4x from sibling expressions of another
+;; workspace define (the knob-table shape) -> all but the last call drop the element
+(set-code (string-append
+  "(define k (lambda (x) (length (filter (lambda (y) #t) (list 1)))))\n"
+  "(define row (lambda () (list (k 0) (k 1) (k 2) (k 3))))\n"))
+(eval-current)
+(display (row)) (newline)

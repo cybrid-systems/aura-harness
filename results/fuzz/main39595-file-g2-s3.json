@@ -1,0 +1,102 @@
+{
+ "summary": {
+  "n": 300,
+  "seed": 3,
+  "times_s": {
+   "file": 0.4
+  },
+  "mismatch": {
+   "file": 5
+  },
+  "blocked": {
+   "file": 0
+  },
+  "crash": {
+   "file": 0
+  },
+  "timeout": {
+   "file": 0
+  },
+  "gen": 2
+ },
+ "bad": [
+  {
+   "i": 19,
+   "want": [
+    28,
+    28,
+    28,
+    28
+   ],
+   "wrong": {
+    "file": [
+     "missing"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (min (let ((f1 (lambda (y2) (let ((vv3 (make-vector 4 0))) (let loop ((i4 0)) (if (< i4 4) (begin (vector-set! vv3 i4 (vector-ref (vector 15 -14 -15) (modulo -8 3))) (loop (+ i4 1))) (vector-ref vv3 (modulo (case (modulo y2 4) ((0 1) x) ((2) y2) (else x)) 4)))))))) (+ (f1 (vector-ref (vector (string-length (number->string (abs x))) (let ((vv5 (make-vector 5 0))) (let loop ((i6 0)) (if (< i6 5) (begin (vector-set! vv5 i6 (+ 7 i6)) (loop (+ i6 1))) (vector-ref vv5 (modulo (let ((f7 (lambda (y8) y8))) (+ (f7 x) (f7 -2))) 5))))) 14) (modulo (vector-ref (vector (cond ((= x x) x) ((>= x -14) -20) ((<= 9 x) 11) (else x)) (let ((vv9 (make-vector 2 0))) (let loop ((i10 0)) (if (< i10 2) (begin (vector-set! vv9 i10 -1) (loop (+ i10 1))) (vector-ref vv9 (modulo x 2))))) (vector-ref (vector x x 15) (modulo -4 3))) (modulo x 3)) 3))) (f1 (cond ((= (if (< x x) 20 x) (vector-ref (vector x x x) (modulo x 3))) (letrec ((g11 (lambda (m12) (if (<= m12 0) -9 (+ x (g11 (- m12 1))))))) (g11 (modulo (max x x) 6)))) ((>= (let* ((v13 x) (w14 v13)) 2) (abs x)) -19) (else (let ((vv15 (make-vector 5 0))) (let loop ((i16 0)) (if (< i16 5) (begin (vector-set! vv15 i16 6) (loop (+ i16 1))) (vector-ref vv15 (modulo (quotient x (+ 1 (abs x))) 5)))))))))) (let ((l17 (vector->list (list->vector (list x (let ((t18 (number->string (abs x)))) (let ((t18j (modulo -6 (string-length t18)))) (string->number (substring t18 t18j (+ t18j 1))))) (let loop ((i19 0) (s20 x)) (if (>= i19 4) s20 (loop (+ i19 1) (modulo (+ s20 i19) 99991))))))))) (if (null? l17) (min (let ((vv21 (make-vector 1 0))) (let loop ((i22 0)) (if (< i22 1) (begin (vector-set! vv21 i22 (max x i22)) (loop (+ i22 1))) (vector-ref vv21 (modulo (let ((f23 (lambda (y24) y24))) (+ (f23 -10) (f23 5))) 1))))) (length (cons x (list)))) (list-ref l17 (modulo (let ((t26 (list->string (reverse (string->list (number->string (abs 4))))))) (let ((t26j (modulo (let ((l27 (list x 0))) (if (null? l27) (case (modulo -8 4) ((0 1) 5) ((2) -7) (else -7)) (list-ref l27 (modulo (let loop ((i28 0) (s29 x)) (if (>= i28 6) s29 (loop (+ i28 1) (modulo (+ s29 x) 99991)))) (length l27))))) (string-length t26)))) (string->number (substring t26 t26j (+ t26j 1))))) (length l17))))))) 101))"
+  },
+  {
+   "i": 31,
+   "want": [
+    0,
+    2,
+    12,
+    0
+   ],
+   "wrong": {
+    "file": [
+     "missing"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (modulo (* (let ((t1 (string-append (list->string (reverse (string->list (number->string (abs 10))))) (let ((t2 (list->string (reverse (string->list (number->string (abs x))))))) (substring t2 0 (+ 1 (modulo (string-length (number->string -7)) (string-length t2)))))))) (let ((t1j (modulo x (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1))))) (let ((vv3 (make-vector 3 0))) (let loop ((i4 0)) (if (< i4 3) (begin (vector-set! vv3 i4 (vector-ref (vector (abs (letrec ((g5 (lambda (m6) (if (<= m6 0) i4 (+ i4 (g5 (- m6 1))))))) (g5 (modulo i4 6)))) (cond ((not (> -20 15)) (max -5 -20)) ((<= i4 i4) (length (list -10))) (else (let ((vv7 (make-vector 5 0))) (let loop ((i8 0)) (if (< i8 5) (begin (vector-set! vv7 i8 i8) (loop (+ i8 1))) (vector-ref vv7 (modulo x 5))))))) (string-length (number->string (abs 10)))) (modulo (modulo (* (let ((l9 (list 18 i4 i4 x))) (if (null? l9) i4 (list-ref l9 (modulo i4 (length l9))))) (let ((vv10 (make-vector 4 0))) (let loop ((i11 0)) (if (< i11 4) (begin (vector-set! vv10 i11 -5) (loop (+ i11 1))) (vector-ref vv10 (modulo 16 4)))))) 9973) 3))) (loop (+ i4 1))) (vector-ref vv3 (modulo (if (equal? (list x x -5) (list)) (if (positive? x) (+ x x) x) (let ((l12 (list))) (if (null? l12) (cond ((<= x -3) x) (else x)) (list-ref l12 (modulo (modulo (* 17 -14) 9973) (length l12)))))) 3)))))) 9973)) 101))"
+  },
+  {
+   "i": 104,
+   "want": [
+    0,
+    13,
+    2,
+    9
+   ],
+   "wrong": {
+    "file": [
+     "missing"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (vector-ref (vector -13 (let ((l1 (reverse (filter (lambda (y3) (equal? (list y3) (list 18 y3))) (append (list 14 x x x) (list x 9 x)))))) (if (null? l1) (let* ((v5 x) (w6 (let* ((v7 (let ((v9 v5)) v5)) (w8 (letrec ((g10 (lambda (m11) (if (<= m11 0) 10 (+ v5 (g10 (- m11 1))))))) (g10 (modulo -20 6))))) (letrec ((g12 (lambda (m13) (if (<= m13 0) v7 (+ m13 (g12 (- m13 1))))))) (g12 (modulo v5 6)))))) (let ((t14 (let ((t15 (number->string (abs x)))) (substring t15 0 (+ 1 (modulo w6 (string-length t15))))))) (let ((t14j (modulo (let ((l16 (list w6 w6))) (if (null? l16) w6 (last l16))) (string-length t14)))) (string->number (substring t14 t14j (+ t14j 1)))))) (last l1))) (let ((t17 (list->string (reverse (string->list (let ((t18 (let loop ((i19 0) (a20 \"0\")) (if (>= i19 3) a20 (loop (+ i19 1) (string-append a20 (number->string (abs 9)))))))) (substring t18 0 (+ 1 (modulo (letrec ((g21 (lambda (m22) (if (<= m22 0) x (+ -20 (g21 (- m22 1))))))) (g21 (modulo -19 6))) (string-length t18)))))))))) (let ((t17j (modulo (let loop ((i23 0) (s24 (length (list)))) (if (>= i23 4) s24 (loop (+ i23 1) (modulo (+ s24 i23) 99991)))) (string-length t17)))) (string->number (substring t17 t17j (+ t17j 1)))))) (modulo (letrec ((g25 (lambda (m26) (if (<= m26 0) (vector-ref (vector (let ((f27 (lambda (y28) y28))) (+ (f27 (modulo (* x 7) 9973)) (f27 (let ((t29 (number->string (abs x)))) (let ((t29j (modulo x (string-length t29)))) (string->number (substring t29 t29j (+ t29j 1)))))))) (let* ((v30 (string-length (number->string (abs x)))) (w31 (length (list v30)))) (remainder x (+ 1 (abs -7)))) (vector-ref (vector (if (> 10 x) -19 x) (+ x -9) (let ((vv32 (make-vector 3 0))) (let loop ((i33 0)) (if (< i33 3) (begin (vector-set! vv32 i33 -20) (loop (+ i33 1))) (vector-ref vv32 (modulo x 3)))))) (modulo (cond ((= x x) x) (else 10)) 3))) (modulo (if (and (>= x -15) (> x x)) (string-length (number->string x)) (let ((t34 (number->string (abs 5)))) (let ((t34j (modulo x (string-length t34)))) (string->number (substring t34 t34j (+ t34j 1)))))) 3)) (+ x (g25 (- m26 1))))))) (g25 (modulo (cond ((>= (let ((l35 (list 11 x -7 x))) (if (null? l35) x (list-ref l35 (modulo x (length l35))))) (- x 15)) (- (let loop ((i36 0) (s37 -14)) (if (>= i36 0) s37 (loop (+ i36 1) (modulo (+ s37 s37) 99991)))) (let ((t38 (number->string (abs 15)))) (let ((t38j (modulo x (string-length t38)))) (string->number (substring t38 t38j (+ t38j 1))))))) ((member (length (list 12 x -2)) (list)) (length (reverse (list x x x)))) (else (let* ((v40 (let ((vv42 (make-vector 2 0))) (let loop ((i43 0)) (if (< i43 2) (begin (vector-set! vv42 i43 -14) (loop (+ i43 1))) (vector-ref vv42 (modulo -14 2)))))) (w41 (let ((t44 (number->string (abs -18)))) (let ((t44j (modulo x (string-length t44)))) (string->number (substring t44 t44j (+ t44j 1))))))) (case (modulo x 4) ((0 1) v40) ((2) x) (else w41))))) 6))) 3))) 101))"
+  },
+  {
+   "i": 242,
+   "want": [
+    3,
+    2,
+    2,
+    8
+   ],
+   "wrong": {
+    "file": [
+     3,
+     1,
+     2,
+     8
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (list->string (reverse (string->list (string-append (string-append (string-append (number->string (abs -18)) (number->string (abs x))) (number->string (abs x))) (string-append (number->string (abs 2)) (string-append (number->string (abs 20)) (number->string (abs -3)))))))))) (let ((t1j (modulo (let ((l2 (append (map (lambda (y4) (let ((f5 (lambda (y6) x))) (+ (f5 x) (f5 -11)))) (reverse (list 12 x x x))) (list (let ((f8 (lambda (y9) -14))) (+ (f8 x) (f8 19))))))) (if (null? l2) (modulo (* (string-length (number->string (if (= x x) x -20))) (let ((f10 (lambda (y11) x))) (+ (f10 x) (f10 x)))) 9973) (list-ref l2 (modulo (string-length (number->string (string-length (string-append (number->string (abs x)) (number->string (abs x)))))) (length l2))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 246,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "file": [
+     "missing"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (modulo (string-length (number->string (vector-ref (vector (vector-ref (vector (let loop ((i1 0) (s2 -9)) (if (>= i1 6) s2 (loop (+ i1 1) (modulo (+ s2 -1) 99991)))) x (let ((l3 (list))) (if (null? l3) 0 (list-ref l3 (modulo x (length l3)))))) (modulo (let ((vv4 (make-vector 3 0))) (let loop ((i5 0)) (if (< i5 3) (begin (vector-set! vv4 i5 13) (loop (+ i5 1))) (vector-ref vv4 (modulo x 3))))) 3)) x (length (map (lambda (y6) y6) (list 11 13 x)))) (modulo (max x (let ((l7 (list x))) (if (null? l7) 5 (list-ref l7 (modulo x (length l7)))))) 3)))) (+ 1 (abs (string-length (let loop ((i8 0) (a9 \"0\")) (if (>= i8 4) a9 (loop (+ i8 1) (string-append a9 (number->string (abs (vector-ref (vector (+ i8 i8) (case (modulo i8 4) ((0 1) i8) ((2) x) (else 14)) x) (modulo i8 3))))))))))))) 101))"
+  }
+ ]
+}

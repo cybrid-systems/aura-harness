@@ -1,0 +1,14 @@
+{"n": 300, "seed": 1, "times_s": {"apply": 67.79, "trial": 39.32, "nofuel": 21.11, "file": 0.34}, "mismatch": {"apply": 0, "trial": 0, "nofuel": 38, "file": 0}, "blocked": {"apply": 0, "trial": 0, "nofuel": 30, "file": 0}, "crash": {"apply": 0, "trial": 0, "nofuel": 0, "file": 0}, "timeout": {"apply": 0, "trial": 0, "nofuel": 0, "file": 0}, "gen": 2, "shrunk": {"nofuel": {"tried": 5, "repro": 4}}}
+SHRUNK nofuel #2 1298->66 chars, 137 runs: (lambda (x) (let ((l1 (map (lambda (y7) 0) (list 1)))) (last l1)))  want [0, 0, 0, 0] got ('blocked', 'knob value out of range [0,100]')
+SHRUNK nofuel #3 451->77 chars, 121 runs: (lambda (x) (let ((l2 (filter (lambda (y3) (= 0 0)) (list 1)))) (length l2)))  want [1, 1, 1, 1] got [0, 0, 0, 1]
+SHRUNK nofuel #4 503->66 chars, 52 runs: (lambda (x) (let ((l1 (map (lambda (y2) x) (list 1)))) (last l1)))  want [0, 1, 2, 3] got ('blocked', 'knob value out of range [0,100]')
+SHRUNK nofuel #13: does not reproduce in isolation
+SHRUNK nofuel #14 1650->62 chars, 53 runs: (lambda (x) (length (filter (lambda (y11) (= 0 0)) (list 1))))  want [1, 1, 1, 1] got [0, 0, 0, 1]
+{"i": 2, "want": [13, 13, 13, 13], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 3, "want": [0, 1, 2, 3], "wrong": {"nofuel": [5, 5, 5, 3]}}
+{"i": 4, "want": [0, 0, 1, 2], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 13, "want": [0, 16, 32, 48], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 14, "want": [2, 1, 0, 4], "wrong": {"nofuel": [0, 1, 2, 4]}}
+{"i": 20, "want": [8, 8, 8, 8], "wrong": {"nofuel": [8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}}
+{"i": 32, "want": [19, 23, 13, 31], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 37, "want": [0, 1, 2, 3], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}

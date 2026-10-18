@@ -1,0 +1,14 @@
+{"n": 300, "seed": 2, "times_s": {"apply": 61.38, "trial": 37.59, "nofuel": 18.94, "file": 0.35}, "mismatch": {"apply": 0, "trial": 0, "nofuel": 51, "file": 0}, "blocked": {"apply": 0, "trial": 0, "nofuel": 39, "file": 0}, "crash": {"apply": 0, "trial": 0, "nofuel": 0, "file": 0}, "timeout": {"apply": 0, "trial": 0, "nofuel": 0, "file": 0}, "gen": 2, "shrunk": {"nofuel": {"tried": 5, "repro": 4}}}
+SHRUNK nofuel #6 375->85 chars, 171 runs: (lambda (x) (let ((l1 (filter (lambda (y3) (= 0 0)) (list 1)))) (if (null? l1) 0 1)))  want [1, 1, 1, 1] got [0, 0, 0, 1]
+SHRUNK nofuel #8 1089->44 chars, 108 runs: (lambda (x) (let ((l1 (list 1))) (last l1)))  want [1, 1, 1, 1] got [1, 1, 1, 1]
+SHRUNK nofuel #10 1755->72 chars, 206 runs: (lambda (x) (let ((l7 (map (lambda (y8) 0) (list x)))) (list-ref l7 0)))  want [0, 0, 0, 0] got ('blocked', 'knob value out of range [0,100]')
+SHRUNK nofuel #19: does not reproduce in isolation
+SHRUNK nofuel #21 1561->358 chars, 300 runs: (lambda (x) (let ((vv1 (make-vector 1 0))) (let loop ((i2 0)) (if (< i2 1) (begin (vector-set! vv1 i2 (let ((l3 (map (lambda (y4) (let loop ((i5 0) (s6 (let* ((v7 x) (w8 x)) i2))) (if (>= i5 4) s6 (loop (+ i5 1) (modulo (+ s6 (abs i5)) 99991))))) (append (list x 9 i2) (list i2 20 x 2))))) (list-ref l3 0))) (loop (+ i2 1))) (vector-ref vv1 (modulo 0 1))))))  want [6, 6, 6, 6] got ('blocked', 'knob value out of range [0,100]')
+{"i": 6, "want": [7, 7, 7, 7], "wrong": {"nofuel": [9, 10, 11, 7]}}
+{"i": 8, "want": [0, 1, 2, 3], "wrong": {"nofuel": [0, 7, 14, 3]}}
+{"i": 10, "want": [26, 33, 32, 29], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 19, "want": [14, 47, 77, 100], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 21, "want": [6, 6, 6, 6], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 24, "want": [2, 70, 48, 70], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}
+{"i": 29, "want": [2, 2, 2, 2], "wrong": {"nofuel": [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}}
+{"i": 30, "want": [1, 1, 2, 3], "wrong": {"nofuel": ["blocked", "knob value out of range [0,100]"]}}

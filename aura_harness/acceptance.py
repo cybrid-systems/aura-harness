@@ -33,6 +33,8 @@ CHECKS = {
     "4624": "unbound variable inside a map callback raises (aura#4624, filed from here)",
     "4626": "two map callbacks from sibling expressions of a workspace define both run (aura#4626, filed from here)",
     "4627": "(equal? (list 1 2) want) in a tail-call loop is never #f (aura#4627, c6a18e8a5 regression, filed from here)",
+    "4626-sibcall": "one inline filter callback in a workspace define called 4x from a sibling list (the knob table) keeps the element every time (aura#4626 comment)",
+    "4629-vec": "a fresh (vector x 0 0) in a map callback keeps its length across 10 hot-loop calls (aura#4629 comment, c6a18e8a5 regression)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
 }
 

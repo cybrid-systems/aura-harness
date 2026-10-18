@@ -1,0 +1,3 @@
+;; aura#4629 comment (fuzzer + shrinker, file level): a fresh (vector x 0 0) inside a map callback reads back with length 0 in a hot loop (c6a18e8a5..39595edd4)
+(define fz (lambda (x) (let ((l1 (append (map (lambda (y3) (length (reverse (list 0 0 0 0)))) (map (lambda (y5) (vector-ref (vector x 0 0) 0)) (reverse (list x x 0)))) (append (list x 0 4 0) (list x 0 0 x))))) (length (list 1)))))
+(display (let loop ((i 0) (acc (list))) (if (= i 10) (reverse acc) (loop (+ i 1) (cons (fz i) acc))))) (newline)

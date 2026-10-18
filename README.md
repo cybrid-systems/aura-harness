@@ -313,6 +313,25 @@ Every wrong value traced to an Aura bug, not to the guard:
 
 The wraps cost time: on seed 1, `apply` went from 49.5 to 57.7 s for 300 bodies (+16%), because a wrapped call is a ticked workspace loop instead of a native one.
 
+**Round 9: strings, vector loops and an automatic shrinker.**
+- **`--gen 2`** adds strings to the grammar:
+  - built by `string-append` (metered), prefix `substring`, `string->list`/`reverse`/`list->string`, and named-let accumulation;
+  - read back with `string-length`, a `string->number` digit, and `string=?`/`string<?`/`string>?`.
+  
+  It also adds vectors filled by `vector-set!` in a named let (`make-vector` metered), `vector->list`/`list->vector` round trips, and `equal?` on lists. `--gen 1` (the default) still produces byte-identical R7 bodies.
+- **`--shrink N`** reduces up to N mismatching bodies per path. It replaces subterms greedily, root first, with a constant, a same-kind child, or the list minus one element. Each step re-derives the expected value with the reference evaluator, and the step is kept only if the path is still wrong in the same way. For the `file` path, a body that only fails after earlier defines in the same batch is re-run behind them, and that context is cut down by halves while the failure persists. A body that doesn't fail on its own is reported as `does not reproduce in isolation`.
+
+| `--gen 2`, 300 bodies | apply | trial | nofuel | file |
+|---|---|---|---|---|
+| pin `e50951bff`, seed 1 | **0** | **0** | 38 | 0 |
+| pin, seed 2 | **0** | **0** | 51 | 0 |
+
+`file` path, 300 bodies per run, `--gen 1` seeds 1–3 plus `--gen 2` seeds 1–3: the pin `e50951bff` has **0/1800** wrong, main `39595edd4` has **42/1800** (`results/fuzz/main39595-file-*.json`).
+
+- **Strings and vector loops are clean through the guard on the pin.** apply/trial have 0 wrong over 600 v2 bodies. apply costs 61–68 s per 300 bodies (v1: 57.7 s).
+- **The shrinker turns nofuel mismatches into ~70-char repros in 50–200 runs.** `(lambda (x) (let ((l1 (map (lambda (y7) 0) (list 1)))) (last l1)))` is the #4617 family. `(lambda (x) (length (filter (lambda (y11) (= 0 0)) (list 1))))` (1650 → 62 chars) gives `[0, 0, 0, 1]` instead of `[1, 1, 1, 1]`. That case widened **aura#4626**: one inline callback is enough when another workspace define calls its define several times. The knob table's `(list (knob-0 0) … (knob-0 3))` is exactly that, so only the last call is right; with sequential `let*` calls only the first is right. The `%map`/`%filter` wraps already cover it. `acceptance/4626-sibcall`.
+- **Main's file-path failures are #4629 heap corruption.** Most only fail inside the 300-define batch. Any context cut makes them pass, so the trigger is allocation shape rather than a particular earlier define. One fails alone from its 4th hot call. The shrinker plus a hand pass gave a 2-line repro: a fresh `(vector x 0 0)` in a `map` callback reads back with length 0 in a 10-call loop, on `c6a18e8a5`, `9f82bede1` and `39595edd4`, and is correct on the pin. Posted on **aura#4629**; `acceptance/4629-vec`.
+
 ### Scope guard
 
 `python3 -m aura_harness guard` (`results/guard.txt`) runs 13 attempts against the live harness:
@@ -394,8 +413,10 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4622 (new, filed from here) | `#\(` `#\)` `#\"` literals confuse the file runner's top-level form splitter: a file whose first form has one is refused ("no complete S-expression"); later ones give a spurious warning | char codes in `server.aura` | `acceptance/4622` |
 | cybrid-systems/aura#4623 (new, filed from here) | regression in c6a18e8a5 (#4599), still on 9f82bede1: the second identical run of the proposal transformer returns `(let loop (()) …)` for `(let loop ((i 0)) …)`. Legitimate candidates are rejected, wrong values are applied, and 5 of 23 unit tests fail. An 8-line reader repro is in the issue comments; on 39595edd4, 182 of 300 fuzzed bodies are rejected as "body is not a lambda" | stay on e50951bff | `acceptance/4623`, `acceptance/4623-reader` (PASS on the pin, FAIL on 9f82bede1 and 39595edd4) |
 | cybrid-systems/aura#4624 (new, filed from here) | an unbound variable inside a `map`/`filter` callback is swallowed (`map` yields `()`, `filter` drops the element); #4586 covered `raise` only | none needed: the transformer's helpers are all defined; found while minimizing #4623 | `acceptance/4624` |
-| cybrid-systems/aura#4626 (new, filed from here) | two callbacks handed to native `map`/`filter`/`for-each` from sibling expressions of one workspace define: one is an invalid closure, and `map`/`filter` swallow it into `()` | proposals' HOFs run as workspace loops (`%map`/`%filter`/`%for-each`) | `acceptance/4626` (FAIL on the pin and main) |
+| cybrid-systems/aura#4626 (new, filed from here) | two callbacks handed to native `map`/`filter`/`for-each` from sibling expressions of one workspace define: one is an invalid closure, and `map`/`filter` swallow it into `()`. R9 comment: one callback is enough if another workspace define calls the define more than once (the knob-table row) | proposals' HOFs run as workspace loops (`%map`/`%filter`/`%for-each`) | `acceptance/4626`, `acceptance/4626-sibcall` (FAIL on the pin and main) |
 | cybrid-systems/aura#4627 (new, filed from here) | regression in c6a18e8a5, still on main 39595edd4: `(equal? (list 1 2) want)` is `#f` on every 66th iteration of a tail-call loop | stay on e50951bff | `acceptance/4627` (PASS on the pin) |
+| cybrid-systems/aura#4629 (filed from aura-memory) | regression in c6a18e8a5, still on 39595edd4: freshly allocated pairs/vectors in hot loops get clobbered (self-referential list cells; a `(vector x 0 0)` with length 0). The fuzzer sees it in 42/1800 plain file-level bodies on main, 0 on the pin | stay on e50951bff | `acceptance/4629-vec` (PASS on the pin) |
+| cybrid-systems/aura#4628 (filed from aura-memory) | `member` compares pairs, vectors and floats with `eq?` | the guard compares strings only; the fuzzer's `member` is on ints | – |
 | cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
@@ -405,7 +426,7 @@ It also reports a regression in which the evolved harness exposed a run-configur
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 27 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 31 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
@@ -443,7 +464,8 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 * Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
 * Re-pin to main once aura#4623 and aura#4627 are fixed (still open on 39595edd4). 9f82bede1 already fixes the rebind-history growth (aura#4583) and the deleted-workspace leak (aura#4610), which would retire the compaction knob and the periodic restarts.
 * Make the tick cheap once aura#4617/#4618 are fixed (an inline counter instead of a workspace call), or drop it for an Aura-native step budget / preemptible fiber if one lands.
-* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to multi-knob bodies, string ops and vectors built in loops.
+* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to multi-knob bodies (knobs calling knobs) and hash tables.
+* Re-pin past `e50951bff` once aura#4629 (heap corruption; also hits 2.3% of plain file-level fuzz bodies on `39595edd4`), #4623 and #4627 are fixed. `results/acceptance-39595edd4.txt` tracks them.
 * Replace the simulated environment with a small real tool-use suite.
 
 ## License
