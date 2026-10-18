@@ -287,6 +287,32 @@ Two findings from tuning this:
 
 Other Aura issues found on the way, all filed with repros: an error in a `while`/`when`/`unless` body is discarded, and an error in the `while` test loops forever (aura#4619); the IR call stack is unbounded, so deep recursion in a workspace define is OOM-killed instead of raising (aura#4620); rest parameters don't work in workspace defines (aura#4621); `#\(` / `#\)` / `#\"` literals confuse the file runner's top-level form splitter: a file whose first form has one is refused, and later ones print a spurious warning (aura#4622). A guard-side workaround applies to each: the `while` rewrite, the 100000-step budget (well below the ~5M frames that 4 GB allows), list-argument wrappers, and char codes in `server.aura`.
 
+### Differential proposal fuzzer (`scripts/fuzz_proposals.py`)
+
+The fuzzer generates random knob bodies over the guard's allowlisted subset (`let`/`let*`/`letrec`, named-let loops, `cond`/`case`, closures, list/vector ops, `map`/`filter`), always `(lambda (x) (modulo (abs E) 101))`. It runs each body down four paths and compares the 4 knob values with a Python reference evaluator:
+- `apply`: guarded change in the live harness;
+- `trial`: child-workspace trial;
+- `nofuel`: apply with `AURA_HARNESS_FUEL=0`, so bodies run uninstrumented with native functions;
+- `file`: the body in a plain file, no workspace.
+
+300 bodies per seed, on the pin e50951bff:
+
+| | apply | trial | nofuel | file |
+|---|---|---|---|---|
+| R7 first run (seed 1, native `map`/`filter`/`last`) | 17 wrong | 18 wrong | 67 wrong | 0 |
+| + workspace HOFs and std-lib wrap, seed 1 | **0** | **0** | 63 | 0 |
+| same, seed 2 | **0** | **0** | 69 | 0 |
+| same, seed 3 | **0** | **0** | 77 (1 hang) | 0 |
+| seed 1 on main 9f82bede1 (before the wraps) | 220 wrong (182 "body is not a lambda", 3 crashes) | 236 | 106 | 6 |
+
+Every wrong value traced to an Aura bug, not to the guard:
+- **aura#4626:** two callbacks handed to native `map`/`filter`/`for-each` from sibling expressions of one workspace define get an invalid closure, and `map`/`filter` swallow the error into `()`. Proposed `map`/`filter`/`for-each` now run as workspace named-let loops (`%map`/`%filter`/`%for-each`, `AURA_HARNESS_HOF_WRAP`, default 1). n-ary `map` is rejected (aura#4616).
+- **aura#4617 via std-lib functions:** `last`, `list-tail`, `assq`, `even?`, `odd?`, `zero?`, `positive?`, `negative?` and `expt` are file-level Aura defines. A knob calling one made the knob-chunk caller read wrong lists on every 5th read, like `(((0) 0 6 5) ((1) 0 6 5) (1))` for a 4-knob row. Each is now renamed at admission to a workspace `%` version (`AURA_HARNESS_STD_WRAP`, default 1). `string-split`, `string-upcase`, `string-downcase` and `symbol->string` are off the allowlist. SOURCE shows the plain names in both cases.
+- **nofuel** keeps its mismatches by design: with fuel off, nothing is instrumented or renamed. The column documents what the wraps buy. Seed 3 body 175 (native `filter` + `last`, a `letrec` recursion) hung the uninstrumented control plane after 174 earlier rebinds in the same process. A fresh process returns a wrong value instead (74 → 4, the #4617 `last` corruption), and the fuel paths get it right. The fuzzer now has a per-body watchdog (`--call-timeout`, default 60 s) that kills, records `timeout` and restarts.
+- **main 9f82bede1 / 39595edd4:** two new c6a18e8a5 regressions. The guard's recursive-descent reader returns cyclic or empty lists on the second read (an 8-line repro, posted on aura#4623). `equal?` is `#f` on every 66th iteration of a tail-call loop when its first argument is freshly allocated (**aura#4627**, 3 lines).
+
+The wraps cost time: on seed 1, `apply` went from 49.5 to 57.7 s for 300 bodies (+16%), because a wrapped call is a ticked workspace loop instead of a native one.
+
 ### Scope guard
 
 `python3 -m aura_harness guard` (`results/guard.txt`) runs 13 attempts against the live harness:
@@ -360,30 +386,33 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4583 (reopened from here) | every `mutate:rebind` pays for the workspace's rebind history (time and memory) | fixed upstream in a398f78a7 (closed): on main 9f82bede1, rebinds 1001–1500 cost 81–84 ms vs 82–91 ms for rebinds 1–500; on the pin, 300 → 1,190 ms. Not adopted yet because of aura#4623 | `acceptance/4583-linear` (PASS on 9f82bede1), `scripts/longrun.py` |
 | cybrid-systems/aura#4610 (filed from here) | deleted child workspaces keep their rebind cost and memory; later rebinds everywhere slow down | gone on main 9f82bede1 (root rebind 17 → 16 ms after 1000 trials; on the pin, 25 → 63 ms), probably via a398f78a7; issue still open. On the pin: restart the process periodically | `scripts/longrun.py --mix trial-rollback` |
 | cybrid-systems/aura#4615 (new, filed from here) | rebinding a define is O(B²) in the basic blocks of each define that calls it; a flat 4000-call aggregator made every knob APPLY 534 ms | knobs read through 16-knob chunk callers (`AURA_HARNESS_KNOB_CHUNK`) | `acceptance/4615`, `scripts/size_sweep.py --chunk 0` |
-| cybrid-systems/aura#4617 (new, filed from here) | calling a file-level function from a workspace define lets the tree-walker reclaim heap objects held only by the IR frame | the fuel tick and allocation wrappers are workspace code (prelude), with the counter in a host vector; std-lib functions are off the allowlist | `acceptance/4617` |
+| cybrid-systems/aura#4617 (new, filed from here) | calling a file-level function from a workspace define lets the tree-walker reclaim heap objects held only by the IR frame | the fuel tick and allocation wrappers are workspace code (prelude), with the counter in a host vector; std-lib functions that are file-level are renamed to workspace `%` versions (`last`, `list-tail`, `assq`, numeric predicates, `expt`) or off the allowlist; found again by the fuzzer through `last` | `acceptance/4617`, `acceptance/4617-last` |
 | cybrid-systems/aura#4618 (new, filed from here) | in a workspace define, `set!` of a global is dropped, and a comparison after a captured-cell `set!` is constant-folded | counter in a host vector (`vector-set!`) | `acceptance/4618` |
 | cybrid-systems/aura#4619 (new, filed from here) | an error raised in a `while`/`when`/`unless` body is discarded; an error in the `while` test loops forever | `while` rewritten to a named let at admission | `acceptance/4619` |
 | cybrid-systems/aura#4620 (new, filed from here) | the IR call stack is unbounded (≥64 slots / ~0.77 KB per frame): deep recursion in a workspace define is OOM-killed instead of raising | fuel (100000 steps) | `acceptance/4620` (1.5 GB address-space cap) |
 | cybrid-systems/aura#4621 (new, filed from here) | rest parameters (`(lambda args …)`, `(a . r)`) don't work in workspace defines | allocation wrappers take one list argument, built at the call site | `acceptance/4621` |
 | cybrid-systems/aura#4622 (new, filed from here) | `#\(` `#\)` `#\"` literals confuse the file runner's top-level form splitter: a file whose first form has one is refused ("no complete S-expression"); later ones give a spurious warning | char codes in `server.aura` | `acceptance/4622` |
-| cybrid-systems/aura#4623 (new, filed from here) | regression in c6a18e8a5 (#4599), still on 9f82bede1: the second identical run of the proposal transformer returns `(let loop (()) …)` for `(let loop ((i 0)) …)`. Legitimate candidates are rejected, wrong values are applied, and 5 of 23 unit tests fail | stay on e50951bff | `acceptance/4623` (PASS on the pin, FAIL on 9f82bede1) |
+| cybrid-systems/aura#4623 (new, filed from here) | regression in c6a18e8a5 (#4599), still on 9f82bede1: the second identical run of the proposal transformer returns `(let loop (()) …)` for `(let loop ((i 0)) …)`. Legitimate candidates are rejected, wrong values are applied, and 5 of 23 unit tests fail. An 8-line reader repro is in the issue comments; on 39595edd4, 182 of 300 fuzzed bodies are rejected as "body is not a lambda" | stay on e50951bff | `acceptance/4623`, `acceptance/4623-reader` (PASS on the pin, FAIL on 9f82bede1 and 39595edd4) |
 | cybrid-systems/aura#4624 (new, filed from here) | an unbound variable inside a `map`/`filter` callback is swallowed (`map` yields `()`, `filter` drops the element); #4586 covered `raise` only | none needed: the transformer's helpers are all defined; found while minimizing #4623 | `acceptance/4624` |
+| cybrid-systems/aura#4626 (new, filed from here) | two callbacks handed to native `map`/`filter`/`for-each` from sibling expressions of one workspace define: one is an invalid closure, and `map`/`filter` swallow it into `()` | proposals' HOFs run as workspace loops (`%map`/`%filter`/`%for-each`) | `acceptance/4626` (FAIL on the pin and main) |
+| cybrid-systems/aura#4627 (new, filed from here) | regression in c6a18e8a5, still on main 39595edd4: `(equal? (list 1 2) want)` is `#f` on every 66th iteration of a tail-call loop | stay on e50951bff | `acceptance/4627` (PASS on the pin) |
 | cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
-`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610`, `4615`, `4617`–`4622` and `4624` FAIL on the pin. `results/acceptance-9f82bede1.txt` is the same suite on main 9f82bede1: `4583-linear` and `4610` PASS there, and `4623` FAILs. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
+`python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. `4583-linear`, `4610`, `4615`, `4617`–`4622`, `4617-last`, `4624` and `4626` FAIL on the pin. `results/acceptance-9f82bede1.txt` and `results/acceptance-39595edd4.txt` are the same suite on main: `4583-linear` and `4610` PASS there; `4623`, `4623-reader` and `4627` FAIL. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 23 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 27 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
 scripts/in-docker.sh 'python3 -m aura_harness source'                           # the seed harness as Aura sees it
 AURA_HARNESS_MEM=8g scripts/in-docker.sh 'python3 scripts/longrun.py --steps 2000'  # long-run growth (~4 min)
 scripts/in-docker.sh 'python3 scripts/size_sweep.py --knobs 0,50,200,500,1000'       # harness-size sweep (~30 s)
+scripts/in-docker.sh 'python3 scripts/fuzz_proposals.py --n 300 --seed 1 --out runs/fuzz/s1.json'  # differential fuzzer (~2 min)
 scripts/in-docker.sh 'python3 scripts/runaway.py --out runs/runaway.json'            # runaway bodies, fuel on + off (~15 min, mostly fuel-off hangs at --timeout 30)
 ```
 
@@ -401,7 +430,7 @@ aura_harness/control.py   Aura backend and file-edit + reload backend (file_serv
 aura_harness/agent.py     solver / proposer / held-out gate loop, metrics
 aura_harness/{bench,latency,guard,acceptance,__main__}.py
 acceptance/               Aura issue repros + harness-cycle
-results/                  committed runaway (fuel on/off, latency, bench) / bench / ablations / latency / guard outputs + one example audit log
+results/                  committed fuzz summaries (results/fuzz), runaway (fuel on/off, latency, bench) / bench / ablations / latency / guard outputs + one example audit log
 scripts/                  longrun.py, size_sweep.py, parallel_replay.py, runaway.py (+ runaway_table.py), in-docker / test / bench wrappers
 tests/                    unit tests (knob size stress, compile equivalence, trials, keep/rollback, budget raise blocked, guard, backend equivalence, runaway containment)
 ```
@@ -412,8 +441,9 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 * Make the gate shift-aware: weight recent held-out tasks, or split the window at detected shifts. This would let `lsp-find`-style post-shift tools win.
 * Let the proposer write new mechanisms, not just table edits. Wire the LLM hook, keep the guard and gate, and measure how often the guard fires on real model output.
 * Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
-* Re-pin to main once aura#4623 is fixed. 9f82bede1 already fixes the rebind-history growth (aura#4583) and the deleted-workspace leak (aura#4610), which would retire the compaction knob and the periodic restarts.
+* Re-pin to main once aura#4623 and aura#4627 are fixed (still open on 39595edd4). 9f82bede1 already fixes the rebind-history growth (aura#4583) and the deleted-workspace leak (aura#4610), which would retire the compaction knob and the periodic restarts.
 * Make the tick cheap once aura#4617/#4618 are fixed (an inline counter instead of a workspace call), or drop it for an Aura-native step budget / preemptible fiber if one lands.
+* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to multi-knob bodies, string ops and vectors built in loops.
 * Replace the simulated environment with a small real tool-use suite.
 
 ## License

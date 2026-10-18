@@ -208,6 +208,97 @@ if __name__ == "__main__":
 
 
 @unittest.skipUnless(HAVE, "needs AURA_BIN")
+class HofWrapTests(unittest.TestCase):
+    """map / filter / for-each in proposed code run as workspace loops (%map ...): with the native primitives, two
+    callbacks from sibling expressions of one workspace define get an invalid closure (aura#4626)."""
+    BODY = "(lambda (x) (+ (length (filter (lambda (a) (> a 1)) (list 1 2 3))) (car (map (lambda (b) (* b 10)) (list 4)))))"
+
+    def start(self, wrap):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_KNOBS"] = "1"
+        os.environ["AURA_HARNESS_HOF_WRAP"] = wrap
+        try:
+            return AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_KNOBS", None); os.environ.pop("AURA_HARNESS_HOF_WRAP", None)
+
+    def test_two_callbacks_give_the_right_value(self):
+        from aura_harness.harness import Candidate
+        h = self.start("1")
+        try:
+            adm = h.pipe.call("ADMIT", "knob-0", self.BODY)
+            self.assertFalse(adm["reason"])
+            self.assertIn("(%filter (lambda (a)", adm["body"]); self.assertIn("(%map (lambda (b)", adm["body"])
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
+            self.assertTrue(r["ok"], r.get("reason"))
+            self.assertEqual(r["table"]["knobs"], [[42] * 4])
+            src = h.source()
+            self.assertIn("(filter (lambda (a)", src); self.assertNotIn("%map", src); self.assertNotIn("%filter", src)
+            n = h.pipe.call("ADMIT", "knob-0", "(lambda (x) (length (map (lambda (a b) a) (list 1) (list 2))))")
+            self.assertIn("n-ary map", n["reason"])
+        finally:
+            h.close()
+
+    def test_native_hofs_hit_aura_4626(self):
+        # documents the Aura bug the wrap avoids; flip to assertEqual once aura#4626 is fixed on the pin
+        from aura_harness.harness import Candidate
+        h = self.start("0")
+        try:
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
+            self.assertNotEqual(r.get("table", {}).get("knobs"), [[42] * 4])
+        finally:
+            h.close()
+
+
+class StdWrapTests(unittest.TestCase):
+    """Allowlisted std-lib functions that are file-level Aura defines (last, list-tail, assq, even?, ...) run as
+    workspace %versions: a workspace define calling the file-level one by name has its frame's lists reclaimed mid-call,
+    so a caller define read wrong values on every 5th read (aura#4617; found by scripts/fuzz_proposals.py)."""
+    BODY = ("(lambda (x) (+ (length (list 5 6 0 (last (list x (list x))))) (if (even? x) 10 20) (expt 2 3)"
+            " (cadr (assq 'b (list (list 'a 1) (list 'b 2)))) (car (list-tail (list 7 8 9) 2))))")
+    WANT = [[33, 43, 33, 43]]
+
+    def start(self, wrap):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_KNOBS"] = "1"
+        os.environ["AURA_HARNESS_STD_WRAP"] = wrap
+        try:
+            return AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_KNOBS", None); os.environ.pop("AURA_HARNESS_STD_WRAP", None)
+
+    def test_std_calls_stay_right_over_repeated_reads(self):
+        from aura_harness.harness import Candidate
+        h = self.start("1")
+        try:
+            adm = h.pipe.call("ADMIT", "knob-0", self.BODY)
+            self.assertFalse(adm["reason"])
+            for n in ("%last", "%even?", "%expt", "%assq", "%list-tail"):
+                self.assertIn("(" + n + " ", adm["body"])
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
+            self.assertTrue(r["ok"], r.get("reason"))
+            self.assertEqual([h.table()["knobs"] for _ in range(12)], [self.WANT] * 12)
+            src = h.source()
+            self.assertIn("(last (list x", src); self.assertNotIn("%last", src); self.assertNotIn("%even?", src)
+            for bad in ("string-upcase", "symbol->string"):
+                rr = h.pipe.call("ADMIT", "knob-0", "(lambda (x) (string-length (" + bad + " x)))")
+                self.assertIn("symbol not allowed: " + bad, rr["reason"])
+        finally:
+            h.close()
+
+    def test_file_level_last_hits_aura_4617(self):
+        # documents the Aura bug the wrap avoids; flip once aura#4617 is fixed on the pin
+        h = self.start("0")
+        try:
+            body = "(lambda (x) (length (list 5 6 0 (last (list x (list x))))))"
+            from aura_harness.harness import Candidate
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=body))
+            reads = [r.get("table", {}).get("knobs")] + [h.table().get("knobs") for _ in range(11)]
+            self.assertNotEqual(reads, [[[4, 4, 4, 4]]] * 12)
+        finally:
+            h.close()
+
+
 class RunawayTests(unittest.TestCase):
     """Runaway containment (fuel metering): runaway bodies fail their trial, the process survives, legitimate loops
     still pass with the right value."""

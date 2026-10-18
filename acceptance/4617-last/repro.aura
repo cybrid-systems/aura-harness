@@ -1,0 +1,5 @@
+(set-code "(define knob-0 (lambda (x) (list 5 6 0 (last (list x (list x))))))\n(define chunk (lambda () (list (knob-0 0) (knob-0 1) (knob-0 2) (knob-0 3))))\n")
+(eval-current)
+(define want (list (knob-0 0) (knob-0 1) (knob-0 2) (knob-0 3)))
+(define (go i bad) (if (= i 0) bad (let ((r (chunk))) (go (- i 1) (if (equal? r want) bad (+ bad 1))))))
+(display (list "last" (go 200 0)))

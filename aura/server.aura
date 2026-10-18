@@ -168,7 +168,8 @@
 ;; a comparison after set! of a captured cell constant-folds (aura#4618); calling a file-level function from a
 ;; workspace define lets the tree-walker's reclaim free heap objects that only the workspace frame holds (aura#4617; so
 ;; no allowlisted name may be a file-level function either: the std-lib iota/range/make-list/assoc/string-join/
-;; string-pad/string-repeat are left out for that reason).
+;; string-pad/string-repeat/string-split/string-upcase/string-downcase/symbol->string are left out for that reason,
+;; and last/list-tail/assq/even?/odd?/zero?/positive?/negative?/expt are renamed to workspace %versions, below).
 ;; Every host entry into the harness (TABLE / trial materialise, D) refills the counter to *fuel-max*. A body that runs
 ;; out makes its trial fail with "fuel exhausted" instead of taking the process down. AURA_HARNESS_FUEL=0 turns the
 ;; parse/allowlist/instrument stage off (the token check alone, the pre-R5 guard).
@@ -193,8 +194,35 @@
        ;; second argument as-is, (lambda xs ...) takes exactly one argument; aura#4621)
        "(define %make-vector (lambda (args) (%charge (%sz (car args))) (apply make-vector args)))\n"
        "(define %string-append (lambda (args) (%charge (quotient (%slen args) 8)) (apply string-append args)))\n"
-       "(define %append (lambda (args) (%charge (%llen args)) (apply append args)))\n")))
+       "(define %append (lambda (args) (%charge (%llen args)) (apply append args)))\n"
+       ;; workspace map / filter / for-each (AURA_HARNESS_HOF_WRAP, default on): two callbacks handed to the NATIVE
+       ;; higher-order primitives from sibling expressions of one workspace define get an invalid closure, and map /
+       ;; filter swallow the error into () (aura#4626, #4624). Named-let loops over a workspace call are unaffected.
+       (if (= *hof-wrap* 0) ""
+           (string-append
+            "(define %map (lambda (f xs) (let loop ((xs xs) (acc (list))) (%tick) (if (null? xs) (reverse acc) (loop (cdr xs) (cons (f (car xs)) acc))))))\n"
+            "(define %filter (lambda (f xs) (let loop ((xs xs) (acc (list))) (%tick) (if (null? xs) (reverse acc) (loop (cdr xs) (if (f (car xs)) (cons (car xs) acc) acc))))))\n"
+            "(define %for-each (lambda (f xs) (let loop ((xs xs)) (%tick) (if (null? xs) #t (begin (f (car xs)) (loop (cdr xs)))))))\n"))
+       ;; workspace versions of the allowlisted std-lib functions that are file-level Aura defines (AURA_HARNESS_STD_WRAP,
+       ;; default on): a workspace define calling one by name has its frame's lists reclaimed mid-call (aura#4617); the
+       ;; fuzzer's (last ...) bodies came back wrong on every 5th caller read
+       (if (= *std-wrap* 0) ""
+           (string-append
+            "(define %last (lambda (l) (let loop ((l l)) (%tick) (if (null? (cdr l)) (car l) (loop (cdr l))))))\n"
+            "(define %list-tail (lambda (l k) (let loop ((l l) (k k)) (%tick) (if (= k 0) l (loop (cdr l) (- k 1))))))\n"
+            "(define %assq (lambda (k al) (let loop ((al al)) (%tick) (cond ((null? al) #f) ((eq? (car (car al)) k) (car al)) (else (loop (cdr al)))))))\n"
+            "(define %even? (lambda (n) (= (remainder n 2) 0)))\n"
+            "(define %odd? (lambda (n) (not (= (remainder n 2) 0))))\n"
+            "(define %zero? (lambda (n) (= n 0)))\n"
+            "(define %positive? (lambda (n) (> n 0)))\n"
+            "(define %negative? (lambda (n) (< n 0)))\n"
+            "(define %expt (lambda (b e) (if (not (integer? e)) (raise \"expt: integer exponent only\") (let loop ((k (abs e)) (acc 1)) (%tick) (if (= k 0) (if (< e 0) (/ 1 acc) acc) (loop (- k 1) (* acc b)))))))\n")))))
 (define *renamed* (list "make-vector" "string-append" "append"))
+(define *hof-wrap* (let ((v (getenv "AURA_HARNESS_HOF_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *hofs* (if (= *hof-wrap* 0) (list) (list "map" "filter" "for-each")))
+(define *std-wrap* (let ((v (getenv "AURA_HARNESS_STD_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *stdw* (if (= *std-wrap* 0) (list) (list "last" "list-tail" "assq" "even?" "odd?" "zero?" "positive?" "negative?" "expt")))
+(define *wrapped* (append *hofs* *stdw*))
 (define *allowed-syms*
   (append
    (list "lambda" "let" "let*" "letrec" "letrec*" "if" "cond" "case" "when" "unless" "begin" "and" "or" "else" "=>"
@@ -204,8 +232,8 @@
          "floor" "ceiling" "truncate" "sqrt" "expt" "not" "eq?" "eqv?" "equal?" "boolean?" "cons" "car" "cdr" "caar"
          "cadr" "cdar" "cddr" "caddr" "cdddr" "cadddr" "list" "list?" "pair?" "null?" "length" "list-ref" "list-tail"
          "member" "memq" "assq" "reverse" "map" "filter" "for-each" "last" "string?" "string-length" "substring"
-         "string=?" "string<?" "string>?" "string-index" "string-upcase" "string-downcase" "number->string"
-         "string->number" "symbol->string" "string-split" "string-ref" "string->list" "list->string" "char?" "char=?"
+         "string=?" "string<?" "string>?" "string-index" "number->string"
+         "string->number" "string-ref" "string->list" "list->string" "char?" "char=?"
          "symbol?" "procedure?" "vector" "vector?" "vector-ref" "vector-length" "vector-set!" "vector->list"
          "list->vector" "hash" "hash-ref" "hash-set!" "hash-has-key?"
          "needs" "kinds" "tools" "errs" "facts" "tkinds" "nsubs" "strategies")
@@ -275,6 +303,7 @@
   (cond ((sx-literal? a) a)
         ((member a env) a)
         ((member a *renamed*) (raise (string-append "allocator used as a value (call it directly): " a)))
+        ((member a *wrapped*) (string-append "%" a))
         ((sx-allowed? a) a)
         (else (raise (string-append "symbol not allowed: " a)))))
 (define (sx-body xs env) (if (null? xs) (raise "empty body") (map (lambda (x) (sx-xf x env)) xs)))
@@ -326,6 +355,10 @@
                                                    (raise "bad case clause")))
                                   (cddr x)))))
          ((member h *renamed*) (list (string-append "%" h) (cons "list" (map (lambda (y) (sx-xf y env)) (cdr x)))))
+         ((member h *hofs*)
+          (if (not (= n 3)) (raise (string-append h " takes one function and one list (n-ary map drops lists, aura#4616)")))
+          (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
+         ((member h *stdw*) (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
          (else (map (lambda (y) (sx-xf y env)) x)))))
     (else (map (lambda (y) (sx-xf y env)) x))))
 ;; -> (list reason-or-#f instrumented-body)
@@ -377,7 +410,8 @@
                                             (substring s bj (string-length s))))))))
 (define (clean-source s)
   (let loop ((s (str-replace (unwrap-tick-begin (drop-pct-defines s)) (string-append " " *fuel-tick*) "")) (rs *renamed*))
-    (if (null? rs) s (loop (unwrap-call s (car rs)) (cdr rs)))))
+    (if (null? rs) (unhof s *wrapped*) (loop (unwrap-call s (car rs)) (cdr rs)))))
+(define (unhof s hs) (if (null? hs) s (unhof (str-replace s (string-append "%" (car hs)) (car hs)) (cdr hs))))
 
 ;; ---------------------------------------------------------------- audit log + version
 (define *version* 0)

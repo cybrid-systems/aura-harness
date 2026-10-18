@@ -1,0 +1,21 @@
+;; aura#4626: in a workspace define, two callbacks handed to map from sibling expressions -> one gets an invalid closure, map yields ()
+;; workspace define with two callback lambdas: the first one's results are lost
+(set-code (string-append
+  "(define two-maps (lambda () (list (map (lambda (a) 1) (list 0 0)) (map (lambda (b) 2) (list 0 0)))))\n"
+  "(define one-map (lambda () (map (lambda (a) 1) (list 0 0))))\n"
+  "(define two-calls (lambda () (list ((lambda (a) 1) 0) ((lambda (b) 2) 0))))\n"
+  "(define map-for-each (lambda () (let ((v (vector 0))) (list (map (lambda (a) 1) (list 0 0)) (begin (for-each (lambda (b) (vector-set! v 0 9)) (list 0)) (vector-ref v 0))))))\n"
+  "(define let-bound (lambda () (let ((f (lambda (a) 1)) (g (lambda (b) 2))) (list (map f (list 0 0)) (map g (list 0 0))))))\n"
+  "(define same-param (lambda () (list (map (lambda (a) 1) (list 0 0)) (map (lambda (a) 2) (list 0 0)))))\n"
+  "(define three (lambda () (list (map (lambda (a) 1) (list 0)) (map (lambda (b) 2) (list 0)) (map (lambda (c) 3) (list 0)))))\n"))
+(eval-current)
+(define (two-maps-file) (list (map (lambda (a) 1) (list 0 0)) (map (lambda (b) 2) (list 0 0))))
+
+
+
+
+
+
+
+
+(display (two-maps)) (newline)

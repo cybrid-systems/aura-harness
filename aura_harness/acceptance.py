@@ -28,7 +28,11 @@ CHECKS = {
     "4621": "rest parameters in a workspace define (aura#4621, filed from here)",
     "4622": "a #\\( char literal in the first form doesn't make the file runner refuse the file (aura#4622, filed from here)",
     "4623": "second identical run of a tree-walked transformer gives the same list (aura#4623, c6a18e8a5 regression, filed from here)",
+    "4623-reader": "8-line recursive list reader called twice on equal input gives the same tree (aura#4623 comment)",
+    "4617-last": "a workspace caller reading a define that calls std-lib last gets the right list 200/200 times (aura#4617)",
     "4624": "unbound variable inside a map callback raises (aura#4624, filed from here)",
+    "4626": "two map callbacks from sibling expressions of a workspace define both run (aura#4626, filed from here)",
+    "4627": "(equal? (list 1 2) want) in a tail-call loop is never #f (aura#4627, c6a18e8a5 regression, filed from here)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
 }
 

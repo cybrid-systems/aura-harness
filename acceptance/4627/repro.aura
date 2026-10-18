@@ -1,0 +1,3 @@
+(define want (list 1 2))
+(define (go i bad) (if (= i 0) bad (go (- i 1) (if (equal? (list 1 2) want) bad (cons i bad)))))
+(display (go 1000 (list))) (newline)

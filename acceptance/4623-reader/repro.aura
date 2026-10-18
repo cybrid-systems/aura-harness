@@ -1,0 +1,8 @@
+(define (rd ts)
+  (if (equal? (car ts) "(") (rd-list (cdr ts) (list)) (cons (car ts) (cdr ts))))
+(define (rd-list ts acc)
+  (if (equal? (car ts) ")") (cons (reverse acc) (cdr ts))
+      (let ((r (rd ts))) (rd-list (cdr r) (cons (car r) acc)))))
+(define (toks d) (if (= d 0) (list "x") (append (list "(" "f") (toks (- d 1)) (list ")"))))
+(display (car (rd (toks 6)))) (newline)
+(display (car (rd (toks 6)))) (newline)
