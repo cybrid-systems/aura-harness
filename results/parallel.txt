@@ -1,3 +1,3 @@
-jobs=1 gate p50=191.29 ms p99=485.86 ms wall=5.52 s success=0.618
-jobs=4 gate p50=214.8 ms p99=505.23 ms wall=5.29 s success=0.618
+jobs=1 gate p50=53.97 ms p99=114.13 ms wall=1.44 s success=0.618
+jobs=4 gate p50=36.23 ms p99=107.98 ms wall=1.07 s success=0.618
 same verdicts: True

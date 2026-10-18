@@ -30,7 +30,7 @@ def aura_env() -> tuple[str, dict]:
     lib = os.environ.get("AURA_LIB")
     if lib:
         env["AURA_PATH"] = lib + (":" + env["AURA_PATH"] if env.get("AURA_PATH") else "")
-    # set-code / mutate:rebind from a local program still need the sandbox off: cybrid-systems/aura#4575
+    # set-code / mutate:rebind from a local program still need the sandbox off: aura soft refuses rebinds (cybrid-systems/aura#4609)
     env.setdefault("AURA_SANDBOX", "off")
     env.setdefault("AURA_PIPELINE_STRICT", "0")
     return aura, env

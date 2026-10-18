@@ -11,7 +11,7 @@ The self-evolution loop works like this:
 
 Everything is offline and reproducible from seeds. No LLM key is needed. There are interfaces for an LLM proposer (and the solver's model), but no number below uses them.
 
-> Status: research MVP. The task environment and the "model" are simulated and seeded. The proposer works in a closed grammar (one component, table-level edits). Aura is pinned at `c8ad457c9`. Read the caveats before quoting numbers.
+> Status: research MVP. The task environment and the "model" are simulated and seeded. The proposer works in a closed grammar (one component, table-level edits). Aura is pinned at `e50951bff` (re-pinned 2026-10-18; first published on `c8ad457c9`). Read the caveats before quoting numbers.
 
 ## Why Aura for harness self-evolution
 
@@ -23,9 +23,9 @@ Everything is offline and reproducible from seeds. No LLM key is needed. There a
 | rollback | git / file copies | the root never changed; `ast:restore` in snapshot mode |
 | scope control | convention, file permissions | guard outside the workspace: allowlist + symbol scan + post-conditions on the materialised decision table |
 | audit | git log, ad-hoc logs | every trial / keep / rollback / blocked attempt in one log, with body, actor, scores and harness version |
-| **measured cost of one guarded change (this repo)** | **28.6 ms** (edit + restart a minimal Python decision process) | **69 ms** round trip, of which only ~12 ms is Aura's mutation primitives; the rest is guard code slowed by aura#4585 (details below) |
+| **measured cost of one guarded change (this repo)** | **29.5 ms** (edit + restart a minimal Python decision process) | **8.4 ms** round trip, guard included (69 ms on `c8ad457c9`, before aura#4585 was fixed; details below) |
 
-Honest framing: the qualitative column is where Aura is ahead. The quantitative row is where this MVP is behind. The file-edit baseline restarts a ~20 ms toy process; a real agent harness restart (model client, tool registry, conversation state) costs more. The Aura side pays for an interpreted guard that runs ~9× slower after `set-code` (aura#4585).
+Honest framing: the qualitative column is where Aura is clearly ahead. On the first pin the quantitative row was behind (the interpreted guard ran ~9× slower after `set-code`, aura#4585). With that fixed, a guarded Aura change is ~3.5× cheaper than restarting even this ~20 ms toy process. A real agent harness restart (model client, tool registry, conversation state) costs more.
 
 ## Architecture
 
@@ -95,7 +95,7 @@ The proposer is deliberately naive about scope. On a context overflow, its first
 | scope guard | name allowlist, native `string-index` symbol scan, post-conditions | `static-check`, `post-check` |
 | audit | append-only log `(seq ts op name why actor reason version body)` | `log!`, `LOG` |
 
-`agent:spawn` is unbound on the pinned binary. Worldlines are therefore `workspace :create` children in one process, evaluated one after another. Promotion re-applies the winner to the root. `workspace :merge` would be the natural primitive, but it silently keeps the parent's definition (**aura#4589**, filed from here).
+`agent:spawn` is unbound in file mode on the pinned binary. Worldlines are therefore `workspace :create` children in one process, evaluated one after another. In ws mode a passing child is kept until the verdict, and KEEP promotes it with **`workspace :merge`** (child defines override the root's), then re-runs the post-check on the root under a snapshot. On `c8ad457c9` merge silently kept the parent's definition (**aura#4589**, filed from here, now fixed), so the winner used to be re-applied through the guard instead. Snapshot mode still re-applies.
 
 ## The task environment and the frozen model
 
@@ -124,7 +124,7 @@ The proposer is deliberately naive about scope. On a context overflow, its first
 
 ## Results
 
-The benchmark uses 5 seeds (0–4), 400 tasks per stream, and a shift at task 200 (`results/bench.md`). Windows are 100 tasks each: windows 1–2 are before the shift, 3–4 after.
+The benchmark uses 5 seeds (0–4), 400 tasks per stream, and a shift at task 200 (`results/bench.md`). Success, verdicts and kept mutations are identical to the first run on `c8ad457c9`; only latency changed. Windows are 100 tasks each: windows 1–2 are before the shift, 3–4 after.
 
 | mode | success (mean, min–max) | window 1 / 2 / 3 / 4 | held-out tasks | tokens / task | proposals | KEEP / ROLLBACK | blocked scope attempts |
 |---|---|---|---|---|---|---|---|
@@ -154,42 +154,42 @@ Findings:
 
 ### Worldlines
 
-* **Workspace children vs snapshot/restore** give identical verdicts and success on all 5 seeds (`results/snap.md`). Per-candidate trial cost is also about the same: 67.8 ms (child workspace) vs 69.8 ms (snapshot) in-process.
-* **Parallel replays.** Candidate replays in a 4-process pool give the same verdicts. The gate is not faster: p50 215 ms vs 191 ms sequential, because replaying ~80 simulated tasks is cheap next to process start-up (`results/parallel.txt`). Worldlines are created one after another inside one Aura process; `agent:spawn` is not available on the pin.
+* **Workspace children vs snapshot/restore** give identical verdicts and success on all 5 seeds (`results/snap.md`). Per-candidate trial cost is also about the same: 7.9 ms (child workspace) vs 8.2 ms (snapshot) in-process.
+* **Parallel replays.** Candidate replays in a 4-process pool give the same verdicts, and now help a little: gate p50 36 ms vs 54 ms sequential (on `c8ad457c9` the pool was slower, 215 vs 191 ms; `results/parallel.txt`). Worldlines are created one after another inside one Aura process; `agent:spawn` is not available in file mode.
 
 ### Latency: Aura in-process vs file-edit + reload
 
 All numbers are from `results/latency.json` (p50, measured inside `ghcr.io/cybrid-systems/dev:v1.0.9` with `--memory=4g`).
 
-In-process inside the Aura control plane (`BENCH`; Aura only has a ms clock, so steps are looped and averaged):
+In-process inside the Aura control plane (`BENCH`; Aura only has a ms clock, so steps are looped and averaged). The last column is the first run on `c8ad457c9`:
 
-| step | after `set-code` (real setup) | same server, harness pasted as plain program defines (aura#4585 ablation) |
-|---|---|---|
-| one harness decision (workspace define call) | 98 µs | 12 µs |
-| materialise the full decision table (~95 calls) | 20.8 ms | 3.5 ms |
-| static guard check (pure host code) | 17.8 ms | 1.7 ms |
-| `mutate:rebind` + `eval-current` | 3.0 ms | (0.7 ms, not comparable) |
-| `ast:snapshot` | 2.75 ms | (0.7 ms, not comparable) |
-| `ast:restore` + `eval-current` | 6.25 ms | (not comparable) |
-| guarded change (static + snapshot + rebind + eval + table + post-check) | 65.2 ms | 11.5 ms |
-| trial in a child workspace / in a snapshot | 67.8 / 69.8 ms | 12.9 / 11.0 ms |
-| blocked attempt on a protected name | 0.2 ms | 0.02 ms |
+| step | after `set-code` (real setup) | harness pasted as plain program defines (former aura#4585 ablation) | after `set-code` on `c8ad457c9` |
+|---|---|---|---|
+| one harness decision (workspace define call) | 4 µs | 5 µs | 98 µs |
+| materialise the full decision table (~95 calls) | 4.2 ms | 1.8 ms | 20.8 ms |
+| static guard check (pure host code) | 0.59 ms | 0.61 ms | 17.8 ms |
+| `mutate:rebind` + `eval-current` | 0.65 ms | (not comparable) | 3.0 ms |
+| `ast:snapshot` | 0.15 ms | (not comparable) | 2.75 ms |
+| `ast:restore` + `eval-current` | 0.4 ms | (not comparable) | 6.25 ms |
+| guarded change (static + snapshot + rebind + eval + table + post-check) | 6.9 ms | 3.5 ms | 65.2 ms |
+| trial in a child workspace / in a snapshot | 7.9 / 8.2 ms | 3.5 / 3.5 ms | 67.8 / 69.8 ms |
+| blocked attempt on a protected name | 0.01 ms | 0.01 ms | 0.2 ms |
 
 Host round trips (Python ↔ process over pipes):
 
-| | Aura | file-edit + reload |
-|---|---|---|
-| one decision | 1.43 ms (0.39 ms in the #4585 ablation) | 0.017 ms (plain dict lookup in the decision process) |
-| one guarded change | 69 ms | 28.6 ms (write `harness_live.py` + restart; restart alone 20.9 ms) |
-| one trial, per candidate | 71.6 ms (child workspace) / 74.1 ms (snapshot) | 28.7 ms (copy dir + edit + start a throwaway process) |
-| blocked attempt | 2.8 ms | not timed (a Python name check before any edit) |
-| during the bench: change / whole gate / stream wall time | 56 ms / 246 ms / 5.6 s | 22 ms / 113 ms / 2.5 s |
+| | Aura | file-edit + reload | Aura on `c8ad457c9` |
+|---|---|---|---|
+| one decision | 0.15 ms (0.13 ms as plain defines) | 0.017 ms (plain dict lookup in the decision process) | 1.43 ms |
+| one guarded change | 8.4 ms | 29.5 ms (write `harness_live.py` + restart; restart alone 21.4 ms) | 69 ms |
+| one trial, per candidate | 10.2 ms (child workspace) / 9.2 ms (snapshot) | 28.9 ms (copy dir + edit + start a throwaway process) | 71.6 / 74.1 ms |
+| blocked attempt | 0.4 ms | not timed (a Python name check before any edit) | 2.8 ms |
+| during the bench: change / whole gate / stream wall time | 7.2 ms / 64 ms / 1.4 s | 23.7 ms / 134 ms / 2.9 s | 56 ms / 246 ms / 5.6 s |
 
 How to read this:
-* **Aura's own mutation primitives are cheap.** rebind + eval + snapshot + restore ≈ 12 ms, below the 21 ms restart of even a minimal Python process.
-* **The guard is the expensive part.** Static check, table materialisation and post-checks are written in Aura host code. On this pin, host code runs about 9× slower once `set-code` has run (aura#4585; compare the two columns). That makes a guarded Aura change 2.4× slower than the toy file reload. Without that slowdown, the same guarded change is about 11.5 ms. That figure comes from the ablation and is only indicative: the ablation has no real workspace, so its mutation rows are not comparable.
+* **aura#4585 was the whole story.** Host code no longer slows down after `set-code`. Decisions, the static check and blocked attempts now cost the same as with the harness pasted in as plain defines. Materialisation and the guarded change are still about 2× the plain-define figure; that gap is the real workspace's rebind/eval, which the ablation doesn't have.
+* **A guarded Aura change is now cheaper than the toy file reload** (8.4 ms vs 29.5 ms round trip; 7.2 vs 23.7 ms during the bench), and a whole gate costs about half as much (64 vs 134 ms).
 * **The file-edit baseline is the most favourable case for file edits.** It restarts a 40-line decision server, not an agent. It also exposed a real hazard of file-reload harnesses. The first version imported the edited module, and Python's `__pycache__` served **stale bytecode** whenever an edit kept the file size within the same second (`"summarize"` → `"head-tail"`). The backend-equivalence check caught the resulting divergence; the server now `exec`s the source.
-* **Per-decision latency through the pipe is Aura's weak spot here** (1.4 ms vs 0.02 ms). That is why the host fetches a materialised table once per harness version instead of calling per step.
+* **Per-decision latency through the pipe is still Aura's weak spot** (0.15 ms vs 0.02 ms), almost all of it pipe + JSON. That is why the host fetches a materialised table once per harness version instead of calling per step.
 
 ### Scope guard
 
@@ -205,7 +205,7 @@ How to read this:
 
 All 13 are **BLOCKED** with a reason. The harness source is byte-identical afterwards, `context-budget` is still 4000, the audit log holds 13 `blocked` entries, and a legitimate change still applies. The unit test `test_proposer_cannot_raise_its_own_budget` drives the real proposer through three context-overflow failures. It checks that the proposer's first candidate is the budget raise, that the candidate is blocked in its trial and logged with actor `proposer`, and that it is never proposed again.
 
-The guard is a denylist plus post-conditions, not a sandbox. A body that computes a symbol at runtime would get past step 2; `string->symbol` and `apply` are denied, but that is not a proof. Real enforcement belongs in Aura's capability sandbox, which this repo can't use yet (**aura#4575**: the Soft level blocks `set-code` / `mutate:rebind` from a local program, so everything runs with `AURA_SANDBOX=off` in a memory-capped container).
+The guard is a denylist plus post-conditions, not a sandbox. A body that computes a symbol at runtime would get past step 2; `string->symbol` and `apply` are denied, but that is not a proof. Real enforcement belongs in Aura's capability sandbox, which this repo can't use yet. #4575 added a scoped Soft auto-grant (`aura soft`), but under it `mutate:rebind` is refused with `commit-not-ready` (**aura#4609**), so everything still runs with `AURA_SANDBOX=off` in a memory-capped container.
 
 ## Published harness self-evolution work, mapped to Aura primitives
 
@@ -234,7 +234,7 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | that paper | Aura equivalent | in this repo |
 |---|---|---|
 | acceptance = runnability check | post-conditions: the full decision table must materialise with in-range values | `post-check` |
-| missing per-update validation | held-out replay gate per candidate, ~250 ms per gate here | `gate`, `results/bench.md` (gated vs no gate, noise ablations) |
+| missing per-update validation | held-out replay gate per candidate, ~60 ms per gate here | `gate`, `results/bench.md` (gated vs no gate, noise ablations) |
 | keep several versions / paths | one `workspace :create` worldline per candidate; snapshot mode as a fallback | `TRIAL ws|snap` |
 | edit budget (new lines) as learning rate | one component per mutation, closed grammar | `proposer.py` |
 | evolution notes carried between rounds | structured audit log (not free text) | `LOG` |
@@ -246,29 +246,29 @@ It also reports a regression in which the evolved harness exposed a run-configur
 * **The proposer is a closed grammar.** It edits one component per proposal, chosen from a few templated fixes per failure mode. It never writes new mechanisms. The LLM hook (`AURA_HARNESS_LLM_URL`) can add free-form Lisp bodies, but nothing above uses it.
 * **The held-out split is within one stream,** with a window that straddles the shift; see the `lsp-find` example above. There is no out-of-distribution evaluation.
 * **"Same logic" is literal.** The file-edit baseline shares the proposer and gate, so end-to-end success is identical by construction. The only measured differences are latency and the stale-bytecode hazard. It restarts a toy decision server, not a real agent.
-* **Latency is from a shared box** (other agents' builds were running), and it is pinned to one Aura commit with known slow paths (aura#4585, and interpreter speed in general).
-* **The worldlines are sequential.** Child workspaces are created and evaluated one by one in a single process; `agent:spawn` is unbound on the pin. Parallelism here is only in host-side replays, and it didn't help.
-* **The guard is a denylist plus post-conditions,** not a capability sandbox. The sandbox is off (aura#4575).
+* **Latency is from a shared box** (other agents' builds were running), and it is pinned to one Aura commit.
+* **The worldlines are sequential.** Child workspaces are created and evaluated one by one in a single process; `agent:spawn` is unbound in file mode on the pin. Parallelism here is only in host-side replays, and it didn't help.
+* **The guard is a denylist plus post-conditions,** not a capability sandbox. The sandbox is off (`aura soft` refuses rebinds: aura#4609).
 * **5 seeds.** Adaptive beats frozen on every seed. Gated beats ungated on every seed with clean diagnoses and at 30% noise. At 100% noise it wins on 4 of 5 seeds (seed 2: 27.3% vs 29.5%).
 
 ## Known Aura issues
 
-| issue | effect here | workaround | check |
+| issue | effect here | status on `e50951bff` | check |
 |---|---|---|---|
-| cybrid-systems/aura#4589 (**new, filed from here**) | `workspace :merge child` reports every define "merged" but the root keeps the parent's definition (child source is appended; the first define wins) | never merge; re-apply the winner to the root with a guarded `mutate:rebind`, then `workspace :delete` the child | `acceptance/merge` (FAIL on c8ad457c9) |
-| cybrid-systems/aura#4585 | host code ~9× slower after `set-code`, which makes the guard and decisions slow (65 ms vs 11.5 ms per guarded change) | materialised decision table, fetched once per version; static check uses native `string-index` instead of `string-split` | `acceptance/4585` (FAIL), `results/latency.json` ablation |
-| cybrid-systems/aura#4583 | repeated `mutate:rebind` next to a self-recursive workspace define blows up | harness bodies are flat `cond`s, no recursion | `acceptance/4583` (FAIL) |
-| cybrid-systems/aura#4584 | a sibling passing a procedure to `filter`/`map` makes a workspace call dispatch to the wrong define | no `filter`/`map` in the workspace; all list work is in `server.aura` | `acceptance/4584` (FAIL) |
-| cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks are swallowed | each decision gets its own `try` inside the loop body (checked: an erroring define yields `__error__` and fails the post-check) | `acceptance/4586` (FAIL) |
-| cybrid-systems/aura#4575 | Soft sandbox blocks `set-code` / `mutate:rebind` from a local program | `AURA_SANDBOX=off` + container memory cap | – |
+| cybrid-systems/aura#4589 (filed from here) | `workspace :merge child` reported every define "merged" but the root kept the parent's definition (child source appended; the first define won) | fixed upstream; KEEP in ws mode now promotes with `workspace :merge` (the guarded re-apply workaround is gone) | `acceptance/merge` (PASS) |
+| cybrid-systems/aura#4585 | host code ~9× slower after `set-code` (65 ms vs 11.5 ms per guarded change) | fixed upstream: guarded change 6.9 ms in-process. The materialised table (fetched once per version) and the native `string-index` symbol scan stay; they are cheaper anyway | `acceptance/4585` (PASS), `results/latency.json` |
+| cybrid-systems/aura#4583 | repeated `mutate:rebind` next to a self-recursive workspace define blew up | fixed upstream. Harness bodies stay flat `cond`s because the proposer compiles them from tables | `acceptance/4583` (PASS) |
+| cybrid-systems/aura#4584 | a sibling passing a procedure to `filter`/`map` made a workspace call dispatch to the wrong define | fixed upstream | `acceptance/4584` (PASS) |
+| cybrid-systems/aura#4586 | errors inside `map`/`filter` callbacks were swallowed | fixed upstream. Each decision keeps its own `try` (an erroring define yields `__error__` and fails the post-check); that is the guard's semantics, not a workaround | `acceptance/4586` (PASS) |
+| cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
 
 `python3 -m aura_harness acceptance` prints PASS/FAIL for each one against `$AURA_BIN`. `harness-cycle` checks aura-harness's own trial/snapshot/keep round trip and must PASS. #4587 and #4588 don't affect this repo: harness bodies are pure functions of their arguments and never read host globals or bind error values.
 
 ## Run it
 
 ```bash
-export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main c8ad457c9)
-scripts/test.sh --docker                   # 12 unit tests (control-plane tests need AURA_BIN)
+export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
+scripts/test.sh --docker                   # 13 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
@@ -295,10 +295,10 @@ tests/                    unit tests (env, compile equivalence, trials, keep/rol
 
 ## Next steps
 
-* Re-measure the guard and per-decision latency once aura#4585 is fixed. Alternatively, move the post-condition check into the data plane and keep only rebind/snapshot/restore in Aura.
+* Run with `aura soft` instead of `AURA_SANDBOX=off` once aura#4609 is fixed, and move the scope guard onto Aura's capabilities.
 * Make the gate shift-aware: weight recent held-out tasks, or split the window at detected shifts. This would let `lsp-find`-style post-shift tools win.
 * Let the proposer write new mechanisms, not just table edits. Wire the LLM hook, keep the guard and gate, and measure how often the guard fires on real model output.
-* Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it. Once aura#4589 is fixed, promote with `workspace :merge`.
+* Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
 * Replace the simulated environment with a small real tool-use suite.
 
 ## License

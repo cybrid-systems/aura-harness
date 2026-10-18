@@ -33,7 +33,7 @@
    "heldout": 20
   },
   "why": "tool-error sed|bad-args",
-  "gate_ms": 162.1
+  "gate_ms": 34.4
  },
  {
   "ts": 41,
@@ -87,7 +87,7 @@
    "heldout": 22
   },
   "why": "info-lost code-file",
-  "gate_ms": 437.8
+  "gate_ms": 86.1
  },
  {
   "ts": 47,
@@ -123,7 +123,7 @@
    "heldout": 24
   },
   "why": "rediscover db-schema",
-  "gate_ms": 155.7
+  "gate_ms": 35.5
  },
  {
   "ts": 57,
@@ -159,7 +159,7 @@
    "heldout": 29
   },
   "why": "rediscover test-cmd",
-  "gate_ms": 234.7
+  "gate_ms": 44.3
  },
  {
   "ts": 67,
@@ -195,7 +195,7 @@
    "heldout": 34
   },
   "why": "tool-error sed|bad-args",
-  "gate_ms": 167.4
+  "gate_ms": 48.9
  },
  {
   "ts": 68,
@@ -249,7 +249,7 @@
    "heldout": 34
   },
   "why": "info-lost test-log",
-  "gate_ms": 461.8
+  "gate_ms": 107.6
  },
  {
   "ts": 100,
@@ -285,7 +285,7 @@
    "heldout": 40
   },
   "why": "rediscover db-schema",
-  "gate_ms": 166.4
+  "gate_ms": 50.2
  },
  {
   "ts": 116,
@@ -330,7 +330,7 @@
    "heldout": 43
   },
   "why": "context-overflow refactor",
-  "gate_ms": 270.6
+  "gate_ms": 65.9
  },
  {
   "ts": 126,
@@ -384,7 +384,7 @@
    "heldout": 42
   },
   "why": "info-lost service-log",
-  "gate_ms": 493.2
+  "gate_ms": 118.0
  },
  {
   "ts": 145,
@@ -420,7 +420,7 @@
    "heldout": 43
   },
   "why": "rediscover db-schema",
-  "gate_ms": 189.4
+  "gate_ms": 56.1
  },
  {
   "ts": 168,
@@ -450,7 +450,7 @@
    "heldout": 43
   },
   "why": "rediscover test-cmd",
-  "gate_ms": 95.9
+  "gate_ms": 32.9
  },
  {
   "ts": 180,
@@ -486,7 +486,7 @@
    "heldout": 41
   },
   "why": "rediscover repo-layout",
-  "gate_ms": 182.7
+  "gate_ms": 56.6
  },
  {
   "ts": 204,
@@ -516,7 +516,7 @@
    "heldout": 43
   },
   "why": "tool-error cat|not-found",
-  "gate_ms": 108.9
+  "gate_ms": 36.1
  },
  {
   "ts": 217,
@@ -552,7 +552,7 @@
    "heldout": 45
   },
   "why": "rediscover repo-layout",
-  "gate_ms": 178.6
+  "gate_ms": 61.7
  },
  {
   "ts": 219,
@@ -588,7 +588,7 @@
    "heldout": 41
   },
   "why": "tool-error sed|bad-args",
-  "gate_ms": 242.7
+  "gate_ms": 59.2
  },
  {
   "ts": 223,
@@ -630,7 +630,7 @@
    "heldout": 42
   },
   "why": "tool-error grep|timeout",
-  "gate_ms": 325.4
+  "gate_ms": 81.2
  },
  {
   "ts": 232,
@@ -672,7 +672,7 @@
    "heldout": 42
   },
   "why": "context-overflow refactor",
-  "gate_ms": 346.0
+  "gate_ms": 89.1
  },
  {
   "ts": 265,
@@ -714,7 +714,7 @@
    "heldout": 42
   },
   "why": "context-overflow refactor",
-  "gate_ms": 341.9
+  "gate_ms": 95.6
  },
  {
   "ts": 268,
@@ -750,7 +750,7 @@
    "heldout": 44
   },
   "why": "rediscover repo-layout",
-  "gate_ms": 252.9
+  "gate_ms": 71.1
  },
  {
   "ts": 300,
@@ -786,7 +786,7 @@
    "heldout": 40
   },
   "why": "rediscover db-schema",
-  "gate_ms": 202.9
+  "gate_ms": 63.4
  },
  {
   "ts": 314,
@@ -816,7 +816,7 @@
    "heldout": 41
   },
   "why": "tool-error sql|rate-limit",
-  "gate_ms": 189.7
+  "gate_ms": 53.4
  },
  {
   "ts": 395,
@@ -852,6 +852,6 @@
    "heldout": 42
   },
   "why": "tool-error apply-patch|bad-args",
-  "gate_ms": 187.9
+  "gate_ms": 60.3
  }
 ]

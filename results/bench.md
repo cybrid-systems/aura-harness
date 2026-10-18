@@ -30,10 +30,10 @@ Gate / change latency (host-measured, p50 over all seeds' events) and stream wal
 
 | mode | per change (apply or verdict) p50 | gate total p50 | trial call p50 | stream wall s (mean) |
 |---|---|---|---|---|
-| frozen harness | – | – | – | 0.2 |
-| file-edit + reload (gated) | 22.4 ms | 113 ms | 63 ms | 2.5 |
-| **Aura, gated** | 56.2 ms | 246 ms | 163 ms | 5.6 |
-| Aura, no gate | 69.1 ms | 0 ms | 0 ms | 2.1 |
+| frozen harness | – | – | – | 0.1 |
+| file-edit + reload (gated) | 23.7 ms | 134 ms | 71 ms | 2.9 |
+| **Aura, gated** | 7.2 ms | 64 ms | 22 ms | 1.4 |
+| Aura, no gate | 8.2 ms | 0 ms | 0 ms | 0.4 |
 
 Kept mutations (count across seeds):
 

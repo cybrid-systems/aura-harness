@@ -54,6 +54,19 @@ class ControlTests(unittest.TestCase):
         self.assertEqual(self.h.decide("compress", "test-log"), ["tail", 800])
         ops = [e["op"] for e in self.h.log()]
         self.assertEqual(ops, ["trial-ws", "rollback", "trial-ws", "keep"])
+        # ws-mode KEEP promotes with `workspace :merge` (aura#4589 fixed): one define, no appended duplicate
+        self.assertEqual(self.h.source().count("(define compress"), 1)
+
+    def test_keep_snap_mode_reapplies(self):
+        from aura_harness.harness import Candidate
+        tb = self.h.table()
+        self.h.worldlines = "snap"
+        c = Candidate("compress", dict(tb["compress"], **{"test-log": ["tail", 800]}), "w", "s", "compress test-log tail/800")
+        self.h.trial(7, [c])
+        r = self.h.verdict(7, 0, {"base": [1, 2, 3]}, "w")
+        self.assertEqual(r["verdict"], "KEEP")
+        self.assertEqual(self.h.decide("compress", "test-log"), ["tail", 800])
+        self.assertEqual(self.h.source().count("(define compress"), 1)
 
     def test_random_compiled_candidates_match_python(self):
         """Lisp compile (Aura) and Python compile (file baseline) give the same table for random edits"""

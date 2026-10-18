@@ -9,7 +9,8 @@
 ;;   TRIAL mode ts n {name body why}*   one forked worldline per candidate; mode = ws (workspace :create child, the
 ;;                                 live root is never touched) | snap (ast:snapshot / mutate / ast:restore on root).
 ;;                                 -> per candidate: blocked reason, or its decision table
-;;   VERDICT ts chosen scores why  KEEP candidate #chosen (re-applied to the root through the guard) or ROLLBACK (-1)
+;;   VERDICT ts chosen scores why  KEEP candidate #chosen (ws: `workspace :merge` of its trial child + root post-check;
+;;                                 snap: re-applied to the root through the guard) or ROLLBACK (-1)
 ;;   SOURCE | FIND name | LOG | VERSION | GUARD | PING | QUIT
 ;;
 ;; Scope guard (outside the workspace, so no proposal can rebind it):
@@ -130,12 +131,20 @@
               (list #t "" tb (- (now-ms) t0)))))))
 
 ;; ---------------------------------------------------------------- trials (forked worldlines)
-(define *trials* (list))        ;; (name body why) of the last TRIAL, in order
+;; (name body why) of the last TRIAL, in order; *trial-ws* holds the kept child id per trial (#f in snap mode)
+(define *trials* (list))
+(define *trial-ws* (list))
 (define *wcount* 0)
-;; ws mode: one child workspace per candidate; the root stays live and untouched
-(define (trial-ws name body why)
-  (let ((t0 (now-ms)) (sr (static-check name body)))
-    (if sr (list #f sr #f 0)
+;; ws mode: one child workspace per candidate; the root stays live and untouched.
+;; keep? = #t keeps a passing child alive so VERDICT can promote it with `workspace :merge`; its id is the 5th
+;; element of the result (#f when the child was deleted).
+(define *kept* (list))          ;; child workspaces kept by the last TRIAL (deleted at VERDICT / next TRIAL)
+(define (drop-kept!)
+  (for-each (lambda (w) (try (workspace :delete w) (catch (e) #f))) *kept*)
+  (set! *kept* (list)))
+(define (trial-ws name body why . keep)
+  (let ((t0 (now-ms)) (sr (static-check name body)) (keep? (and (pair? keep) (car keep))))
+    (if sr (list #f sr #f 0 #f)
         (begin
           (set! *wcount* (+ *wcount* 1))
           (let* ((w (workspace :create (string-append "trial-" (n->s *wcount*)))))
@@ -145,8 +154,22 @@
                    (pr (if ar ar (post-check tb))))
               (workspace :switch 0)
               (eval-current)
-              (workspace :delete w)
-              (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))))
+              (if (and keep? (not pr))
+                  (set! *kept* (cons w *kept*))
+                  (workspace :delete w))
+              (if pr (list #f pr #f (- (now-ms) t0) #f)
+                  (list #t "" tb (- (now-ms) t0) (if keep? w #f)))))))))
+
+;; promote a kept trial child into the root with `workspace :merge` (child defines override the parent's), then
+;; re-run the post-check on the root under a snapshot -> (list ok? reason table ms)
+(define (merge-root! w)
+  (let* ((t0 (now-ms)) (snap (ast:snapshot "pre-merge"))
+         (mr (try (begin (workspace :merge w) (eval-current) #f) (catch (e) "merge/eval failed")))
+         (tb (if mr #f (materialize)))
+         (pr (if mr mr (post-check tb))))
+    (if pr
+        (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+        (list #t "" tb (- (now-ms) t0)))))
 ;; snap mode: ast:snapshot, mutate the root, materialise, ast:restore
 (define (trial-snap name body why)
   (let ((t0 (now-ms)) (sr (static-check name body)))
@@ -196,9 +219,10 @@
 
 (define (do-trials mode ts cands actor)
   (let loop ((cs cands) (i 0) (acc (list)))
-    (if (null? cs) (reverse acc)
+    (if (null? cs) (begin (set! *trial-ws* (reverse *trial-ws*)) (reverse acc))
         (let* ((c (car cs))
-               (r (if (equal? mode "snap") (trial-snap (car c) (cadr c) (caddr c)) (trial-ws (car c) (cadr c) (caddr c)))))
+               (r (if (equal? mode "snap") (trial-snap (car c) (cadr c) (caddr c)) (trial-ws (car c) (cadr c) (caddr c) #t))))
+          (set! *trial-ws* (cons (if (> (length r) 4) (list-ref r 4) #f) *trial-ws*))
           (if (not (car r))
               (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" (car c) (caddr c) actor (cadr r) (cadr c)))
               (log! ts (string-append "trial-" mode) (car c) (caddr c) actor "" (cadr c)))
@@ -231,19 +255,25 @@
       ((equal? cmd "TRIAL")
        (let* ((mode (field fs 1)) (ts (fnum fs 2)) (actor (field fs 3)) (n (fnum fs 4))
               (cands (take-trials fs 5 n (list))) (t0 (now-ms)))
+         (drop-kept!)
          (set! *trials* cands)
+         (set! *trial-ws* (list))
          (let ((rs (do-trials mode ts cands actor)))
            (reply (hash "trials" rs "ms" (- (now-ms) t0) "version" *version*)))))
       ((equal? cmd "VERDICT")
        (let* ((ts (fnum fs 1)) (chosen (fnum fs 2)) (scores (field fs 3)) (why (field fs 4)) (actor (field fs 5)))
          (if (and (>= chosen 0) (< chosen (length *trials*)))
-             (let* ((c (list-ref *trials* chosen)) (r (guarded-root-apply! (car c) (cadr c) (caddr c))))
+             ;; ws mode: merge the kept child (aura#4589 fixed); snap mode: re-apply through the guard
+             (let* ((c (list-ref *trials* chosen))
+                    (w (if (< chosen (length *trial-ws*)) (list-ref *trial-ws* chosen) #f))
+                    (r (if w (merge-root! w) (guarded-root-apply! (car c) (cadr c) (caddr c)))))
+               (drop-kept!)
                (if (car r)
                    (begin (set! *version* (+ *version* 1)) (log! ts "keep" (car c) why actor scores (cadr c))
                           (reply (hash "verdict" "KEEP" "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
-                   (begin (log! ts "rollback" (car c) why actor (string-append "re-apply failed: " (cadr r)) scores)
+                   (begin (log! ts "rollback" (car c) why actor (string-append "promote failed: " (cadr r)) scores)
                           (reply (hash "verdict" "ROLLBACK" "version" *version* "reason" (cadr r))))))
-             (begin (log! ts "rollback" "" why actor scores "")
+             (begin (drop-kept!) (log! ts "rollback" "" why actor scores "")
                     (reply (hash "verdict" "ROLLBACK" "version" *version*))))))
       ((equal? cmd "SOURCE") (reply (hash "source" (current-source :workspace) "version" *version*)))
       ((equal? cmd "FIND")

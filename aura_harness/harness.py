@@ -62,7 +62,7 @@ def _default(values) -> object:
 
 
 def to_lisp(name: str, m: dict) -> str:
-    """compile one component mapping into a flat-cond lambda (no recursion, no filter/map: aura#4583/#4584)"""
+    """compile one component mapping into a flat-cond lambda (tables compile to flat conds)"""
     if name == "route-tool":
         d = _default(list(m.values()))
         arms = " ".join(f"((equal? need {q(k)}) {q(v)})" for k, v in m.items() if v != d)

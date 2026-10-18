@@ -21,7 +21,7 @@ Gate / change latency (host-measured, p50 over all seeds' events) and stream wal
 
 | mode | per change (apply or verdict) p50 | gate total p50 | trial call p50 | stream wall s (mean) |
 |---|---|---|---|---|
-| **Aura, gated** | 56.4 ms | 237 ms | 165 ms | 5.5 |
+| **Aura, gated** | 7.4 ms | 61 ms | 23 ms | 1.5 |
 
 Kept mutations (count across seeds):
 
