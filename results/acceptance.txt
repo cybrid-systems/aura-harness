@@ -13,7 +13,7 @@ FAIL  4583-linear   rebind 1001-1500 of the same body costs < 1.5x rebind 1-500 
 FAIL  4610          1000 deleted child-workspace trials leave root rebind cost < 1.5x (aura#4610, filed from here)
       got: (flat #f)
 FAIL  4615          rebind of f with a 4x bigger caller of f costs < 8x (aura#4615, filed from here)
-      got: superlinear 55ms -> 838ms
+      got: superlinear 60ms -> 739ms
 FAIL  4617          workspace define calling a file-level fn by name keeps its frame's vector/list (aura#4617, filed from here)
       got: (75 30)
 FAIL  4618          set! of a global in a workspace define stores; no const-fold after set! (aura#4618, filed from here)
@@ -22,7 +22,7 @@ FAIL  4619          raise in a while body / non-final when, unless reaches try (
       got: (returned returned returned returned)
 FAIL  4620          100M-deep recursion raises a catchable error under a 1.5 GB cap (aura#4620, filed from here)
       got: (no output, rc=-6) l+284 in /usr/lib/x86_64-linux-gnu/libc.so.6
-si_addr 0x3e800000011 is outside any loaded module (use-after-free or uninit ptr?)
+si_addr 0x3e800000012 is outside any loaded module (use-after-free or uninit ptr?)
 Resolve with: addr2line -e aura -f -C <ip> <si_addr>
 === END CRASH ===
 
@@ -34,5 +34,9 @@ FAIL  4622          a #\( char literal in the first form doesn't make the file r
   (aura seeds AURA_BIN from self when unset — still export in runners)
 Special modes: --serve, --serve-async, --ir, --jit, --help
 
+PASS  4623          second identical run of a tree-walked transformer gives the same list (aura#4623, c6a18e8a5 regression, filed from here)
+      got: (R (lambda (need) (%tick) (let loop ((i 0)) (%tick) (loop (+ i 1)))))
+FAIL  4624          unbound variable inside a map callback raises (aura#4624, filed from here)
+      got: swallowed
 PASS  merge         workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)
       got: MERGED

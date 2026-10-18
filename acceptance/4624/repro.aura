@@ -1,0 +1,4 @@
+;; aura#4624 (filed from here): an unbound variable inside a map callback must raise, not yield ()
+(define (h x) (map (lambda (y) (nope y)) x))
+(display (try (begin (h (list 1 2)) "swallowed") (catch (e) "caught")))
+(newline)

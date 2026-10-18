@@ -1,0 +1,1 @@
+(R (lambda (need) (%tick) (let loop ((i 0)) (%tick) (loop (+ i 1)))))

@@ -1,7 +1,7 @@
 """Acceptance checks for the Aura build in AURA_BIN.
 
 Each acceptance/<name>/repro.aura runs from its own directory; the last non-empty stdout line must equal expect.txt.
-Issue repros (#4583 #4584 #4585 #4586 copied from aura-memory; #4589 merge, #4610 #4615 #4617-#4622 filed from here) FAIL while the issue\nis open on that build;
+Issue repros (#4583 #4584 #4585 #4586 copied from aura-memory; #4589 merge, #4610 #4615 #4617-#4624 filed from here) FAIL while the issue\nis open on that build;
 harness-cycle is aura-harness's own snapshot / rebind / restore shape and must PASS.
 """
 from __future__ import annotations
@@ -27,6 +27,8 @@ CHECKS = {
     "4620": "100M-deep recursion raises a catchable error under a 1.5 GB cap (aura#4620, filed from here)",
     "4621": "rest parameters in a workspace define (aura#4621, filed from here)",
     "4622": "a #\\( char literal in the first form doesn't make the file runner refuse the file (aura#4622, filed from here)",
+    "4623": "second identical run of a tree-walked transformer gives the same list (aura#4623, c6a18e8a5 regression, filed from here)",
+    "4624": "unbound variable inside a map callback raises (aura#4624, filed from here)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
 }
 
