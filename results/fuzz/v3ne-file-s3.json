@@ -1,0 +1,24 @@
+{
+ "summary": {
+  "n": 300,
+  "seed": 3,
+  "times_s": {
+   "file": 0.63
+  },
+  "mismatch": {
+   "file": 0
+  },
+  "blocked": {
+   "file": 0
+  },
+  "crash": {
+   "file": 0
+  },
+  "timeout": {
+   "file": 0
+  },
+  "gen": 3,
+  "shrunk": {}
+ },
+ "bad": []
+}

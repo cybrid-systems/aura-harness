@@ -350,6 +350,20 @@ The wraps cost time: on seed 1, `apply` went from 49.5 to 57.7 s for 300 bodies 
 - **Path-weight guard.** At admission, `path-check` counts the call sites from the new body to each workspace define it calls, using the current source and native `string-index`, and multiplies along every path. A body whose heaviest path is over `AURA_HARNESS_PATH_MAX` (default 1024) is blocked with "call-path weight N … exceeds AURA_HARNESS_PATH_MAX (aura#4630)". It never fired in the fuzz runs, because the random bodies reach weights ≤ 242. It is there to stop a deliberately deep proposal from stalling the control plane. Unit tests: a weight-41 body is accepted, a weight-1641 body is blocked, and a weight-83 body gives the right table.
 - **What remains is memory.** RSS grows 6–10 MB per rebind on the pin (101 MB → 3.0 GB over 293 steps). That is the rebind-history growth of aura#4583, fixed on main in a398f78a7 but not adopted here because of #4623, #4627 and #4629. The workaround is the existing one: restart the control plane periodically (`scripts/longrun.py`).
 
+**Round 13: hash tables (`--gen 3`).** Adds a `(hash)` filled by `hash-set!` in a named let and read back four ways: `hash-ref` with a default, `(length (hash-keys h))`, `hash-remove!` then the count, and `hash-has-key?`. Keys are small ints, 1-element lists (`equal?` keys), or a prefix of `"abc"`, which can be `""`. `--no-empty-key` never uses `""`. `hash-keys`, `hash-remove!` and `hash-length` are now on the guard's allowlist; all are native primitives.
+
+| `--gen 3`, 300 bodies, pin `e50951bff` | apply | trial | nofuel | file |
+|---|---|---|---|---|
+| seed 1, before the wrap | 30 wrong | 30 | 60 | 30 |
+| seed 1, `--no-empty-key` | **0** | **0** | 33 | **0** |
+| seed 1, with `AURA_HARNESS_HASH_WRAP` | **0** | **0** | – | – |
+| seed 2, with the wrap | **0** | **0** | 54 | 27 |
+| seed 3, with the wrap | **0** | **0** | 55 | 32 |
+
+- **Every hash mismatch was `""`.** The shrinker cut each one to about 165 characters, for example `(let ((h (hash))) (let loop ((i 0)) (if (< i 6) (begin (hash-set! h (substring "abc" 0 0) x) …))) (length (hash-keys h)))`, which gives 0 instead of 1. `hash-set!` and the `hash` constructor silently drop the empty-string key. It is a guard from an old corruption fix, filed from aura-memory as **aura#4631**. With `""` excluded, all four paths agree with the reference on ints, strings and list keys. The nofuel column is the known #4617/#4626 family, as before.
+- **The wrap.** `AURA_HARNESS_HASH_WRAP` (default 1) wraps the key, the second argument of `hash-set!`/`hash-ref`/`hash-has-key?`/`hash-remove!`, in `(%hk k)`. That stores a string key as `"s:" + k`. `(hash k v …)` becomes `(%hash0 (hash (%hk k) v …))`, and `hash-keys` becomes the decoding `%hash-keys`. A hash operation used as a value is rejected. SOURCE strips all of this, so it shows the plain body. `%hash0` charges 8 fuel steps per table, because a `(hash)` is never reclaimed (aura#4613). apply time went 71 → 80 s per 300 bodies (+12%). Covered by `HashWrapTests`.
+- **The request loop leaks; the hash body barely matters.** Repeated `TABLE` calls keep 13 KB each (2,000 → 8,000 calls: 101 → 206 MB), whatever the knob body is. A body that allocates a `(hash)` per call adds 2.3 KB per table (4 calls). Even `PING` keeps 1.3 KB. A bare stdin loop splits that into `(hash "pong" #t)` ~0.65 KB, `string-split` ~0.37 KB and `json-encode` ~0.19 KB per request: #4613 plus #4608 strings. Posted on **aura#4613**. The host already fetches the table once per policy version, and long runs restart the control plane.
+
 ### Scope guard
 
 `python3 -m aura_harness guard` (`results/guard.txt`) runs 13 attempts against the live harness:
@@ -435,6 +449,8 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | cybrid-systems/aura#4627 (new, filed from here) | regression in c6a18e8a5, still on main 39595edd4: `(equal? (list 1 2) want)` is `#f` on every 66th iteration of a tail-call loop | stay on e50951bff | `acceptance/4627` (PASS on the pin) |
 | cybrid-systems/aura#4629 (filed from aura-memory) | regression in c6a18e8a5, still on 39595edd4: freshly allocated pairs/vectors in hot loops get clobbered (self-referential list cells; a `(vector x 0 0)` with length 0). The fuzzer sees it in 42/1800 plain file-level bodies on main, 0 on the pin | stay on e50951bff | `acceptance/4629-vec` (PASS on the pin) |
 | cybrid-systems/aura#4630 (new, filed from here) | workspace compile (`set-code`/`eval-current`/`mutate:rebind`) is exponential in call-chain depth with 2 call sites per level; multi-knob fuzz APPLY rose to 3–10 s and the control plane was OOM-killed | knob chunk passes knobs as values (`knob-row4`, `AURA_HARNESS_KNOB_ROW4`); admission blocks call-path weight > `AURA_HARNESS_PATH_MAX` (1024) | `acceptance/4630` (FAIL on the pin and 39595edd4) |
+| cybrid-systems/aura#4631 (filed from aura-memory) | `hash-set!` / `(hash …)` silently drop the key `""`. The fuzzer's `--gen 3` saw it in 30/300 bodies on every path | string hash keys stored as `"s:" + key` (`AURA_HARNESS_HASH_WRAP`) | `HashWrapTests.test_unwrapped_hits_aura_4631` |
+| cybrid-systems/aura#4613 (filed from aura-memory) | `(hash)`, `vector->list` and similar garbage is never reclaimed: every request keeps ≥1.3 KB and a `TABLE` read keeps 13 KB | table fetched once per version; a proposed `(hash)` costs 8 fuel steps; periodic restarts | – |
 | cybrid-systems/aura#4628 (filed from aura-memory) | `member` compares pairs, vectors and floats with `eq?` | the guard compares strings only; the fuzzer's `member` is on ints | – |
 | cybrid-systems/aura#4598 (reopened) | rebind+eval / snapshot / restore are O(workspace size) | none; see Harness size | `scripts/size_sweep.py` |
 | cybrid-systems/aura#4609 (open) | under `aura soft`, `mutate:rebind` is refused (`commit-not-ready`), so the #4575 Soft auto-grant can't be used | `AURA_SANDBOX=off` + container memory cap | – |
@@ -445,7 +461,7 @@ It also reports a regression in which the evolved harness exposed a run-configur
 
 ```bash
 export AURA_BIN=~/aura/build-rel/aura      # Aura build-rel binary (tested: main e50951bff; first published on c8ad457c9)
-scripts/test.sh --docker                   # 34 unit tests (control-plane tests need AURA_BIN)
+scripts/test.sh --docker                   # 36 unit tests (control-plane tests need AURA_BIN)
 scripts/bench.sh --docker                  # acceptance, guard, latency, 4-mode bench, noise 0.3/1.0, snapshot worldlines
 scripts/in-docker.sh 'python3 -m aura_harness run --mode aura-gated --seed 0'   # every verdict of one stream
 scripts/in-docker.sh 'python3 -m aura_harness guard'                            # scope-guard attack suite
@@ -483,7 +499,7 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 * Use `agent:spawn` (or parallel fibers over workspace children) for truly parallel worldlines when the pin has it.
 * Re-pin to main once aura#4623 and aura#4627 are fixed (still open on 39595edd4). 9f82bede1 already fixes the rebind-history growth (aura#4583) and the deleted-workspace leak (aura#4610), which would retire the compaction knob and the periodic restarts.
 * Make the tick cheap once aura#4617/#4618 are fixed (an inline counter instead of a workspace call), or drop it for an Aura-native step budget / preemptible fiber if one lands.
-* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; extend the fuzzer to hash tables.
+* Drop the HOF and std-lib wraps once aura#4626 / aura#4617 are fixed; drop the hash key wrap once aura#4631 is fixed.
 * Re-pin past `e50951bff` once aura#4629 (heap corruption; also hits 2.3% of plain file-level fuzz bodies on `39595edd4`), #4623 and #4627 are fixed. `results/acceptance-39595edd4.txt` tracks them.
 * Drop `knob-row4` and the path-weight guard once aura#4630 is fixed (memoised callee compile), and lower or drop the M=8 restarts once the pin includes the aura#4583 history fix.
 * Replace the simulated environment with a small real tool-use suite.

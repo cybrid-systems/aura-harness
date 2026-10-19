@@ -281,6 +281,50 @@ class HofWrapTests(unittest.TestCase):
             h.close()
 
 
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class HashWrapTests(unittest.TestCase):
+    """String hash keys are stored as "s:" + key (AURA_HARNESS_HASH_WRAP): hash-set! and (hash ...) silently drop the
+    key "" (aura#4631; found by the fuzzer's --gen 3). SOURCE shows the plain body."""
+    BODY = ('(lambda (x) (let ((h (hash "" 1 "a" 2))) (hash-set! h "" (+ x 10)) (hash-remove! h "a")'
+            ' (+ (hash-ref h "" 0) (* 20 (length (hash-keys h))) (if (hash-has-key? h "a") 50 0)'
+            ' (if (string=? (car (hash-keys h)) "") 3 0))))')
+    WANT = [[33, 34, 35, 36]]
+
+    def start(self, wrap):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_KNOBS"] = "1"
+        os.environ["AURA_HARNESS_HASH_WRAP"] = wrap
+        try:
+            return AuraHarness("ws")
+        finally:
+            os.environ.pop("AURA_HARNESS_KNOBS", None); os.environ.pop("AURA_HARNESS_HASH_WRAP", None)
+
+    def test_empty_key_round_trips(self):
+        from aura_harness.harness import Candidate
+        h = self.start("1")
+        try:
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
+            self.assertTrue(r["ok"], r.get("reason"))
+            self.assertEqual(r["table"]["knobs"], self.WANT)
+            src = h.source()
+            self.assertIn('(hash "" 1 "a" 2)', src); self.assertIn('(hash-set! h "" (+ x 10))', src)
+            self.assertNotIn("%hk", src); self.assertNotIn("%hash", src)
+            n = h.pipe.call("ADMIT", "knob-0", "(lambda (x) (let ((f hash-ref)) 0))")
+            self.assertIn("hash operation used as a value", n["reason"])
+        finally:
+            h.close()
+
+    def test_unwrapped_hits_aura_4631(self):
+        # documents the Aura bug the wrap avoids; flip once aura#4631 is fixed on the pin
+        from aura_harness.harness import Candidate
+        h = self.start("0")
+        try:
+            r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
+            self.assertNotEqual(r.get("table", {}).get("knobs"), self.WANT)
+        finally:
+            h.close()
+
+
 class StdWrapTests(unittest.TestCase):
     """Allowlisted std-lib functions that are file-level Aura defines (last, list-tail, assq, even?, ...) run as
     workspace %versions: a workspace define calling the file-level one by name has its frame's lists reclaimed mid-call,

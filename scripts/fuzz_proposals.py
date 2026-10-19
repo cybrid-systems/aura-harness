@@ -1,4 +1,4 @@
-"""Differential fuzzing of proposed harness code (Rounds 7, 9, 11).
+"""Differential fuzzing of proposed harness code (Rounds 7, 9, 11, 13).
 
 Generates random, well-typed, terminating bodies for a mutable knob define (knob-0: x in {0,1,2,3} -> [0,100])
 in the guard's allowed subset: integer arithmetic, if / cond / case / and / or / not, let / let* / letrec, named-let
@@ -14,6 +14,10 @@ block on a body the reference evaluates is a false reject.
 Round 9: --gen 2 adds strings and vector loops; --shrink N reduces up to N mismatching bodies per path to a small
 body that is still wrong the same way (greedy subterm replacement, reference re-derived per step; file-path bodies that
 only fail after earlier defines are re-run behind a reduced context).
+
+Round 13: --gen 3 adds hash tables: (hash) filled by hash-set! in a named let, read back by hash-ref with a default,
+hash-keys count, hash-remove! + count or hash-has-key?; keys are small ints, 1-element lists or a prefix of "abc"
+("" included: aura#4631; --no-empty-key leaves it out).
 
 Round 11: --multi M fuzzes a sequence of N changes over knob-0..knob-(M-1) in one live harness. A body for knob-j may
 call (knob-i E) for i < j (no cycles), so every change also re-checks all downstream knobs. Each step compares the
@@ -36,6 +40,7 @@ from aura_harness.control import AuraHarness, aura_env  # noqa: E402
 from aura_harness.harness import Candidate  # noqa: E402
 
 FALSE = False
+NO_EMPTY_KEY = False  # --no-empty-key: v3 string keys are never "" (separates aura#4631 from other hash bugs)
 KNOBS: dict = {}     # multi-knob mode: knob index -> current body AST (absent = the seed's constant 10)
 
 
@@ -58,9 +63,11 @@ class Gen:
         c = r.choice(["arith", "arith", "mul", "div", "abs", "minmax", "if", "cond", "case", "let", "let*", "loop",
                       "len", "ref", "vec", "strlen", "lam", "letrec", "last"]
                      + (["slen", "sdigit", "sdigit", "vloop", "vloop"] if self.v >= 2 else [])
+                     + (["hloop"] * 4 if self.v >= 3 else [])
                      + (["kcall"] * 3 if self.knobs else []))
         n = lambda: self.int_(env, d + 1)
         if c == "kcall": return ("kcall", r.choice(self.knobs), n())
+        if c == "hloop": return self.hloop(env, d, r.choice(["ref", "ref", "count", "rmcount"]))
         if c == "arith": return (r.choice(["+", "-"]), n(), n())
         if c == "mul": return ("modulo", ("*", n(), n()), ("num", 9973))
         if c == "div": return (r.choice(["quotient", "remainder", "modulo"]), n(), ("+", ("num", 1), ("abs", n())))
@@ -121,7 +128,9 @@ class Gen:
         r = self.r
         n = lambda: self.int_(env, d + 1)
         c = r.choice(["cmp", "cmp", "par", "not", "andor", "null", "member"] + (["scmp", "equal"] if self.v >= 2 else [])
+                     + (["hhas"] if self.v >= 3 else [])
                      if d < self.max_depth else ["cmp"])
+        if c == "hhas": return self.hloop(env, d, "has")
         if c == "scmp": return (r.choice(["string=?", "string<?", "string>?"]), self.str_(env, d + 1), self.str_(env, d + 1))
         if c == "equal": return ("equal?", self.list_(env, d + 1), self.list_(env, d + 1))
         if c == "cmp": return (r.choice(["<", ">", "=", "<=", ">="]), n(), n())
@@ -131,6 +140,22 @@ class Gen:
         if c == "null": return ("null?", self.list_(env, d + 1))
         return ("member", n(), self.list_(env, d + 1))
 
+
+    def hkey(self, env, d):
+        """v3 hash keys: small ints, or a prefix of "abc" ("" included: aura#4631), or a 1-element list (equal? keys)"""
+        e = self.int_(env, d + 1)
+        t = self.r.choice(["i", "s", "s", "l"])
+        if t == "i": return ("modulo", e, ("num", 4))
+        if t == "s": return ("hstr", ("+", ("num", 1), ("modulo", e, ("num", 3))) if NO_EMPTY_KEY else ("modulo", e, ("num", 3)))
+        return ("list", [("modulo", e, ("num", 3))])
+
+    def hloop(self, env, d, op):
+        """v3: (hash) filled by hash-set! in a named let, then read back by hash-ref with a default, key count,
+        hash-remove! + count, or hash-has-key?"""
+        h, i = self.fresh("hh"), self.fresh("i")
+        env2 = env + [(i, "int")]
+        k = self.r.randint(0, 6)
+        return ("hloop", h, i, k, self.hkey(env2, d), self.int_(env2, d + 1), self.hkey(env, d), self.int_(env, d + 1), op)
 
     def str_(self, env, d):
         """non-empty digit strings (number->string of an abs), so substring / string->number stay total"""
@@ -180,6 +205,15 @@ def to_aura(e) -> str:
                 f" (vector-ref {v} (modulo {to_aura(N)} {k})))))")
     if t == "v2l": return f"(vector->list (list->vector {to_aura(e[1])}))"
     if t == "kcall": return f"(knob-{e[1]} {to_aura(e[2])})"
+    if t == "hstr": return f'(substring "abc" 0 {to_aura(e[1])})'
+    if t == "hloop":
+        _, h, i, k, KE, VE, QE, DE, op = e
+        fill = f"(let loop (({i} 0)) (if (< {i} {k}) (begin (hash-set! {h} {to_aura(KE)} {to_aura(VE)}) (loop (+ {i} 1))) #t))"
+        read = {"ref": f"(hash-ref {h} {to_aura(QE)} {to_aura(DE)})",
+                "count": f"(length (hash-keys {h}))",
+                "rmcount": f"(begin (hash-remove! {h} {to_aura(QE)}) (length (hash-keys {h})))",
+                "has": f"(hash-has-key? {h} {to_aura(QE)})"}[op]
+        return f"(let (({h} (hash))) {fill} {read})"
     if t == "list": return "(list" + "".join(" " + to_aura(x) for x in e[1]) + ")"
     if t == "vector": return "(vector " + " ".join(to_aura(x) for x in e[1:]) + ")"
     return "(" + t + "".join(" " + to_aura(x) for x in e[1:]) + ")"
@@ -246,6 +280,18 @@ def ev(e, env):
         kb = KNOBS.get(e[1])
         return 10 if kb is None else ev(kb, {"x": E(e[2])})
     if t == "list": return [E(x) for x in e[1]]
+    if t == "hstr": return "abc"[:E(e[1])]
+    if t == "hloop":
+        _, h, i, k, KE, VE, QE, DE, op = e
+        hk = lambda v: (type(v).__name__, tuple(v) if isinstance(v, list) else v)
+        tbl = {}
+        for iv in range(k):
+            env2 = dict(env); env2[i] = iv
+            tbl[hk(ev(KE, env2))] = ev(VE, env2)
+        if op == "ref": q = hk(E(QE)); d = E(DE); return tbl.get(q, d)
+        if op == "count": return len(tbl)
+        if op == "rmcount": tbl.pop(hk(E(QE)), None); return len(tbl)
+        return hk(E(QE)) in tbl
     if t == "sdigit":
         sv = E(e[2]); j = E(e[3]) % len(sv); return int(sv[j])
     if t == "ssub":
@@ -330,6 +376,7 @@ def make_body(r, v=1):
 LISTY = {"list", "map", "filter", "reverse", "cons", "append", "v2l"}
 BOOLY = {"<", ">", "=", "<=", ">=", "even?", "odd?", "zero?", "positive?", "negative?", "not", "and", "or", "null?",
          "member", "string=?", "string<?", "string>?", "equal?"}
+# hloop with op "has" is boolean; kind() checks it below
 STRY = {"number->string", "string-append", "ssub", "srev", "sloop"}
 
 
@@ -338,6 +385,8 @@ def kind(e):
     if not (isinstance(e, tuple) and e and isinstance(e[0], str)) or re.fullmatch(r"[a-z]+[0-9]+", e[0]): return None
     t = e[0]
     if t == "lambda": return "fn"
+    if t == "hloop": return "bool" if e[8] == "has" else "int"
+    if t == "hstr": return "str"
     return "list" if t in LISTY else "bool" if t in BOOLY else "str" if t in STRY else "int"
 
 
@@ -543,7 +592,8 @@ def main():
     ap.add_argument("--paths", default="apply,trial,nofuel,file")
     ap.add_argument("--out", default="")
     ap.add_argument("--call-timeout", type=float, default=60.0, help="kill + restart the control plane after this many s per body")
-    ap.add_argument("--gen", type=int, default=1, help="generator version (1 = Round 7 grammar, 2 = + strings / vector loops / equal?)")
+    ap.add_argument("--gen", type=int, default=1, help="generator version (1 = Round 7 grammar, 2 = + strings / vector loops / equal?, 3 = + hash tables)")
+    ap.add_argument("--no-empty-key", action="store_true", help="v3: never use \"\" as a hash key (aura#4631)")
     ap.add_argument("--shrink", type=int, default=0, help="shrink up to this many mismatching bodies per path")
     ap.add_argument("--shrink-budget", type=int, default=200, help="max candidate runs per shrunk body")
     ap.add_argument("--keep-going", action="store_true", help="multi mode: skip any blocked step instead of stopping (profiling runs)")
@@ -551,6 +601,8 @@ def main():
     ap.add_argument("--table-ms", action="store_true", help="multi mode: also time a TABLE read after each apply")
     ap.add_argument("--multi", type=int, default=0, help="M knobs whose bodies call lower knobs; check the whole table after every rebind")
     a = ap.parse_args()
+    global NO_EMPTY_KEY
+    NO_EMPTY_KEY = a.no_empty_key
     if a.multi:
         return multi_main(a)
     r = random.Random(a.seed)

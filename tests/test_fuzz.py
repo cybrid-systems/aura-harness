@@ -24,6 +24,26 @@ class FuzzGenTests(unittest.TestCase):
         self.assertEqual([fz.ev(v, {"x": x}) for x in range(4)], [0, 1, 4, 9])
         self.assertIn("vector-set! vv1 i2", fz.to_aura(v))
 
+    def test_v3_hash_forms(self):
+        r = random.Random(5)
+        n = 0
+        for _ in range(100):
+            src, vals, e = fz.make_body(r, 3)
+            self.assertEqual(fz.ref_vals(e), vals)
+            n += "(hash)" in src
+        self.assertGreater(n, 30)
+        # i*i mod 3 = 0 1 1 0 1: keys "" "a" "a" "" "a" -> 2 distinct; "" holds its last write (i=3); list keys compare by equal?
+        h = ("hloop", "hh1", "i2", 5, ("hstr", ("modulo", ("*", ("var", "i2"), ("var", "i2")), ("num", 3))), ("var", "i2"),
+             ("hstr", ("num", 0)), ("num", 99), "ref")
+        self.assertEqual(fz.ev(h, {"x": 0}), 3)
+        self.assertEqual(fz.ev(h[:8] + ("count",), {"x": 0}), 2)
+        self.assertEqual(fz.ev(h[:8] + ("rmcount",), {"x": 0}), 1)
+        self.assertIs(fz.ev(h[:8] + ("has",), {"x": 0}), True)
+        self.assertIn('(hash-set! hh1 (substring "abc" 0', fz.to_aura(h))
+        lk = ("hloop", "hh1", "i2", 2, ("list", [("num", 1)]), ("var", "i2"), ("list", [("num", 1)]), ("num", 9), "ref")
+        self.assertEqual(fz.ev(lk, {"x": 0}), 1)
+        self.assertEqual(fz.kind(h[:8] + ("has",)), "bool")
+
 
 class MultiKnobTests(unittest.TestCase):
     def tearDown(self):

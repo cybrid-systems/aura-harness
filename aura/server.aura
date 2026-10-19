@@ -223,13 +223,23 @@
             "(define %zero? (lambda (n) (= n 0)))\n"
             "(define %positive? (lambda (n) (> n 0)))\n"
             "(define %negative? (lambda (n) (< n 0)))\n"
-            "(define %expt (lambda (b e) (if (not (integer? e)) (raise \"expt: integer exponent only\") (let loop ((k (abs e)) (acc 1)) (%tick) (if (= k 0) (if (< e 0) (/ 1 acc) acc) (loop (- k 1) (* acc b)))))))\n")))))
+            "(define %expt (lambda (b e) (if (not (integer? e)) (raise \"expt: integer exponent only\") (let loop ((k (abs e)) (acc 1)) (%tick) (if (= k 0) (if (< e 0) (/ 1 acc) acc) (loop (- k 1) (* acc b)))))))\n"))
+       ;; hash keys (AURA_HARNESS_HASH_WRAP, default on): hash-set! and (hash ...) silently drop the key "" (aura#4631),
+       ;; so every string key is stored as "s:" + key and hash-keys decodes it; a (hash) table is charged 8 steps
+       ;; because the reclaimer never frees one (aura#4613)
+       (if (= *hash-wrap* 0) ""
+           (string-append
+            "(define %hk (lambda (k) (if (string? k) (string-append \"s:\" k) k)))\n"
+            "(define %hash0 (lambda (h) (%charge 8) h))\n"
+            "(define %hash-keys (lambda (h) (let loop ((ks (hash-keys h)) (acc (list))) (%tick) (if (null? ks) (reverse acc) (loop (cdr ks) (cons (let ((k (car ks))) (if (and (string? k) (>= (string-length k) 2) (string=? (substring k 0 2) \"s:\")) (substring k 2 (string-length k)) k)) acc))))))\n")))))
 (define *renamed* (list "make-vector" "string-append" "append"))
 (define *hof-wrap* (let ((v (getenv "AURA_HARNESS_HOF_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
 (define *hofs* (if (= *hof-wrap* 0) (list) (list "map" "filter" "for-each")))
 (define *std-wrap* (let ((v (getenv "AURA_HARNESS_STD_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
 (define *stdw* (if (= *std-wrap* 0) (list) (list "last" "list-tail" "assq" "even?" "odd?" "zero?" "positive?" "negative?" "expt")))
-(define *wrapped* (append *hofs* *stdw*))
+(define *hash-wrap* (let ((v (getenv "AURA_HARNESS_HASH_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *hashk* (if (= *hash-wrap* 0) (list) (list "hash-set!" "hash-ref" "hash-has-key?" "hash-remove!")))   ;; key = 2nd argument
+(define *wrapped* (append *hofs* *stdw* (if (= *hash-wrap* 0) (list) (list "hash-keys"))))
 (define *allowed-syms*
   (append
    (list "lambda" "let" "let*" "letrec" "letrec*" "if" "cond" "case" "when" "unless" "begin" "and" "or" "else" "=>"
@@ -242,7 +252,7 @@
          "string=?" "string<?" "string>?" "string-index" "number->string"
          "string->number" "string-ref" "string->list" "list->string" "char?" "char=?"
          "symbol?" "procedure?" "vector" "vector?" "vector-ref" "vector-length" "vector-set!" "vector->list"
-         "list->vector" "hash" "hash-ref" "hash-set!" "hash-has-key?"
+         "list->vector" "hash" "hash-ref" "hash-set!" "hash-has-key?" "hash-keys" "hash-remove!" "hash-length"
          "needs" "kinds" "tools" "errs" "facts" "tkinds" "nsubs" "strategies")
    *renamed*))
 (define (sx-allowed? a) (or (member a *allowed-syms*) (member a *mutable*)))
@@ -310,6 +320,7 @@
   (cond ((sx-literal? a) a)
         ((member a env) a)
         ((member a *renamed*) (raise (string-append "allocator used as a value (call it directly): " a)))
+        ((or (member a *hashk*) (and (> *hash-wrap* 0) (equal? a "hash"))) (raise (string-append "hash operation used as a value (call it directly): " a)))
         ((member a *wrapped*) (string-append "%" a))
         ((sx-allowed? a) a)
         (else (raise (string-append "symbol not allowed: " a)))))
@@ -366,6 +377,13 @@
           (if (not (= n 3)) (raise (string-append h " takes one function and one list (n-ary map drops lists, aura#4616)")))
           (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
          ((member h *stdw*) (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
+         ((member h *hashk*)
+          (if (< n 3) (raise (string-append "bad " h)))
+          (cons h (cons (sx-xf (cadr x) env) (cons (list "%hk" (sx-xf (caddr x) env)) (map (lambda (y) (sx-xf y env)) (cdddr x))))))
+         ((and (> *hash-wrap* 0) (equal? h "hash"))                 ;; (hash k v ...) -> (%hash0 (hash (%hk k) v ...))
+          (list "%hash0" (cons "hash" (let loop ((as (cdr x)) (k #t) (acc (list)))
+                                        (if (null? as) (reverse acc)
+                                            (loop (cdr as) (not k) (cons (if k (list "%hk" (sx-xf (car as) env)) (sx-xf (car as) env)) acc)))))))
          (else (map (lambda (y) (sx-xf y env)) x)))))
     (else (map (lambda (y) (sx-xf y env)) x))))
 ;; -> (list reason-or-#f instrumented-body)
@@ -462,8 +480,15 @@
                         (and (< (string-index x " ") 0) (< (string-index x "(") 0)))))
           (unwrap-tick-begin (string-append (substring s 0 i) (if one x (string-append "(begin " x ")"))
                                             (substring s bj (string-length s))))))))
+;; (%w X) -> X
+(define (unwrap1 s w)
+  (let* ((pat (string-append "(%" w " ")) (i (string-index s pat)))
+    (if (< i 0) s
+        (let ((j (sx-close s i)))
+          (unwrap1 (string-append (substring s 0 i) (substring s (+ i (string-length pat)) (- j 1)) (substring s j (string-length s))) w)))))
 (define (clean-source s)
-  (let loop ((s (str-replace (unwrap-tick-begin (drop-pct-defines s)) (string-append " " *fuel-tick*) "")) (rs *renamed*))
+  (let loop ((s (unwrap1 (unwrap1 (str-replace (unwrap-tick-begin (drop-pct-defines s)) (string-append " " *fuel-tick*) "") "hk") "hash0"))
+             (rs *renamed*))
     (if (null? rs) (unhof s *wrapped*) (loop (unwrap-call s (car rs)) (cdr rs)))))
 (define (unhof s hs) (if (null? hs) s (unhof (str-replace s (string-append "%" (car hs)) (car hs)) (cdr hs))))
 

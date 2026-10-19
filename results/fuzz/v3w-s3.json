@@ -1,0 +1,1183 @@
+{
+ "summary": {
+  "n": 300,
+  "seed": 3,
+  "times_s": {
+   "apply": 77.54,
+   "trial": 44.73,
+   "nofuel": 24.38,
+   "file": 0.64
+  },
+  "mismatch": {
+   "apply": 0,
+   "trial": 0,
+   "nofuel": 55,
+   "file": 32
+  },
+  "blocked": {
+   "apply": 0,
+   "trial": 0,
+   "nofuel": 20,
+   "file": 0
+  },
+  "crash": {
+   "apply": 0,
+   "trial": 0,
+   "nofuel": 0,
+   "file": 0
+  },
+  "timeout": {
+   "apply": 0,
+   "trial": 0,
+   "nofuel": 0,
+   "file": 0
+  },
+  "gen": 3
+ },
+ "bad": [
+  {
+   "i": 0,
+   "want": [
+    10,
+    11,
+    13,
+    10
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (letrec ((g1 (lambda (m2) (if (<= m2 0) 10 (+ (modulo (* (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 2) (begin (hash-set! hh3 (list (modulo (if (>= 10 x) x 13) 3)) (let ((t5 (number->string (abs -10)))) (let ((t5j (modulo 17 (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1)))))) (loop (+ i4 1))) #t)) (begin (hash-remove! hh3 (list (modulo -3 3))) (length (hash-keys hh3)))) m2) 9973) (g1 (- m2 1))))))) (g1 (modulo (let ((l6 (reverse (cons (letrec ((g9 (lambda (m10) (if (<= m10 0) x (+ -19 (g9 (- m10 1))))))) (g9 (modulo 18 6))) (filter (lambda (y11) (>= 16 x)) (list x x x x)))))) (if (null? l6) x (list-ref l6 (modulo (+ (let ((l12 (reverse (list x x x 6)))) (if (null? l12) (case (modulo x 4) ((0 1) 1) ((2) x) (else 4)) (last l12))) (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 5) (begin (hash-set! hh14 (substring \"abc\" 0 (modulo (let ((t16 (number->string (abs i15)))) (let ((t16j (modulo x (string-length t16)))) (string->number (substring t16 t16j (+ t16j 1))))) 3)) (case (modulo i15 4) ((0 1) i15) ((2) 0) (else x))) (loop (+ i15 1))) #t)) (begin (hash-remove! hh14 (substring \"abc\" 0 (modulo 9 3))) (length (hash-keys hh14))))) (length l6))))) 6)))) 101))"
+  },
+  {
+   "i": 3,
+   "want": [
+    5,
+    5,
+    5,
+    5
+   ],
+   "wrong": {
+    "nofuel": [
+     14,
+     5,
+     5,
+     14
+    ],
+    "file": [
+     14,
+     5,
+     5,
+     14
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let* ((v1 (- (length (vector->list (list->vector (map (lambda (y3) y3) (list x x x))))) (if (not (or (>= x -7) (>= x x))) (let ((t4 (number->string (abs x)))) (let ((t4j (modulo (let ((hh5 (hash))) (let loop ((i6 0)) (if (< i6 3) (begin (hash-set! hh5 (substring \"abc\" 0 (modulo x 3)) i6) (loop (+ i6 1))) #t)) (begin (hash-remove! hh5 (list (modulo -6 3))) (length (hash-keys hh5)))) (string-length t4)))) (string->number (substring t4 t4j (+ t4j 1))))) (string-length (let ((t7 (number->string (abs x)))) (substring t7 0 (+ 1 (modulo x (string-length t7))))))))) (w2 (remainder (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 3) (begin (hash-set! hh8 (substring \"abc\" 0 (modulo (abs (vector-ref (vector x i9 x) (modulo 15 3))) 3)) (let ((t10 (list->string (reverse (string->list (number->string (abs -2))))))) (let ((t10j (modulo (let ((l11 (list 2 v1 x x))) (if (null? l11) v1 (list-ref l11 (modulo 0 (length l11))))) (string-length t10)))) (string->number (substring t10 t10j (+ t10j 1)))))) (loop (+ i9 1))) #t)) (length (hash-keys hh8))) (+ 1 (abs (let ((hh23 (hash))) (let loop ((i24 0)) (if (< i24 4) (begin (hash-set! hh23 (substring \"abc\" 0 (modulo (if (null? (list i24 v1)) (min -16 i24) (modulo i24 (+ 1 (abs -4)))) 3)) i24) (loop (+ i24 1))) #t)) (hash-ref hh23 (list (modulo x 3)) (letrec ((g25 (lambda (m26) (if (<= m26 0) (string-length (number->string (abs x))) (+ -20 (g25 (- m26 1))))))) (g25 (modulo 6 6)))))))))) (- (let* ((v27 (let loop ((i29 0) (s30 x)) (if (>= i29 0) s30 (loop (+ i29 1) (modulo (+ s30 (vector-ref (vector 0 8 x) (modulo v1 3))) 99991))))) (w28 (length (list -13 v1)))) (- v1 (let ((f31 (lambda (y32) w28))) (+ (f31 v1) (f31 v27))))) (let ((hh33 (hash))) (let loop ((i34 0)) (if (< i34 1) (begin (hash-set! hh33 (substring \"abc\" 0 (modulo (let ((f35 (lambda (y36) w2))) (+ (f35 (let ((l37 (list v1 v1 w2 i34))) (if (null? l37) v1 (last l37)))) (f35 (let ((hh38 (hash))) (let loop ((i39 0)) (if (< i39 0) (begin (hash-set! hh38 (modulo i34 4) i39) (loop (+ i39 1))) #t)) (begin (hash-remove! hh38 (modulo -20 4)) (length (hash-keys hh38))))))) 3)) (string-length (number->string (let ((v40 -1)) -15)))) (loop (+ i34 1))) #t)) (hash-ref hh33 (substring \"abc\" 0 (modulo (let ((t41 (number->string (abs -8)))) (let ((t41j (modulo (max w2 w2) (string-length t41)))) (string->number (substring t41 t41j (+ t41j 1))))) 3)) 12))))) 101))"
+  },
+  {
+   "i": 6,
+   "want": [
+    4,
+    4,
+    4,
+    4
+   ],
+   "wrong": {
+    "nofuel": [
+     4,
+     4,
+     2,
+     6,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (length (list (let* ((v1 (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 2) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (max 18 i4) 3)) (let ((t5 (number->string (abs i4)))) (let ((t5j (modulo x (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1)))))) (loop (+ i4 1))) #t)) (hash-ref hh3 (substring \"abc\" 0 (modulo (vector-ref (vector x 11 x) (modulo -8 3)) 3)) 11))) (w2 (length (filter (lambda (y6) (> 16 x)) (list -5))))) (let ((l7 (list 13 -20))) (if (null? l7) (let ((v8 x)) 20) (last l7)))) (let ((v9 (vector-ref (vector (string-length (number->string x)) (modulo (* x x) 9973) (+ x x)) (modulo (let ((l10 (list x))) (if (null? l10) x (last l10))) 3)))) (let* ((v11 x) (w12 (let ((hh13 (hash))) (let loop ((i14 0)) (if (< i14 4) (begin (hash-set! hh13 (list (modulo i14 3)) 5) (loop (+ i14 1))) #t)) (length (hash-keys hh13))))) 6)) (quotient (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 3) (begin (hash-set! hh15 (substring \"abc\" 0 (modulo (length (list -16 -18 3)) 3)) (let ((t17 (number->string (abs i16)))) (let ((t17j (modulo -6 (string-length t17)))) (string->number (substring t17 t17j (+ t17j 1)))))) (loop (+ i16 1))) #t)) (hash-ref hh15 (substring \"abc\" 0 (modulo (let loop ((i18 0) (s19 x)) (if (>= i18 4) s19 (loop (+ i18 1) (modulo (+ s19 i18) 99991)))) 3)) (cond ((> 11 x) x) ((> 5 4) 5) (else x)))) (+ 1 (abs (if (let ((hh20 (hash))) (let loop ((i21 0)) (if (< i21 2) (begin (hash-set! hh20 (substring \"abc\" 0 (modulo 2 3)) i21) (loop (+ i21 1))) #t)) (hash-has-key? hh20 (substring \"abc\" 0 (modulo 7 3)))) 0 (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 5) (begin (hash-set! hh22 (substring \"abc\" 0 (modulo i23 3)) -7) (loop (+ i23 1))) #t)) (length (hash-keys hh22))))))) (modulo (- (- x x) (max 4 x)) (+ 1 (abs (let ((hh24 (hash))) (let loop ((i25 0)) (if (< i25 0) (begin (hash-set! hh24 (list (modulo (let loop ((i26 0) (s27 11)) (if (>= i26 0) s27 (loop (+ i26 1) (modulo (+ s27 15) 99991)))) 3)) (modulo i25 (+ 1 (abs 2)))) (loop (+ i25 1))) #t)) (begin (hash-remove! hh24 (substring \"abc\" 0 (modulo (let ((l28 (list 9 -16 8))) (if (null? l28) -13 (last l28))) 3))) (length (hash-keys hh24)))))))))) 101))"
+  },
+  {
+   "i": 12,
+   "want": [
+    0,
+    1,
+    1,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 6) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (let ((vv3 (make-vector 2 0))) (let loop ((i4 0)) (if (< i4 2) (begin (vector-set! vv3 i4 x) (loop (+ i4 1))) (vector-ref vv3 (modulo (let ((l5 (append (reverse (list x -9 i2)) (vector->list (list->vector (list i2 -16 i2)))))) (if (null? l5) (let ((v8 (case (modulo -2 4) ((0 1) i2) ((2) x) (else x)))) (cond ((< -7 x) i2) ((< 16 -4) -2) ((>= v8 x) v8) (else -9))) (last l5))) 2))))) 3)) x) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (substring \"abc\" 0 (modulo (modulo (* (let ((t9 (string-append (list->string (reverse (string->list (number->string (abs x))))) (let ((t10 (number->string (abs -3)))) (substring t10 0 (+ 1 (modulo x (string-length t10)))))))) (let ((t9j (modulo (string-length (number->string (let ((vv11 (make-vector 2 0))) (let loop ((i12 0)) (if (< i12 2) (begin (vector-set! vv11 i12 i12) (loop (+ i12 1))) (vector-ref vv11 (modulo -15 2))))))) (string-length t9)))) (string->number (substring t9 t9j (+ t9j 1))))) (let ((vv13 (make-vector 3 0))) (let loop ((i14 0)) (if (< i14 3) (begin (vector-set! vv13 i14 (vector-ref (vector (abs 15) (vector-ref (vector i14 i14 x) (modulo x 3)) (string-length (number->string i14))) (modulo (let ((f15 (lambda (y16) -1))) (+ (f15 -5) (f15 -20))) 3))) (loop (+ i14 1))) (vector-ref vv13 (modulo x 3)))))) 9973) 3))) (length (hash-keys hh1))))) 101))"
+  },
+  {
+   "i": 21,
+   "want": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((v1 (let ((t2 (let loop ((i3 0) (a4 \"0\")) (if (>= i3 1) a4 (loop (+ i3 1) (string-append a4 (number->string (abs (let ((l5 (list 8 x i3 i3))) (if (null? l5) (let* ((v6 0) (w7 v6)) v6) (last l5))))))))))) (let ((t2j (modulo (vector-ref (vector (let ((vv8 (make-vector 6 0))) (let loop ((i9 0)) (if (< i9 6) (begin (vector-set! vv8 i9 (case (modulo 18 4) ((0 1) x) ((2) i9) (else -19))) (loop (+ i9 1))) (vector-ref vv8 (modulo (case (modulo x 4) ((0 1) x) ((2) -9) (else -13)) 6))))) (min (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 5) (begin (hash-set! hh10 (modulo i11 4) x) (loop (+ i11 1))) #t)) (length (hash-keys hh10))) (vector-ref (vector 5 x x) (modulo 14 3))) (let ((l12 (list 5 x x x))) (if (null? l12) (max x -7) (last l12)))) (modulo (if (>= -15 x) (let ((t13 (number->string (abs 6)))) (let ((t13j (modulo x (string-length t13)))) (string->number (substring t13 t13j (+ t13j 1))))) (abs -20)) 3)) (string-length t2)))) (string->number (substring t2 t2j (+ t2j 1))))))) (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 0) (begin (hash-set! hh14 (list (modulo (let ((l16 (append (list) (vector->list (list->vector (list i15 -13 x)))))) (if (null? l16) (string-length (number->string (abs i15))) (last l16))) 3)) (case (modulo (if (or (< -16 x) (= x -17)) (+ i15 i15) (length (list))) 4) ((0 1) (let ((l18 (list))) (if (null? l18) (if (> i15 v1) v1 x) (last l18)))) ((2) (letrec ((g19 (lambda (m20) (if (<= m20 0) (let ((hh21 (hash))) (let loop ((i22 0)) (if (< i22 5) (begin (hash-set! hh21 (substring \"abc\" 0 (modulo i22 3)) -1) (loop (+ i22 1))) #t)) (hash-ref hh21 (substring \"abc\" 0 (modulo -20 3)) v1)) (+ m20 (g19 (- m20 1))))))) (g19 (modulo (let loop ((i23 0) (s24 12)) (if (>= i23 5) s24 (loop (+ i23 1) (modulo (+ s24 i15) 99991)))) 6)))) (else i15))) (loop (+ i15 1))) #t)) (length (hash-keys hh14))))) 101))"
+  },
+  {
+   "i": 22,
+   "want": [
+    6,
+    15,
+    15,
+    6
+   ],
+   "wrong": {
+    "nofuel": [
+     27,
+     15,
+     15,
+     27
+    ],
+    "file": [
+     27,
+     15,
+     15,
+     27
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (max (modulo (* (string-length (number->string (let ((vv1 (make-vector 3 0))) (let loop ((i2 0)) (if (< i2 3) (begin (vector-set! vv1 i2 (+ i2 x)) (loop (+ i2 1))) (vector-ref vv1 (modulo 15 3))))))) (string-length (let loop ((i3 0) (a4 \"0\")) (if (>= i3 3) a4 (loop (+ i3 1) (string-append a4 (number->string (abs (+ x i3))))))))) 9973) (let loop ((i5 0) (s6 (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 4) (begin (hash-set! hh7 (list (modulo (let ((vv9 (make-vector 4 0))) (let loop ((i10 0)) (if (< i10 4) (begin (vector-set! vv9 i10 (let ((l11 (list i10 i8 i8))) (if (null? l11) -11 (list-ref l11 (modulo x (length l11)))))) (loop (+ i10 1))) (vector-ref vv9 (modulo (string-length (number->string 12)) 4))))) 3)) (string-length (number->string 14))) (loop (+ i8 1))) #t)) (begin (hash-remove! hh7 (list (modulo (let ((f12 (lambda (y13) -17))) (+ (f12 (cond ((< x x) x) ((<= -1 x) x) (else 12))) (f12 (if (<= x -16) x x)))) 3))) (length (hash-keys hh7)))))) (if (>= i5 6) s6 (loop (+ i5 1) (modulo (+ s6 (if (odd? (abs -10)) (let ((l14 (list))) (if (null? l14) (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 0) (begin (hash-set! hh15 (list (modulo i16 3)) 2) (loop (+ i16 1))) #t)) (begin (hash-remove! hh15 (substring \"abc\" 0 (modulo s6 3))) (length (hash-keys hh15)))) (last l14))) (let ((t17 (number->string (abs -18)))) (let ((t17j (modulo (let ((hh18 (hash))) (let loop ((i19 0)) (if (< i19 3) (begin (hash-set! hh18 (substring \"abc\" 0 (modulo i5 3)) i19) (loop (+ i19 1))) #t)) (hash-ref hh18 (substring \"abc\" 0 (modulo s6 3)) s6)) (string-length t17)))) (string->number (substring t17 t17j (+ t17j 1))))))) 99991)))))) 101))"
+  },
+  {
+   "i": 23,
+   "want": [
+    0,
+    17,
+    14,
+    57
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     39,
+     14,
+     56
+    ],
+    "file": [
+     1,
+     39,
+     14,
+     56
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (- (modulo (vector-ref (vector (string-length (number->string (case (modulo 15 4) ((0 1) -16) ((2) -3) (else x)))) (let ((t1 (number->string (abs x)))) (let ((t1j (modulo (let ((t2 (number->string (abs x)))) (let ((t2j (modulo 3 (string-length t2)))) (string->number (substring t2 t2j (+ t2j 1))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1))))) (vector-ref (vector (let ((vv3 (make-vector 3 0))) (let loop ((i4 0)) (if (< i4 3) (begin (vector-set! vv3 i4 5) (loop (+ i4 1))) (vector-ref vv3 (modulo -14 3))))) (let* ((v5 -9) (w6 x)) -9) (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 6) (begin (hash-set! hh7 (modulo i8 4) i8) (loop (+ i8 1))) #t)) (hash-ref hh7 (substring \"abc\" 0 (modulo x 3)) x))) (modulo (cond ((= x -19) 1) (else 15)) 3))) (modulo (modulo (let ((f9 (lambda (y10) x))) (+ (f9 x) (f9 x))) (+ 1 (abs x))) 3)) (+ 1 (abs (- (let* ((v11 (length (list -8 x x))) (w12 (remainder 16 (+ 1 (abs 9))))) (case (modulo 6 4) ((0 1) w12) ((2) v11) (else -9))) (let ((vv13 (make-vector 1 0))) (let loop ((i14 0)) (if (< i14 1) (begin (vector-set! vv13 i14 (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 6) (begin (hash-set! hh15 (substring \"abc\" 0 (modulo i16 3)) 8) (loop (+ i16 1))) #t)) (length (hash-keys hh15)))) (loop (+ i14 1))) (vector-ref vv13 (modulo (if (= x x) 11 x) 1))))))))) (letrec ((g17 (lambda (m18) (if (<= m18 0) (modulo (* (let loop ((i19 0) (s20 (let loop ((i21 0) (s22 x)) (if (>= i21 5) s22 (loop (+ i21 1) (modulo (+ s22 i21) 99991)))))) (if (>= i19 3) s20 (loop (+ i19 1) (modulo (+ s20 (string-length (number->string -2))) 99991)))) (let ((hh23 (hash))) (let loop ((i24 0)) (if (< i24 5) (begin (hash-set! hh23 (substring \"abc\" 0 (modulo (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 4) (begin (hash-set! hh25 (substring \"abc\" 0 (modulo i26 3)) i26) (loop (+ i26 1))) #t)) (begin (hash-remove! hh25 (substring \"abc\" 0 (modulo i24 3))) (length (hash-keys hh25)))) 3)) (- -7 x)) (loop (+ i24 1))) #t)) (hash-ref hh23 (substring \"abc\" 0 (modulo (let ((t27 (number->string (abs x)))) (let ((t27j (modulo 15 (string-length t27)))) (string->number (substring t27 t27j (+ t27j 1))))) 3)) (cond ((= 6 -1) 6) ((>= -16 12) x) ((= x 15) x) (else x))))) 9973) (+ (let ((hh28 (hash))) (let loop ((i29 0)) (if (< i29 6) (begin (hash-set! hh28 (modulo (let ((l30 (list x m18 m18 i29))) (if (null? l30) i29 (last l30))) 4) (cond ((<= x x) i29) ((= i29 i29) m18) ((= m18 m18) -20) (else i29))) (loop (+ i29 1))) #t)) (hash-ref hh28 (substring \"abc\" 0 (modulo (let ((l31 (list x -16 x))) (if (null? l31) 1 (list-ref l31 (modulo m18 (length l31))))) 3)) x)) (g17 (- m18 1))))))) (g17 (modulo 12 6))))) 101))"
+  },
+  {
+   "i": 25,
+   "want": [
+    16,
+    17,
+    18,
+    19
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     17,
+     18,
+     7
+    ],
+    "file": [
+     1,
+     17,
+     18,
+     7
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (vector-ref (vector -12 (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 1) (begin (hash-set! hh1 (modulo (length (append (map (lambda (y4) x) (list x -6 x)) (list -12 -18 1))) 4) (let ((t5 (let ((t6 (let loop ((i7 0) (a8 \"0\")) (if (>= i7 2) a8 (loop (+ i7 1) (string-append a8 (number->string (abs -8)))))))) (substring t6 0 (+ 1 (modulo (let ((vv9 (make-vector 4 0))) (let loop ((i10 0)) (if (< i10 4) (begin (vector-set! vv9 i10 11) (loop (+ i10 1))) (vector-ref vv9 (modulo x 4))))) (string-length t6))))))) (let ((t5j (modulo (vector-ref (vector (let ((hh11 (hash))) (let loop ((i12 0)) (if (< i12 0) (begin (hash-set! hh11 (list (modulo -9 3)) i12) (loop (+ i12 1))) #t)) (hash-ref hh11 (modulo x 4) x)) i2 (- x x)) (modulo (length (list i2 i2 i2)) 3)) (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1)))))) (loop (+ i2 1))) #t)) (hash-ref hh1 (list (modulo (modulo (let ((t13 (number->string (abs x)))) (let ((t13j (modulo (- -6 x) (string-length t13)))) (string->number (substring t13 t13j (+ t13j 1))))) (+ 1 (abs (let ((vv14 (make-vector 3 0))) (let loop ((i15 0)) (if (< i15 3) (begin (vector-set! vv14 i15 (let ((f16 (lambda (y17) i15))) (+ (f16 x) (f16 x)))) (loop (+ i15 1))) (vector-ref vv14 (modulo x 3)))))))) 3)) (let ((f18 (lambda (y19) y19))) (+ (f18 (let ((t20 (number->string (abs x)))) (let ((t20j (modulo (let ((vv21 (make-vector 5 0))) (let loop ((i22 0)) (if (< i22 5) (begin (vector-set! vv21 i22 12) (loop (+ i22 1))) (vector-ref vv21 (modulo x 5))))) (string-length t20)))) (string->number (substring t20 t20j (+ t20j 1)))))) (f18 (letrec ((g23 (lambda (m24) (if (<= m24 0) (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 2) (begin (hash-set! hh25 (substring \"abc\" 0 (modulo x 3)) 15) (loop (+ i26 1))) #t)) (hash-ref hh25 (substring \"abc\" 0 (modulo x 3)) x)) (+ m24 (g23 (- m24 1))))))) (g23 (modulo (string-length (number->string (abs x))) 6)))))))) (let ((t27 (number->string (abs (let ((hh28 (hash))) (let loop ((i29 0)) (if (< i29 1) (begin (hash-set! hh28 (substring \"abc\" 0 (modulo (modulo i29 (+ 1 (abs 11))) 3)) (let* ((v30 15) (w31 16)) 20)) (loop (+ i29 1))) #t)) (begin (hash-remove! hh28 (list (modulo (let ((hh32 (hash))) (let loop ((i33 0)) (if (< i33 4) (begin (hash-set! hh32 (list (modulo x 3)) -14) (loop (+ i33 1))) #t)) (begin (hash-remove! hh32 (list (modulo x 3))) (length (hash-keys hh32)))) 3))) (length (hash-keys hh28)))))))) (let ((t27j (modulo x (string-length t27)))) (string->number (substring t27 t27j (+ t27j 1)))))) (modulo -2 3))) 101))"
+  },
+  {
+   "i": 30,
+   "want": [
+    2,
+    0,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     2,
+     2,
+     2,
+     2
+    ],
+    "file": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (- (let ((l1 (filter (lambda (y2) (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 1) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (length (list y2 11 y2)) 3)) (string-length (number->string (abs y2)))) (loop (+ i4 1))) #t)) (hash-has-key? hh3 (substring \"abc\" 0 (modulo (- 10 x) 3))))) (filter (lambda (y6) (or (<= y6 x) (> -19 -20))) (filter (lambda (y7) (<= x x)) (list x x x)))))) (if (null? l1) (let ((f8 (lambda (y9) (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 2) (begin (hash-set! hh10 (substring \"abc\" 0 (modulo x 3)) y9) (loop (+ i11 1))) #t)) (hash-ref hh10 (substring \"abc\" 0 (modulo y9 3)) y9))))) (+ (f8 (let loop ((i12 0) (s13 (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 5) (begin (hash-set! hh14 (modulo i15 4) -19) (loop (+ i15 1))) #t)) (hash-ref hh14 (substring \"abc\" 0 (modulo x 3)) 4)))) (if (>= i12 1) s13 (loop (+ i12 1) (modulo (+ s13 4) 99991))))) (f8 (let* ((v16 (cond ((< x -5) x) ((< x x) 5) (else x))) (w17 (length (list x)))) -9)))) (list-ref l1 (modulo x (length l1))))) (let ((vv18 (make-vector 4 0))) (let loop ((i19 0)) (if (< i19 4) (begin (vector-set! vv18 i19 (if (member (let ((vv20 (make-vector 4 0))) (let loop ((i21 0)) (if (< i21 4) (begin (vector-set! vv20 i21 18) (loop (+ i21 1))) (vector-ref vv20 (modulo -20 4))))) (reverse (list i19 i19))) (let ((hh23 (hash))) (let loop ((i24 0)) (if (< i24 6) (begin (hash-set! hh23 (list (modulo (let ((l25 (list))) (if (null? l25) x (list-ref l25 (modulo i19 (length l25))))) 3)) (case (modulo -6 4) ((0 1) 14) ((2) 15) (else -18))) (loop (+ i24 1))) #t)) (begin (hash-remove! hh23 (list (modulo (let ((t26 (number->string (abs x)))) (let ((t26j (modulo i19 (string-length t26)))) (string->number (substring t26 t26j (+ t26j 1))))) 3))) (length (hash-keys hh23)))) (let ((v29 (let ((t30 (number->string (abs i19)))) (let ((t30j (modulo x (string-length t30)))) (string->number (substring t30 t30j (+ t30j 1))))))) v29))) (loop (+ i19 1))) (vector-ref vv18 (modulo (string-length (number->string (abs (let ((hh31 (hash))) (let loop ((i32 0)) (if (< i32 0) (begin (hash-set! hh31 (modulo i32 4) -10) (loop (+ i32 1))) #t)) (begin (hash-remove! hh31 (modulo x 4)) (length (hash-keys hh31))))))) 4))))))) 101))"
+  },
+  {
+   "i": 33,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (number->string (abs (string-length (number->string 20)))))) (let ((t1j (modulo (let* ((v2 (let ((vv4 (make-vector 4 0))) (let loop ((i5 0)) (if (< i5 4) (begin (vector-set! vv4 i5 (string-length (number->string (let ((vv6 (make-vector 4 0))) (let loop ((i7 0)) (if (< i7 4) (begin (vector-set! vv6 i7 i5) (loop (+ i7 1))) (vector-ref vv6 (modulo x 4)))))))) (loop (+ i5 1))) (vector-ref vv4 (modulo (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 2) (begin (hash-set! hh8 (modulo (let ((vv10 (make-vector 1 0))) (let loop ((i11 0)) (if (< i11 1) (begin (vector-set! vv10 i11 2) (loop (+ i11 1))) (vector-ref vv10 (modulo 13 1))))) 4) (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 2) (begin (hash-set! hh12 (substring \"abc\" 0 (modulo i13 3)) i9) (loop (+ i13 1))) #t)) (begin (hash-remove! hh12 (substring \"abc\" 0 (modulo -19 3))) (length (hash-keys hh12))))) (loop (+ i9 1))) #t)) (length (hash-keys hh8))) 4)))))) (w3 (let ((l14 (filter (lambda (y15) (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 6) (begin (hash-set! hh16 (modulo 17 4) v2) (loop (+ i17 1))) #t)) (hash-has-key? hh16 (substring \"abc\" 0 (modulo 8 3))))) (append (list -5) (list v2 x x -20))))) (if (null? l14) (let ((l19 (map (lambda (y20) y20) (list 3)))) (if (null? l19) (let ((l21 (list 0))) (if (null? l21) v2 (list-ref l21 (modulo -17 (length l21))))) (last l19))) (last l14))))) (modulo (* (string-length (number->string (cond ((= x 7) v2) ((<= v2 v2) x) ((> w3 11) w3) (else v2)))) (let ((f22 (lambda (y23) -1))) (+ (f22 (letrec ((g24 (lambda (m25) (if (<= m25 0) x (+ w3 (g24 (- m25 1))))))) (g24 (modulo w3 6)))) (f22 -10)))) 9973)) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 34,
+   "want": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((l1 (reverse (filter (lambda (y3) (equal? (map (lambda (y4) 16) (list 9)) (append (list 18 x 18 17) (list x)))) (filter (lambda (y6) (= y6 -6)) (map (lambda (y7) x) (list x 5))))))) (if (null? l1) x (list-ref l1 (modulo (case (modulo (letrec ((g8 (lambda (m9) (if (<= m9 0) -14 (+ (let ((t10 (number->string (abs 2)))) (let ((t10j (modulo 5 (string-length t10)))) (string->number (substring t10 t10j (+ t10j 1))))) (g8 (- m9 1))))))) (g8 (modulo (letrec ((g11 (lambda (m12) (if (<= m12 0) (case (modulo -2 4) ((0 1) x) ((2) x) (else 12)) (+ x (g11 (- m12 1))))))) (g11 (modulo (let ((hh13 (hash))) (let loop ((i14 0)) (if (< i14 3) (begin (hash-set! hh13 (modulo i14 4) -6) (loop (+ i14 1))) #t)) (length (hash-keys hh13))) 6))) 6))) 4) ((0 1) (let ((f15 (lambda (y16) (length (list 7 x y16))))) (+ (f15 (string-length (number->string x))) (f15 (let ((hh17 (hash))) (let loop ((i18 0)) (if (< i18 5) (begin (hash-set! hh17 (modulo (letrec ((g19 (lambda (m20) (if (<= m20 0) i18 (+ i18 (g19 (- m20 1))))))) (g19 (modulo i18 6))) 4) (let ((hh21 (hash))) (let loop ((i22 0)) (if (< i22 3) (begin (hash-set! hh21 (substring \"abc\" 0 (modulo i22 3)) i18) (loop (+ i22 1))) #t)) (begin (hash-remove! hh21 (substring \"abc\" 0 (modulo -16 3))) (length (hash-keys hh21))))) (loop (+ i18 1))) #t)) (hash-ref hh17 (substring \"abc\" 0 (modulo (max 13 x) 3)) -18)))))) ((2) 14) (else (string-length (number->string (max (let* ((v23 -18) (w24 -3)) -18) (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 2) (begin (hash-set! hh25 (substring \"abc\" 0 (modulo i26 3)) -20) (loop (+ i26 1))) #t)) (hash-ref hh25 (modulo 11 4) x))))))) (length l1)))))) 101))"
+  },
+  {
+   "i": 35,
+   "want": [
+    4,
+    3,
+    3,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (cond ((equal? (cons (let ((t2 (number->string (abs x)))) (let ((t2j (modulo (let ((t3 (number->string (abs -14)))) (let ((t3j (modulo x (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))) (string-length t2)))) (string->number (substring t2 t2j (+ t2j 1))))) (list)) (map (lambda (y4) x) (filter (lambda (y5) (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 6) (begin (hash-set! hh6 (list (modulo i7 3)) 15) (loop (+ i7 1))) #t)) (hash-has-key? hh6 (substring \"abc\" 0 (modulo y5 3))))) (map (lambda (y8) x) (list x))))) x) (else (vector-ref (vector (- (- (length (list 19 x x x)) (- x x)) (case (modulo (vector-ref (vector x -3 -9) (modulo x 3)) 4) ((0 1) x) ((2) (let ((l9 (list 12))) (if (null? l9) x (last l9)))) (else x))) 0 -3) (modulo (let ((vv10 (make-vector 4 0))) (let loop ((i11 0)) (if (< i11 4) (begin (vector-set! vv10 i11 (modulo (* (modulo (* x -17) 9973) (let loop ((i12 0) (s13 i11)) (if (>= i12 6) s13 (loop (+ i12 1) (modulo (+ s13 20) 99991))))) 9973)) (loop (+ i11 1))) (vector-ref vv10 (modulo (+ (let ((vv14 (make-vector 2 0))) (let loop ((i15 0)) (if (< i15 2) (begin (vector-set! vv14 i15 i15) (loop (+ i15 1))) (vector-ref vv14 (modulo 7 2))))) 17) 4))))) 3))))) 101))"
+  },
+  {
+   "i": 40,
+   "want": [
+    11,
+    11,
+    14,
+    11
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "file": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (+ (let* ((v1 (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 0) (begin (hash-set! hh3 (list (modulo x 3)) (let ((f5 (lambda (y6) i4))) (+ (f5 i4) (f5 (let ((t7 (number->string (abs -2)))) (let ((t7j (modulo -13 (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1))))))))) (loop (+ i4 1))) #t)) (hash-ref hh3 (modulo (+ (let ((t8 (number->string (abs x)))) (let ((t8j (modulo 13 (string-length t8)))) (string->number (substring t8 t8j (+ t8j 1))))) x) 4) (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 5) (begin (hash-set! hh9 (list (modulo (let ((v11 -15)) v11) 3)) (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 3) (begin (hash-set! hh12 (substring \"abc\" 0 (modulo x 3)) -2) (loop (+ i13 1))) #t)) (length (hash-keys hh12)))) (loop (+ i10 1))) #t)) (length (hash-keys hh9)))))) (w2 (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 1) (begin (hash-set! hh14 (substring \"abc\" 0 (modulo (if (member 4 (list 18 4 -6)) (let ((v16 x)) v1) (let ((l17 (list -12))) (if (null? l17) v1 (last l17)))) 3)) x) (loop (+ i15 1))) #t)) (hash-ref hh14 (substring \"abc\" 0 (modulo (- (let ((t18 (number->string (abs v1)))) (let ((t18j (modulo x (string-length t18)))) (string->number (substring t18 t18j (+ t18j 1))))) (let ((hh19 (hash))) (let loop ((i20 0)) (if (< i20 3) (begin (hash-set! hh19 (substring \"abc\" 0 (modulo v1 3)) x) (loop (+ i20 1))) #t)) (length (hash-keys hh19)))) 3)) v1)))) (let ((hh21 (hash))) (let loop ((i22 0)) (if (< i22 5) (begin (hash-set! hh21 (substring \"abc\" 0 (modulo (string-length (let loop ((i23 0) (a24 \"0\")) (if (>= i23 2) a24 (loop (+ i23 1) (string-append a24 (number->string (abs x))))))) 3)) (case (modulo (let* ((v25 -11) (w26 3)) x) 4) ((0 1) (length (list x))) ((2) (let ((v27 x)) 4)) (else v1))) (loop (+ i22 1))) #t)) (hash-ref hh21 (substring \"abc\" 0 (modulo 9 3)) (+ v1 (let loop ((i28 0) (s29 v1)) (if (>= i28 5) s29 (loop (+ i28 1) (modulo (+ s29 18) 99991)))))))) (let ((v30 (let ((l31 (list))) (if (null? l31) (string-length (number->string x)) (list-ref l31 (modulo (case (modulo (let ((l32 (list))) (if (null? l32) 1 (list-ref l32 (modulo -6 (length l32))))) 4) ((0 1) (+ -15 x)) ((2) (cond ((> x x) x) ((<= x x) x) (else x))) (else (if (< x x) x 18))) (length l31))))))) (vector-ref (vector 10 -8 (let ((f33 (lambda (y34) 12))) (+ (f33 v30) (f33 (abs -10))))) (modulo (let loop ((i35 0) (s36 (let ((hh37 (hash))) (let loop ((i38 0)) (if (< i38 4) (begin (hash-set! hh37 (substring \"abc\" 0 (modulo -11 3)) -8) (loop (+ i38 1))) #t)) (begin (hash-remove! hh37 (list (modulo 5 3))) (length (hash-keys hh37)))))) (if (>= i35 2) s36 (loop (+ i35 1) (modulo (+ s36 (string-length (number->string (abs -9)))) 99991)))) 3))))) 101))"
+  },
+  {
+   "i": 41,
+   "want": [
+    2,
+    2,
+    3,
+    5
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "file": [
+     1,
+     2,
+     3,
+     4
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (+ (let ((l1 (list (let ((hh2 (hash))) (let loop ((i3 0)) (if (< i3 3) (begin (hash-set! hh2 (substring \"abc\" 0 (modulo (modulo (* x i3) 9973) 3)) (if (>= x -19) i3 9)) (loop (+ i3 1))) #t)) (hash-ref hh2 (substring \"abc\" 0 (modulo (if (> x x) x x) 3)) (string-length (number->string x))))))) (if (null? l1) (let ((v4 (abs (if (<= x x) x x)))) v4) (list-ref l1 (modulo (length (append (list -5 x -20 x) (reverse (list x x x)))) (length l1))))) (if (equal? (cons (min 16 x) (map (lambda (y8) x) (list x 20 x x))) (list (let ((vv9 (make-vector 1 0))) (let loop ((i10 0)) (if (< i10 1) (begin (vector-set! vv9 i10 i10) (loop (+ i10 1))) (vector-ref vv9 (modulo x 1))))) (let ((vv11 (make-vector 5 0))) (let loop ((i12 0)) (if (< i12 5) (begin (vector-set! vv11 i12 x) (loop (+ i12 1))) (vector-ref vv11 (modulo -7 5))))))) (max (string-length (let ((t13 (number->string (abs x)))) (substring t13 0 (+ 1 (modulo x (string-length t13)))))) (min (string-length (number->string x)) (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 2) (begin (hash-set! hh14 (list (modulo -14 3)) x) (loop (+ i15 1))) #t)) (length (hash-keys hh14))))) (let ((l16 (reverse (filter (lambda (y18) (= y18 18)) (list x x))))) (if (null? l16) (let ((l19 (list x x 9 x))) (if (null? l19) (let* ((v20 x) (w21 1)) v20) (last l19))) (last l16)))))) 101))"
+  },
+  {
+   "i": 50,
+   "want": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     3,
+     1,
+     2,
+     3
+    ],
+    "file": [
+     3,
+     1,
+     2,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (modulo (let ((vv1 (make-vector 3 0))) (let loop ((i2 0)) (if (< i2 3) (begin (vector-set! vv1 i2 (vector-ref (vector (string-length (number->string (let ((l3 (list -10))) (if (null? l3) 15 (last l3))))) (let ((l4 (cons i2 (list -3 i2 -15 x)))) (if (null? l4) (let ((vv6 (make-vector 6 0))) (let loop ((i7 0)) (if (< i7 6) (begin (vector-set! vv6 i7 i7) (loop (+ i7 1))) (vector-ref vv6 (modulo i2 6))))) (last l4))) (length (map (lambda (y8) y8) (list x x 19 3)))) (modulo (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 6) (begin (hash-set! hh9 (substring \"abc\" 0 (modulo (remainder x (+ 1 (abs -12))) 3)) (vector-ref (vector -5 i10 10) (modulo 14 3))) (loop (+ i10 1))) #t)) (begin (hash-remove! hh9 (list (modulo -12 3))) (length (hash-keys hh9)))) 3))) (loop (+ i2 1))) (vector-ref vv1 (modulo (let ((vv12 (make-vector 5 0))) (let loop ((i13 0)) (if (< i13 5) (begin (vector-set! vv12 i13 (quotient (string-length (number->string i13)) (+ 1 (abs (case (modulo i13 4) ((0 1) x) ((2) 20) (else x)))))) (loop (+ i13 1))) (vector-ref vv12 (modulo (letrec ((g14 (lambda (m15) (if (<= m15 0) (max x x) (+ x (g14 (- m15 1))))))) (g14 (modulo x 6))) 5))))) 3))))) (+ 1 (abs (case (modulo (modulo (if (zero? x) (let ((vv16 (make-vector 6 0))) (let loop ((i17 0)) (if (< i17 6) (begin (vector-set! vv16 i17 x) (loop (+ i17 1))) (vector-ref vv16 (modulo -11 6))))) (string-length (number->string (abs x)))) (+ 1 (abs (let ((f18 (lambda (y19) -12))) (+ (f18 (case (modulo 16 4) ((0 1) x) ((2) x) (else x))) (f18 (let* ((v20 x) (w21 -12)) 12))))))) 4) ((0 1) -4) ((2) (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 3) (begin (hash-set! hh22 (substring \"abc\" 0 (modulo (let ((hh24 (hash))) (let loop ((i25 0)) (if (< i25 1) (begin (hash-set! hh24 (substring \"abc\" 0 (modulo (if (<= i25 i23) i23 x) 3)) i25) (loop (+ i25 1))) #t)) (length (hash-keys hh24))) 3)) (length (filter (lambda (y26) (= y26 i23)) (list i23 i23)))) (loop (+ i23 1))) #t)) (hash-ref hh22 (substring \"abc\" 0 (modulo (vector-ref (vector x -15 (let ((hh27 (hash))) (let loop ((i28 0)) (if (< i28 3) (begin (hash-set! hh27 (list (modulo x 3)) i28) (loop (+ i28 1))) #t)) (hash-ref hh27 (substring \"abc\" 0 (modulo x 3)) x))) (modulo (let* ((v29 x) (w30 v29)) x) 3)) 3)) (let ((t31 (let loop ((i32 0) (a33 \"0\")) (if (>= i32 0) a33 (loop (+ i32 1) (string-append a33 (number->string (abs i32)))))))) (let ((t31j (modulo (string-length (number->string x)) (string-length t31)))) (string->number (substring t31 t31j (+ t31j 1)))))))) (else (let ((l34 (map (lambda (y35) (modulo x (+ 1 (abs x)))) (cons -19 (list))))) (if (null? l34) (string-length (list->string (reverse (string->list (number->string (abs x)))))) (last l34))))))))) 101))"
+  },
+  {
+   "i": 56,
+   "want": [
+    16,
+    17,
+    26,
+    19
+   ],
+   "wrong": {
+    "nofuel": [
+     16,
+     17,
+     18,
+     19
+    ],
+    "file": [
+     16,
+     17,
+     18,
+     19
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (letrec ((g1 (lambda (m2) (if (<= m2 0) x (+ (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 6) (begin (hash-set! hh3 (modulo (let ((l5 (append (list) (list x)))) (if (null? l5) (let ((vv7 (make-vector 6 0))) (let loop ((i8 0)) (if (< i8 6) (begin (vector-set! vv7 i8 -13) (loop (+ i8 1))) (vector-ref vv7 (modulo -4 6))))) (last l5))) 4) (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 0) (begin (hash-set! hh9 (substring \"abc\" 0 (modulo (let ((v11 m2)) i4) 3)) i4) (loop (+ i10 1))) #t)) (begin (hash-remove! hh9 (modulo (string-length (number->string (abs 12))) 4)) (length (hash-keys hh9))))) (loop (+ i4 1))) #t)) (hash-ref hh3 (list (modulo (+ (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 3) (begin (hash-set! hh14 (substring \"abc\" 0 (modulo x 3)) i15) (loop (+ i15 1))) #t)) (begin (hash-remove! hh14 (substring \"abc\" 0 (modulo m2 3))) (length (hash-keys hh14)))) (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 1) (begin (hash-set! hh16 (modulo m2 4) 15) (loop (+ i17 1))) #t)) (hash-ref hh16 (modulo -20 4) m2))) 3)) (length (append (list 15 m2 m2 -3) (list x m2 x 11))))) (g1 (- m2 1))))))) (g1 (modulo (+ (max (string-length (number->string (let* ((v19 -10) (w20 v19)) -9))) (let ((hh21 (hash))) (let loop ((i22 0)) (if (< i22 4) (begin (hash-set! hh21 (substring \"abc\" 0 (modulo (let ((l23 (list x i22))) (if (null? l23) 6 (list-ref l23 (modulo i22 (length l23))))) 3)) (if (< i22 x) 11 i22)) (loop (+ i22 1))) #t)) (begin (hash-remove! hh21 (modulo (let loop ((i24 0) (s25 x)) (if (>= i24 2) s25 (loop (+ i24 1) (modulo (+ s25 s25) 99991)))) 4)) (length (hash-keys hh21))))) (let ((l28 (filter (lambda (y29) (equal? (list x -3 x) (list y29))) (cons x (list 1))))) (if (null? l28) 12 (list-ref l28 (modulo (let ((t31 (string-append (number->string (abs 12)) (number->string (abs x))))) (let ((t31j (modulo (max x -14) (string-length t31)))) (string->number (substring t31 t31j (+ t31j 1))))) (length l28)))))) 6)))) 101))"
+  },
+  {
+   "i": 79,
+   "want": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "file": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (length (filter (lambda (y1) (odd? (let ((hh2 (hash))) (let loop ((i3 0)) (if (< i3 2) (begin (hash-set! hh2 (substring \"abc\" 0 (modulo (let ((v4 x)) i3) 3)) (vector-ref (vector 20 i3 y1) (modulo x 3))) (loop (+ i3 1))) #t)) (begin (hash-remove! hh2 (list (modulo y1 3))) (length (hash-keys hh2)))))) (cons (max (- x x) (let ((t6 (number->string (abs -13)))) (let ((t6j (modulo -4 (string-length t6)))) (string->number (substring t6 t6j (+ t6j 1)))))) (map (lambda (y7) (remainder y7 (+ 1 (abs 20)))) (map (lambda (y8) y8) (list))))))) 101))"
+  },
+  {
+   "i": 109,
+   "want": [
+    4,
+    4,
+    4,
+    4
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (length (append (cons (let ((f3 (lambda (y4) y4))) (+ (f3 x) (f3 (letrec ((g5 (lambda (m6) (if (<= m6 0) -3 (+ -4 (g5 (- m6 1))))))) (g5 (modulo -5 6)))))) (list)) (list (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 5) (begin (hash-set! hh7 (list (modulo (length (list i8 -13 x x)) 3)) (let ((l9 (list x))) (if (null? l9) i8 (last l9)))) (loop (+ i8 1))) #t)) (length (hash-keys hh7))) (string-length (number->string (abs x))) x)))) 101))"
+  },
+  {
+   "i": 122,
+   "want": [
+    2,
+    1,
+    89,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ],
+    "file": [
+     0,
+     1,
+     89,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (vector-ref (vector (remainder (let ((f1 (lambda (y2) (quotient -12 (+ 1 (abs -8)))))) (+ (f1 (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 1) (begin (hash-set! hh3 (list (modulo i4 3)) (let ((l5 (list -11 i4 i4))) (if (null? l5) i4 (last l5)))) (loop (+ i4 1))) #t)) (length (hash-keys hh3)))) (f1 (cond ((< x 19) (+ 8 x)) ((= x -11) (let ((l8 (list))) (if (null? l8) 6 (list-ref l8 (modulo x (length l8)))))) (else (modulo (* x 13) 9973)))))) (+ 1 (abs (vector-ref (vector (modulo (let ((f9 (lambda (y10) x))) (+ (f9 x) (f9 x))) (+ 1 (abs (cond ((<= 19 x) x) (else x))))) (let* ((v11 (case (modulo -9 4) ((0 1) x) ((2) -7) (else x))) (w12 (- 11 x))) (modulo (* 14 x) 9973)) (vector-ref (vector (letrec ((g13 (lambda (m14) (if (<= m14 0) x (+ x (g13 (- m14 1))))))) (g13 (modulo -1 6))) 16 (min x x)) (modulo (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 6) (begin (hash-set! hh15 (substring \"abc\" 0 (modulo 3 3)) x) (loop (+ i16 1))) #t)) (length (hash-keys hh15))) 3))) (modulo (string-length (number->string (abs 19))) 3))))) x (let loop ((i17 0) (s18 (cond ((string=? (let ((t19 (number->string (abs x)))) (substring t19 0 (+ 1 (modulo 9 (string-length t19))))) (let loop ((i20 0) (a21 \"0\")) (if (>= i20 1) a21 (loop (+ i20 1) (string-append a21 (number->string (abs 10))))))) x) (else (let ((vv22 (make-vector 1 0))) (let loop ((i23 0)) (if (< i23 1) (begin (vector-set! vv22 i23 (if (> 1 7) 20 x)) (loop (+ i23 1))) (vector-ref vv22 (modulo (let ((t24 (number->string (abs x)))) (let ((t24j (modulo -7 (string-length t24)))) (string->number (substring t24 t24j (+ t24j 1))))) 1))))))))) (if (>= i17 5) s18 (loop (+ i17 1) (modulo (+ s18 (- (let ((v25 (let ((vv26 (make-vector 4 0))) (let loop ((i27 0)) (if (< i27 4) (begin (vector-set! vv26 i27 s18) (loop (+ i27 1))) (vector-ref vv26 (modulo 6 4))))))) (let ((vv28 (make-vector 6 0))) (let loop ((i29 0)) (if (< i29 6) (begin (vector-set! vv28 i29 v25) (loop (+ i29 1))) (vector-ref vv28 (modulo 19 6)))))) (let ((t30 (string-append (number->string (abs x)) (number->string (abs -19))))) (let ((t30j (modulo (cond ((= x 5) x) ((< x -1) x) ((< s18 s18) s18) (else x)) (string-length t30)))) (string->number (substring t30 t30j (+ t30j 1))))))) 99991))))) (modulo x 3))) 101))"
+  },
+  {
+   "i": 134,
+   "want": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "file": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (list->string (reverse (string->list (string-append (let ((t2 (number->string (abs 10)))) (substring t2 0 (+ 1 (modulo (vector-ref (vector 8 -11 16) (modulo -5 3)) (string-length t2))))) (number->string (abs (string-length (number->string (abs x))))))))))) (let ((t1j (modulo (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 6) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (- (vector-ref (vector (let ((hh5 (hash))) (let loop ((i6 0)) (if (< i6 3) (begin (hash-set! hh5 (modulo x 4) x) (loop (+ i6 1))) #t)) (hash-ref hh5 (list (modulo -5 3)) -7)) (let ((l7 (list 7 x -3 i4))) (if (null? l7) -19 (last l7))) (length (list x x i4))) (modulo (let ((t8 (number->string (abs -14)))) (let ((t8j (modulo i4 (string-length t8)))) (string->number (substring t8 t8j (+ t8j 1))))) 3)) (let ((t9 (let ((t10 (number->string (abs i4)))) (substring t10 0 (+ 1 (modulo i4 (string-length t10))))))) (let ((t9j (modulo (string-length (number->string (abs i4))) (string-length t9)))) (string->number (substring t9 t9j (+ t9j 1)))))) 3)) (let ((hh11 (hash))) (let loop ((i12 0)) (if (< i12 6) (begin (hash-set! hh11 (list (modulo (string-length (string-append (number->string (abs 8)) (number->string (abs i12)))) 3)) -8) (loop (+ i12 1))) #t)) (length (hash-keys hh11)))) (loop (+ i4 1))) #t)) (begin (hash-remove! hh3 (substring \"abc\" 0 (modulo (let ((hh20 (hash))) (let loop ((i21 0)) (if (< i21 5) (begin (hash-set! hh20 (substring \"abc\" 0 (modulo (+ (let loop ((i22 0) (s23 x)) (if (>= i22 6) s23 (loop (+ i22 1) (modulo (+ s23 i22) 99991)))) (let ((vv24 (make-vector 3 0))) (let loop ((i25 0)) (if (< i25 3) (begin (vector-set! vv24 i25 x) (loop (+ i25 1))) (vector-ref vv24 (modulo -8 3)))))) 3)) (let ((f26 (lambda (y27) x))) (+ (f26 (vector-ref (vector x i21 x) (modulo i21 3))) (f26 (string-length (number->string -10)))))) (loop (+ i21 1))) #t)) (length (hash-keys hh20))) 3))) (length (hash-keys hh3)))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 136,
+   "want": [
+    1,
+    1,
+    2,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     2,
+     2
+    ],
+    "file": [
+     1,
+     1,
+     2,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (string-length (number->string (vector-ref (vector (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 2) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo i2 3)) (let ((t3 (number->string (abs x)))) (let ((t3j (modulo (let ((t4 (number->string (abs x)))) (let ((t4j (modulo i2 (string-length t4)))) (string->number (substring t4 t4j (+ t4j 1))))) (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1)))))) (loop (+ i2 1))) #t)) (hash-ref hh1 (substring \"abc\" 0 (modulo (abs (case (modulo x 4) ((0 1) 10) ((2) x) (else x))) 3)) (vector-ref (vector (string-length (number->string 19)) (case (modulo -6 4) ((0 1) x) ((2) 15) (else x)) (let ((t5 (number->string (abs x)))) (let ((t5j (modulo -2 (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1)))))) (modulo 16 3)))) (string-length (list->string (reverse (string->list (let loop ((i6 0) (a7 \"0\")) (if (>= i6 4) a7 (loop (+ i6 1) (string-append a7 (number->string (abs x)))))))))) (let ((vv8 (make-vector 5 0))) (let loop ((i9 0)) (if (< i9 5) (begin (vector-set! vv8 i9 x) (loop (+ i9 1))) (vector-ref vv8 (modulo (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 1) (begin (hash-set! hh10 (list (modulo (string-length (number->string (abs x))) 3)) -3) (loop (+ i11 1))) #t)) (length (hash-keys hh10))) 5)))))) (modulo (length (append (filter (lambda (y15) (= x -11)) (list)) (cons 13 (list x x)))) 3))))) 101))"
+  },
+  {
+   "i": 140,
+   "want": [
+    61,
+    61,
+    61,
+    61
+   ],
+   "wrong": {
+    "nofuel": [
+     61,
+     61,
+     61,
+     5
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let loop ((i1 0) (s2 (string-length (number->string x)))) (if (>= i1 6) s2 (loop (+ i1 1) (modulo (+ s2 (let ((f3 (lambda (y4) (let ((l5 (map (lambda (y6) 5) (list 9 i1 s2)))) (if (null? l5) (string-length (number->string i1)) (last l5)))))) (+ (f3 (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 0) (begin (hash-set! hh7 (substring \"abc\" 0 (modulo (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 0) (begin (hash-set! hh9 (substring \"abc\" 0 (modulo x 3)) 12) (loop (+ i10 1))) #t)) (hash-ref hh9 (list (modulo s2 3)) (let ((t11 (number->string (abs s2)))) (let ((t11j (modulo i8 (string-length t11)))) (string->number (substring t11 t11j (+ t11j 1))))))) 3)) -4) (loop (+ i8 1))) #t)) (length (hash-keys hh7)))) (f3 (min (let ((l23 (list i1 3))) (if (null? l23) (let ((v24 i1)) -13) (last l23))) -11))))) 99991))))) 101))"
+  },
+  {
+   "i": 146,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "file": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 6) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (modulo (modulo (* (string-length (number->string (let ((f3 (lambda (y4) i2))) (+ (f3 -15) (f3 9))))) (let ((v5 (if (> 17 -14) 4 -17))) (let ((l6 (list i2))) (if (null? l6) 10 (last l6))))) 9973) (+ 1 (abs (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 4) (begin (hash-set! hh7 (modulo (let ((l9 (filter (lambda (y10) (> 5 i2)) (list)))) (if (null? l9) (let loop ((i11 0) (s12 x)) (if (>= i11 5) s12 (loop (+ i11 1) (modulo (+ s12 i11) 99991)))) (list-ref l9 (modulo (cond ((>= i8 i2) i8) ((<= x -17) i8) ((>= i8 i8) i8) (else -4)) (length l9))))) 4) (letrec ((g13 (lambda (m14) (if (<= m14 0) (let loop ((i15 0) (s16 x)) (if (>= i15 5) s16 (loop (+ i15 1) (modulo (+ s16 -11) 99991)))) (+ i2 (g13 (- m14 1))))))) (g13 (modulo 9 6)))) (loop (+ i8 1))) #t)) (begin (hash-remove! hh7 (modulo i2 4)) (length (hash-keys hh7))))))) 3)) (let ((vv20 (make-vector 5 0))) (let loop ((i21 0)) (if (< i21 5) (begin (vector-set! vv20 i21 (let loop ((i22 0) (s23 (length (list)))) (if (>= i22 5) s23 (loop (+ i22 1) (modulo (+ s23 (+ (if (< 12 9) i22 s23) (let loop ((i24 0) (s25 i21)) (if (>= i24 3) s25 (loop (+ i24 1) (modulo (+ s25 i24) 99991)))))) 99991))))) (loop (+ i21 1))) (vector-ref vv20 (modulo (let ((f26 (lambda (y27) (modulo (* y27 x) 9973)))) (+ (f26 (let ((l28 (list))) (if (null? l28) (let ((vv29 (make-vector 1 0))) (let loop ((i30 0)) (if (< i30 1) (begin (vector-set! vv29 i30 i2) (loop (+ i30 1))) (vector-ref vv29 (modulo x 1))))) (last l28)))) (f26 i2))) 5)))))) (loop (+ i2 1))) #t)) (length (hash-keys hh1)))) 101))"
+  },
+  {
+   "i": 148,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (list->string (reverse (string->list (number->string (abs -11))))))) (let ((t1j (modulo (length (list (modulo (* (let ((l2 (list 15 3 -15))) (if (null? l2) -18 (list-ref l2 (modulo x (length l2))))) (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 3) (begin (hash-set! hh3 (modulo -8 4) i4) (loop (+ i4 1))) #t)) (hash-ref hh3 (substring \"abc\" 0 (modulo -16 3)) x))) 9973) (let ((l5 (append (list) (list x x x)))) (if (null? l5) x (list-ref l5 (modulo (let ((f7 (lambda (y8) y8))) (+ (f7 -18) (f7 x))) (length l5))))) (string-length (list->string (reverse (string->list (number->string (abs x)))))) (let ((v9 8)) (let ((l10 (list v9))) (if (null? l10) v9 (last l10)))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 160,
+   "want": [
+    1,
+    3,
+    3,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     2,
+     2,
+     2
+    ],
+    "file": [
+     1,
+     2,
+     2,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 3) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (if (positive? (if (not (<= -20 x)) (let ((v3 -11)) x) (cond ((>= x x) x) (else x)))) i2 (vector-ref (vector (string-length (number->string (- x 2))) (let ((hh4 (hash))) (let loop ((i5 0)) (if (< i5 4) (begin (hash-set! hh4 (modulo 3 4) (vector-ref (vector 17 -8 7) (modulo -17 3))) (loop (+ i5 1))) #t)) (length (hash-keys hh4))) (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 4) (begin (hash-set! hh8 (modulo (let ((l10 (list -12 i2))) (if (null? l10) -2 (list-ref l10 (modulo 1 (length l10))))) 4) -20) (loop (+ i9 1))) #t)) (length (hash-keys hh8)))) (modulo (let ((hh11 (hash))) (let loop ((i12 0)) (if (< i12 4) (begin (hash-set! hh11 (substring \"abc\" 0 (modulo (if (> i12 9) -18 x) 3)) (let ((v13 i12)) -9)) (loop (+ i12 1))) #t)) (begin (hash-remove! hh11 (list (modulo (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 1) (begin (hash-set! hh14 (substring \"abc\" 0 (modulo -7 3)) i15) (loop (+ i15 1))) #t)) (begin (hash-remove! hh14 (substring \"abc\" 0 (modulo x 3))) (length (hash-keys hh14)))) 3))) (length (hash-keys hh11)))) 3))) 3)) 20) (loop (+ i2 1))) #t)) (length (hash-keys hh1)))) 101))"
+  },
+  {
+   "i": 161,
+   "want": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (list->string (reverse (string->list (list->string (reverse (string->list (let ((t2 (let loop ((i3 0) (a4 \"0\")) (if (>= i3 2) a4 (loop (+ i3 1) (string-append a4 (number->string (abs 7)))))))) (substring t2 0 (+ 1 (modulo (let* ((v5 -15) (w6 -5)) x) (string-length t2))))))))))))) (let ((t1j (modulo (let ((t7 (let loop ((i8 0) (a9 \"0\")) (if (>= i8 1) a9 (loop (+ i8 1) (string-append a9 (number->string (abs (let ((vv10 (make-vector 3 0))) (let loop ((i11 0)) (if (< i11 3) (begin (vector-set! vv10 i11 (let ((l12 (list x -1 i8))) (if (null? l12) i8 (last l12)))) (loop (+ i11 1))) (vector-ref vv10 (modulo (cond ((<= x i8) x) (else i8)) 3))))))))))))) (let ((t7j (modulo (let ((vv13 (make-vector 4 0))) (let loop ((i14 0)) (if (< i14 4) (begin (vector-set! vv13 i14 (length (reverse (list 1)))) (loop (+ i14 1))) (vector-ref vv13 (modulo (let ((t16 (let loop ((i17 0) (a18 \"0\")) (if (>= i17 1) a18 (loop (+ i17 1) (string-append a18 (number->string (abs 13)))))))) (let ((t16j (modulo (vector-ref (vector -4 x x) (modulo x 3)) (string-length t16)))) (string->number (substring t16 t16j (+ t16j 1))))) 4))))) (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 164,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     2,
+     2,
+     2,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 5) (begin (hash-set! hh1 (list (modulo (let loop ((i3 0) (s4 (if (not (= -1 i2)) (let ((t5 (let loop ((i6 0) (a7 \"0\")) (if (>= i6 2) a7 (loop (+ i6 1) (string-append a7 (number->string (abs -2)))))))) (let ((t5j (modulo (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 1) (begin (hash-set! hh8 (substring \"abc\" 0 (modulo i2 3)) x) (loop (+ i9 1))) #t)) (hash-ref hh8 (modulo x 4) i2)) (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1))))) (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 2) (begin (hash-set! hh10 (list (modulo i11 3)) (let ((l12 (list))) (if (null? l12) i2 (last l12)))) (loop (+ i11 1))) #t)) (hash-ref hh10 (modulo 8 4) 1))))) (if (>= i3 6) s4 (loop (+ i3 1) (modulo (+ s4 (let ((v13 (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 5) (begin (hash-set! hh14 (modulo -17 4) (vector-ref (vector -18 i2 9) (modulo i3 3))) (loop (+ i15 1))) #t)) (length (hash-keys hh14))))) (let ((l16 (list 10 x))) (if (null? l16) (let ((t17 (number->string (abs i2)))) (let ((t17j (modulo 6 (string-length t17)))) (string->number (substring t17 t17j (+ t17j 1))))) (list-ref l16 (modulo (let ((t18 (number->string (abs s4)))) (let ((t18j (modulo i3 (string-length t18)))) (string->number (substring t18 t18j (+ t18j 1))))) (length l16))))))) 99991)))) 3)) (if (and (< (let ((vv19 (make-vector 6 0))) (let loop ((i20 0)) (if (< i20 6) (begin (vector-set! vv19 i20 -7) (loop (+ i20 1))) (vector-ref vv19 (modulo -3 6))))) (let ((l21 (list x x))) (if (null? l21) -12 (last l21)))) (> (case (modulo -8 4) ((0 1) x) ((2) i2) (else 12)) (max i2 -4))) (case (modulo 8 4) ((0 1) x) ((2) (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 4) (begin (hash-set! hh22 (list (modulo (let ((vv24 (make-vector 4 0))) (let loop ((i25 0)) (if (< i25 4) (begin (vector-set! vv24 i25 -12) (loop (+ i25 1))) (vector-ref vv24 (modulo 4 4))))) 3)) (let ((l26 (list x -3 x))) (if (null? l26) -8 (list-ref l26 (modulo 14 (length l26)))))) (loop (+ i23 1))) #t)) (begin (hash-remove! hh22 (substring \"abc\" 0 (modulo (let* ((v27 i2) (w28 0)) x) 3))) (length (hash-keys hh22))))) (else (if (negative? x) (- 14 17) (string-length (number->string 19))))) (+ (string-length (number->string (let ((f31 (lambda (y32) -3))) (+ (f31 i2) (f31 i2))))) x))) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (substring \"abc\" 0 (modulo x 3))) (length (hash-keys hh1))))) 101))"
+  },
+  {
+   "i": 166,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let* ((v1 -9) (w2 (vector-ref (vector (let* ((v3 (quotient (vector-ref (vector x 7 -14) (modulo -20 3)) (+ 1 (abs (let ((t5 (number->string (abs -4)))) (let ((t5j (modulo x (string-length t5)))) (string->number (substring t5 t5j (+ t5j 1))))))))) (w4 (min (- 17 1) (let* ((v6 x) (w7 -3)) v1)))) (quotient (modulo (* 16 -3) 9973) (+ 1 (abs (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 4) (begin (hash-set! hh8 (modulo x 4) i9) (loop (+ i9 1))) #t)) (hash-ref hh8 (list (modulo w4 3)) v3)))))) (min (- (+ 0 v1) (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 2) (begin (hash-set! hh10 (substring \"abc\" 0 (modulo -3 3)) 19) (loop (+ i11 1))) #t)) (length (hash-keys hh10)))) (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 3) (begin (hash-set! hh12 (substring \"abc\" 0 (modulo (string-length (number->string (abs x))) 3)) (let* ((v14 12) (w15 v1)) -2)) (loop (+ i13 1))) #t)) (length (hash-keys hh12)))) (min (let ((f20 (lambda (y21) -3))) (+ (f20 (let ((v22 v1)) v1)) (f20 5))) (length (filter (lambda (y23) (< y23 -8)) (list x))))) (modulo (case (modulo (let* ((v24 (let* ((v26 x) (w27 -6)) v26)) (w25 (- 18 v1))) (cond ((>= v24 w25) v24) ((>= -5 v24) x) ((= 11 w25) x) (else v1))) 4) ((0 1) (+ (cond ((= x v1) 6) ((> v1 v1) v1) ((< 13 x) v1) (else x)) (let ((l28 (list 12))) (if (null? l28) v1 (list-ref l28 (modulo 17 (length l28))))))) ((2) (let ((f29 (lambda (y30) y30))) (+ (f29 (let ((hh31 (hash))) (let loop ((i32 0)) (if (< i32 3) (begin (hash-set! hh31 (list (modulo i32 3)) -12) (loop (+ i32 1))) #t)) (hash-ref hh31 (list (modulo v1 3)) -9))) (f29 (string-length (number->string 18)))))) (else (- (case (modulo x 4) ((0 1) v1) ((2) v1) (else x)) (+ v1 v1)))) 3)))) (length (cons (let loop ((i34 0) (s35 (let ((hh36 (hash))) (let loop ((i37 0)) (if (< i37 0) (begin (hash-set! hh36 (substring \"abc\" 0 (modulo 5 3)) -7) (loop (+ i37 1))) #t)) (length (hash-keys hh36))))) (if (>= i34 0) s35 (loop (+ i34 1) (modulo (+ s35 (min x -14)) 99991)))) (filter (lambda (y38) (string>? (number->string (abs 5)) (number->string (abs w2)))) (vector->list (list->vector (list 3)))))))) 101))"
+  },
+  {
+   "i": 167,
+   "want": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (number->string (abs x)))) (let ((t1j (modulo (let ((l2 (map (lambda (y3) (let ((t4 (let ((t5 (number->string (abs x)))) (substring t5 0 (+ 1 (modulo -3 (string-length t5))))))) (let ((t4j (modulo (modulo (* 11 x) 9973) (string-length t4)))) (string->number (substring t4 t4j (+ t4j 1)))))) (list (min x x))))) (if (null? l2) x (list-ref l2 (modulo (vector-ref (vector (modulo (* (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 0) (begin (hash-set! hh6 (modulo i7 4) 3) (loop (+ i7 1))) #t)) (hash-ref hh6 (substring \"abc\" 0 (modulo -14 3)) x)) (- 19 18)) 9973) (let ((v8 x)) (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 1) (begin (hash-set! hh9 (modulo i10 4) v8) (loop (+ i10 1))) #t)) (length (hash-keys hh9)))) (let* ((v11 (- x -8)) (w12 (length (list)))) (let ((hh13 (hash))) (let loop ((i14 0)) (if (< i14 6) (begin (hash-set! hh13 (substring \"abc\" 0 (modulo v11 3)) v11) (loop (+ i14 1))) #t)) (begin (hash-remove! hh13 (modulo x 4)) (length (hash-keys hh13)))))) (modulo (remainder (- -4 x) (+ 1 (abs (letrec ((g15 (lambda (m16) (if (<= m16 0) 0 (+ m16 (g15 (- m16 1))))))) (g15 (modulo 7 6)))))) 3)) (length l2))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 169,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "file": [
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 4) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (let ((t3 (let loop ((i4 0) (a5 \"0\")) (if (>= i4 1) a5 (loop (+ i4 1) (string-append a5 (number->string (abs (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 0) (begin (hash-set! hh6 (substring \"abc\" 0 (modulo (let ((v8 14)) 7) 3)) i2) (loop (+ i7 1))) #t)) (hash-ref hh6 (modulo (let ((vv9 (make-vector 3 0))) (let loop ((i10 0)) (if (< i10 3) (begin (vector-set! vv9 i10 -20) (loop (+ i10 1))) (vector-ref vv9 (modulo i2 3))))) 4) (length (list 1 -14 -16)))))))))))) (let ((t3j (modulo (+ (let loop ((i11 0) (s12 15)) (if (>= i11 1) s12 (loop (+ i11 1) (modulo (+ s12 (case (modulo 5 4) ((0 1) -19) ((2) -11) (else s12))) 99991)))) (case (modulo (string-length (number->string -19)) 4) ((0 1) (length (list))) ((2) (let ((l13 (list x))) (if (null? l13) 12 (last l13)))) (else (let ((f14 (lambda (y15) x))) (+ (f14 x) (f14 -17)))))) (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))) 3)) (let ((l16 (filter (lambda (y17) (and (< x x) (not (= y17 13)))) (cons (vector-ref (vector -3 7 x) (modulo -2 3)) (vector->list (list->vector (list 4 i2 -12))))))) (if (null? l16) (let ((t19 (list->string (reverse (string->list (let ((t20 (number->string (abs i2)))) (substring t20 0 (+ 1 (modulo i2 (string-length t20)))))))))) (let ((t19j (modulo (let ((t21 (list->string (reverse (string->list (number->string (abs 9))))))) (let ((t21j (modulo (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 0) (begin (hash-set! hh22 (substring \"abc\" 0 (modulo i23 3)) i2) (loop (+ i23 1))) #t)) (begin (hash-remove! hh22 (modulo x 4)) (length (hash-keys hh22)))) (string-length t21)))) (string->number (substring t21 t21j (+ t21j 1))))) (string-length t19)))) (string->number (substring t19 t19j (+ t19j 1))))) (last l16)))) (loop (+ i2 1))) #t)) (length (hash-keys hh1)))) 101))"
+  },
+  {
+   "i": 173,
+   "want": [
+    18,
+    18,
+    18,
+    18
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (min -18 (vector-ref (vector (let loop ((i1 0) (s2 (let ((t3 (list->string (reverse (string->list (number->string (abs -17))))))) (let ((t3j (modulo (+ x x) (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))))) (if (>= i1 3) s2 (loop (+ i1 1) (modulo (+ s2 (vector-ref (vector (let* ((v4 0) (w5 i1)) -17) (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 4) (begin (hash-set! hh6 (list (modulo -13 3)) s2) (loop (+ i7 1))) #t)) (hash-ref hh6 (list (modulo i1 3)) 16)) (abs x)) (modulo (let ((t8 (number->string (abs 12)))) (let ((t8j (modulo x (string-length t8)))) (string->number (substring t8 t8j (+ t8j 1))))) 3))) 99991)))) (let ((l9 (list))) (if (null? l9) (let ((l10 (append (list 9 x x) (list x x 10)))) (if (null? l10) (let ((vv12 (make-vector 6 0))) (let loop ((i13 0)) (if (< i13 6) (begin (vector-set! vv12 i13 -9) (loop (+ i13 1))) (vector-ref vv12 (modulo x 6))))) (last l10))) (list-ref l9 (modulo (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 2) (begin (hash-set! hh14 (modulo (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 4) (begin (hash-set! hh16 (list (modulo -20 3)) i15) (loop (+ i17 1))) #t)) (hash-ref hh16 (substring \"abc\" 0 (modulo x 3)) 7)) 4) (let ((v18 x)) v18)) (loop (+ i15 1))) #t)) (length (hash-keys hh14))) (length l9))))) (let loop ((i21 0) (s22 x)) (if (>= i21 0) s22 (loop (+ i21 1) (modulo (+ s22 (let ((l23 (list x i21))) (if (null? l23) (let loop ((i24 0) (s25 i21)) (if (>= i24 6) s25 (loop (+ i24 1) (modulo (+ s25 s22) 99991)))) (list-ref l23 (modulo (let ((hh26 (hash))) (let loop ((i27 0)) (if (< i27 0) (begin (hash-set! hh26 (modulo i27 4) 16) (loop (+ i27 1))) #t)) (begin (hash-remove! hh26 (list (modulo s22 3))) (length (hash-keys hh26)))) (length l23)))))) 99991))))) (modulo (let* ((v28 (cond ((let ((hh30 (hash))) (let loop ((i31 0)) (if (< i31 3) (begin (hash-set! hh30 (substring \"abc\" 0 (modulo x 3)) i31) (loop (+ i31 1))) #t)) (hash-has-key? hh30 (modulo x 4))) (let ((t32 (number->string (abs x)))) (let ((t32j (modulo x (string-length t32)))) (string->number (substring t32 t32j (+ t32j 1)))))) (else (modulo (* x -10) 9973)))) (w29 v28)) (let ((l33 (reverse (list v28 v28)))) (if (null? l33) (length (list v28)) (list-ref l33 (modulo (remainder -14 (+ 1 (abs w29))) (length l33)))))) 3)))) 101))"
+  },
+  {
+   "i": 175,
+   "want": [
+    1,
+    0,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "file": [
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (modulo (let ((v1 (+ x (let* ((v2 (if (>= 4 10) x x)) (w3 (let ((f4 (lambda (y5) 3))) (+ (f4 v2) (f4 -12))))) (string-length (number->string x)))))) (case (modulo v1 4) ((0 1) (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 4) (begin (hash-set! hh6 (substring \"abc\" 0 (modulo (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 4) (begin (hash-set! hh8 (substring \"abc\" 0 (modulo i7 3)) 6) (loop (+ i9 1))) #t)) (hash-ref hh8 (substring \"abc\" 0 (modulo i7 3)) v1)) 3)) v1) (loop (+ i7 1))) #t)) (begin (hash-remove! hh6 (list (modulo (let ((v10 x)) 14) 3))) (length (hash-keys hh6))))) ((2) (- (let loop ((i13 0) (s14 v1)) (if (>= i13 2) s14 (loop (+ i13 1) (modulo (+ s14 3) 99991)))) (if (>= v1 -15) v1 v1))) (else (let ((t15 (let ((t16 (number->string (abs -13)))) (substring t16 0 (+ 1 (modulo 11 (string-length t16))))))) (let ((t15j (modulo (let ((v17 v1)) -8) (string-length t15)))) (string->number (substring t15 t15j (+ t15j 1)))))))) (+ 1 (abs (cond ((equal? (vector->list (list->vector (list))) (reverse (list x x))) x) (else (let ((hh19 (hash))) (let loop ((i20 0)) (if (< i20 3) (begin (hash-set! hh19 (substring \"abc\" 0 (modulo (string-length (let loop ((i21 0) (a22 \"0\")) (if (>= i21 1) a22 (loop (+ i21 1) (string-append a22 (number->string (abs -17))))))) 3)) (modulo (* x x) 9973)) (loop (+ i20 1))) #t)) (begin (hash-remove! hh19 (list (modulo (if (not (<= x x)) (string-length (number->string -6)) (let loop ((i23 0) (s24 -11)) (if (>= i23 1) s24 (loop (+ i23 1) (modulo (+ s24 8) 99991))))) 3))) (length (hash-keys hh19)))))))))) 101))"
+  },
+  {
+   "i": 176,
+   "want": [
+    0,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (abs (let ((l1 (map (lambda (y2) (min (string-length (number->string x)) (let ((t3 (number->string (abs x)))) (let ((t3j (modulo x (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))))) (vector->list (list->vector (cons -12 (list 20 x x x))))))) (if (null? l1) (let ((l5 (reverse (list 17 x)))) (if (null? l5) (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 3) (begin (hash-set! hh7 (substring \"abc\" 0 (modulo (+ -5 13) 3)) 20) (loop (+ i8 1))) #t)) (length (hash-keys hh7))) (last l5))) (last l1))))) 101))"
+  },
+  {
+   "i": 177,
+   "want": [
+    0,
+    8,
+    6,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     8,
+     6,
+     4
+    ],
+    "file": [
+     0,
+     8,
+     6,
+     4
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (list->string (reverse (string->list (number->string (abs (let loop ((i2 0) (s3 (let ((hh4 (hash))) (let loop ((i5 0)) (if (< i5 5) (begin (hash-set! hh4 (substring \"abc\" 0 (modulo -16 3)) i5) (loop (+ i5 1))) #t)) (hash-ref hh4 (modulo -18 4) x)))) (if (>= i2 3) s3 (loop (+ i2 1) (modulo (+ s3 s3) 99991))))))))))) (let ((t1j (modulo (cond ((or (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 5) (begin (hash-set! hh6 (substring \"abc\" 0 (modulo (min 4 i7) 3)) (modulo (* i7 -11) 9973)) (loop (+ i7 1))) #t)) (hash-has-key? hh6 (substring \"abc\" 0 (modulo (let ((vv8 (make-vector 6 0))) (let loop ((i9 0)) (if (< i9 6) (begin (vector-set! vv8 i9 i9) (loop (+ i9 1))) (vector-ref vv8 (modulo x 6))))) 3)))) (member -4 (cons -14 (list x x -2 x)))) x) ((null? (list 9 x)) (max x (let ((l13 (list 3))) (if (null? l13) (length (list x -4 x)) (last l13))))) (else (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 2) (begin (hash-set! hh14 (list (modulo (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 5) (begin (hash-set! hh16 (substring \"abc\" 0 (modulo (let ((hh18 (hash))) (let loop ((i19 0)) (if (< i19 3) (begin (hash-set! hh18 (substring \"abc\" 0 (modulo i19 3)) i19) (loop (+ i19 1))) #t)) (length (hash-keys hh18))) 3)) (quotient x (+ 1 (abs i15)))) (loop (+ i17 1))) #t)) (length (hash-keys hh16))) 3)) (string-length (let loop ((i21 0) (a22 \"0\")) (if (>= i21 1) a22 (loop (+ i21 1) (string-append a22 (number->string (abs i15)))))))) (loop (+ i15 1))) #t)) (begin (hash-remove! hh14 (list (modulo (modulo (* (letrec ((g23 (lambda (m24) (if (<= m24 0) x (+ -20 (g23 (- m24 1))))))) (g23 (modulo x 6))) (remainder x (+ 1 (abs x)))) 9973) 3))) (length (hash-keys hh14)))))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 180,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 4) (begin (hash-set! hh1 (list (modulo x 3)) -8) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (substring \"abc\" 0 (modulo (cond ((not (positive? (let ((t3 (number->string (abs x)))) (let ((t3j (modulo 18 (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))))) (let ((v4 (let loop ((i5 0) (s6 (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 5) (begin (hash-set! hh7 (substring \"abc\" 0 (modulo x 3)) i8) (loop (+ i8 1))) #t)) (hash-ref hh7 (modulo x 4) x)))) (if (>= i5 0) s6 (loop (+ i5 1) (modulo (+ s6 (abs -16)) 99991)))))) (let ((vv9 (make-vector 2 0))) (let loop ((i10 0)) (if (< i10 2) (begin (vector-set! vv9 i10 (+ v4 i10)) (loop (+ i10 1))) (vector-ref vv9 (modulo (let* ((v11 x) (w12 13)) w12) 2))))))) ((even? (let ((t13 (number->string (abs 12)))) (let ((t13j (modulo (cond ((> x x) x) (else x)) (string-length t13)))) (string->number (substring t13 t13j (+ t13j 1)))))) (let ((vv14 (make-vector 5 0))) (let loop ((i15 0)) (if (< i15 5) (begin (vector-set! vv14 i15 (let ((vv16 (make-vector 4 0))) (let loop ((i17 0)) (if (< i17 4) (begin (vector-set! vv16 i17 (let ((l18 (list x i15 i17 i17))) (if (null? l18) i15 (last l18)))) (loop (+ i17 1))) (vector-ref vv16 (modulo (let ((t19 (number->string (abs i15)))) (let ((t19j (modulo 16 (string-length t19)))) (string->number (substring t19 t19j (+ t19j 1))))) 4)))))) (loop (+ i15 1))) (vector-ref vv14 (modulo (modulo (* (if (> x x) x -2) (modulo (* x 15) 9973)) 9973) 5)))))) ((positive? (let loop ((i20 0) (s21 x)) (if (>= i20 3) s21 (loop (+ i20 1) (modulo (+ s21 (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 3) (begin (hash-set! hh22 (list (modulo i20 3)) s21) (loop (+ i23 1))) #t)) (hash-ref hh22 (modulo i20 4) i20))) 99991))))) 20) (else (let ((hh24 (hash))) (let loop ((i25 0)) (if (< i25 5) (begin (hash-set! hh24 (modulo (let loop ((i26 0) (s27 (let ((l28 (list i25 x))) (if (null? l28) i25 (last l28))))) (if (>= i26 6) s27 (loop (+ i26 1) (modulo (+ s27 (let ((l29 (list -5))) (if (null? l29) 2 (last l29)))) 99991)))) 4) x) (loop (+ i25 1))) #t)) (hash-ref hh24 (modulo (length (map (lambda (y30) 10) (list x x 9))) 4) (letrec ((g31 (lambda (m32) (if (<= m32 0) (letrec ((g33 (lambda (m34) (if (<= m34 0) 10 (+ m34 (g33 (- m34 1))))))) (g33 (modulo 4 6))) (+ -5 (g31 (- m32 1))))))) (g31 (modulo (max x x) 6))))))) 3))) (length (hash-keys hh1))))) 101))"
+  },
+  {
+   "i": 183,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     2,
+     1,
+     1,
+     2
+    ],
+    "file": [
+     2,
+     1,
+     1,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 6) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (max (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 1) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (let loop ((i5 0) (s6 x)) (if (>= i5 6) s6 (loop (+ i5 1) (modulo (+ s6 -9) 99991)))) 3)) (string-length (number->string -4))) (loop (+ i4 1))) #t)) (length (hash-keys hh3))) (let ((v7 (let* ((v8 4) (w9 v8)) 13))) (let loop ((i10 0) (s11 i2)) (if (>= i10 0) s11 (loop (+ i10 1) (modulo (+ s11 6) 99991)))))) 3)) (case (modulo (string-length (number->string (abs -20))) 4) ((0 1) (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 0) (begin (hash-set! hh12 (list (modulo (+ -8 -16) 3)) (+ -1 -20)) (loop (+ i13 1))) #t)) (begin (hash-remove! hh12 (substring \"abc\" 0 (modulo (if (<= i2 x) x x) 3))) (length (hash-keys hh12))))) ((2) (let loop ((i14 0) (s15 i2)) (if (>= i14 5) s15 (loop (+ i14 1) (modulo (+ s15 (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 6) (begin (hash-set! hh16 (substring \"abc\" 0 (modulo -18 3)) i14) (loop (+ i17 1))) #t)) (hash-ref hh16 (modulo s15 4) -5))) 99991))))) (else (let loop ((i18 0) (s19 (let ((hh20 (hash))) (let loop ((i21 0)) (if (< i21 1) (begin (hash-set! hh20 (list (modulo -12 3)) i2) (loop (+ i21 1))) #t)) (hash-ref hh20 (substring \"abc\" 0 (modulo 10 3)) -7)))) (if (>= i18 3) s19 (loop (+ i18 1) (modulo (+ s19 (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 3) (begin (hash-set! hh22 (modulo 10 4) 20) (loop (+ i23 1))) #t)) (hash-ref hh22 (substring \"abc\" 0 (modulo i18 3)) x))) 99991))))))) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (substring \"abc\" 0 (modulo (modulo (* x (cond ((null? (list x)) x) (else 16))) 9973) 3))) (length (hash-keys hh1)))))) 101))"
+  },
+  {
+   "i": 185,
+   "want": [
+    0,
+    2,
+    2,
+    5
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "file": [
+     0,
+     1,
+     2,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((l1 (map (lambda (y2) (if (member (string-length (number->string y2)) (reverse (list -19 x))) (string-length (number->string (abs -14))) (let ((vv4 (make-vector 5 0))) (let loop ((i5 0)) (if (< i5 5) (begin (vector-set! vv4 i5 (let ((l6 (list y2 x x y2))) (if (null? l6) i5 (last l6)))) (loop (+ i5 1))) (vector-ref vv4 (modulo (let ((v7 y2)) x) 5))))))) (list)))) (if (null? l1) (letrec ((g8 (lambda (m9) (if (<= m9 0) x (+ (remainder (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 6) (begin (hash-set! hh10 (substring \"abc\" 0 (modulo -15 3)) m9) (loop (+ i11 1))) #t)) (begin (hash-remove! hh10 (substring \"abc\" 0 (modulo m9 3))) (length (hash-keys hh10)))) (+ 1 (abs (remainder m9 (+ 1 (abs x)))))) (g8 (- m9 1))))))) (g8 (modulo (+ (let ((l12 (list))) (if (null? l12) (let ((l13 (list x x))) (if (null? l13) x (list-ref l13 (modulo -6 (length l13))))) (list-ref l12 (modulo x (length l12))))) (+ x x)) 6))) (list-ref l1 (modulo (let loop ((i14 0) (s15 (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 2) (begin (hash-set! hh16 (modulo (let* ((v18 (cond ((< -16 -17) i17) (else i17))) (w19 v18)) (letrec ((g20 (lambda (m21) (if (<= m21 0) 19 (+ -1 (g20 (- m21 1))))))) (g20 (modulo w19 6)))) 4) (let loop ((i22 0) (s23 (+ i17 1))) (if (>= i22 1) s23 (loop (+ i22 1) (modulo (+ s23 -8) 99991))))) (loop (+ i17 1))) #t)) (begin (hash-remove! hh16 (list (modulo (- (case (modulo x 4) ((0 1) x) ((2) 8) (else x)) (modulo (* 6 x) 9973)) 3))) (length (hash-keys hh16)))))) (if (>= i14 6) s15 (loop (+ i14 1) (modulo (+ s15 (let ((hh27 (hash))) (let loop ((i28 0)) (if (< i28 2) (begin (hash-set! hh27 (modulo (case (modulo (if (> i28 4) -12 s15) 4) ((0 1) (letrec ((g29 (lambda (m30) (if (<= m30 0) i14 (+ 10 (g29 (- m30 1))))))) (g29 (modulo x 6)))) ((2) (length (list 7))) (else (let ((hh31 (hash))) (let loop ((i32 0)) (if (< i32 0) (begin (hash-set! hh31 (list (modulo -9 3)) -15) (loop (+ i32 1))) #t)) (length (hash-keys hh31))))) 4) (length (filter (lambda (y33) (< i14 -9)) (list 3 i28 5 s15)))) (loop (+ i28 1))) #t)) (begin (hash-remove! hh27 (substring \"abc\" 0 (modulo (letrec ((g34 (lambda (m35) (if (<= m35 0) -4 (+ i14 (g34 (- m35 1))))))) (g34 (modulo (let loop ((i36 0) (s37 x)) (if (>= i36 1) s37 (loop (+ i36 1) (modulo (+ s37 x) 99991)))) 6))) 3))) (length (hash-keys hh27))))) 99991)))) (length l1)))))) 101))"
+  },
+  {
+   "i": 188,
+   "want": [
+    3,
+    3,
+    3,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     2,
+     2,
+     2,
+     2
+    ],
+    "file": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 5) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 6) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (abs (let ((hh5 (hash))) (let loop ((i6 0)) (if (< i6 4) (begin (hash-set! hh5 (substring \"abc\" 0 (modulo (vector-ref (vector -18 i4 i6) (modulo i4 3)) 3)) (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 5) (begin (hash-set! hh7 (substring \"abc\" 0 (modulo 14 3)) 18) (loop (+ i8 1))) #t)) (length (hash-keys hh7)))) (loop (+ i6 1))) #t)) (hash-ref hh5 (modulo (let ((l9 (list x i4 2))) (if (null? l9) x (last l9))) 4) (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 4) (begin (hash-set! hh10 (substring \"abc\" 0 (modulo x 3)) i4) (loop (+ i11 1))) #t)) (hash-ref hh10 (substring \"abc\" 0 (modulo i4 3)) i2))))) 3)) (+ (modulo (* -8 (case (modulo i2 4) ((0 1) i2) ((2) i4) (else i2))) 9973) (let ((v12 (if (< -17 i2) -20 -17))) (remainder 11 (+ 1 (abs i4)))))) (loop (+ i4 1))) #t)) (hash-ref hh3 (list (modulo (let ((v13 (let ((hh14 (hash))) (let loop ((i15 0)) (if (< i15 2) (begin (hash-set! hh14 (substring \"abc\" 0 (modulo (length (list 10 x)) 3)) i2) (loop (+ i15 1))) #t)) (length (hash-keys hh14))))) (remainder (+ 14 x) (+ 1 (abs (let ((hh18 (hash))) (let loop ((i19 0)) (if (< i19 2) (begin (hash-set! hh18 (list (modulo i2 3)) v13) (loop (+ i19 1))) #t)) (hash-ref hh18 (modulo v13 4) x)))))) 3)) (let ((t20 (let loop ((i21 0) (a22 \"0\")) (if (>= i21 4) a22 (loop (+ i21 1) (string-append a22 (number->string (abs (modulo (* i21 18) 9973))))))))) (let ((t20j (modulo (let ((f23 (lambda (y24) i2))) (+ (f23 (case (modulo i2 4) ((0 1) -8) ((2) -1) (else i2))) (f23 (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 5) (begin (hash-set! hh25 (modulo 2 4) x) (loop (+ i26 1))) #t)) (begin (hash-remove! hh25 (list (modulo x 3))) (length (hash-keys hh25))))))) (string-length t20)))) (string->number (substring t20 t20j (+ t20j 1))))))) 3)) i2) (loop (+ i2 1))) #t)) (length (hash-keys hh1)))) 101))"
+  },
+  {
+   "i": 207,
+   "want": [
+    7,
+    7,
+    2,
+    7
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     7,
+     2,
+     3
+    ],
+    "file": [
+     0,
+     7,
+     2,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 1) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (let ((l3 (vector->list (list->vector (filter (lambda (y4) (string>? (number->string (abs -16)) (number->string (abs y4)))) (reverse (list x x i2 2))))))) (if (null? l3) (length (cons (abs x) (vector->list (list->vector (list))))) (last l3))) 3)) (if (= (let ((t7 (let loop ((i8 0) (a9 \"0\")) (if (>= i8 2) a9 (loop (+ i8 1) (string-append a9 (number->string (abs i2)))))))) (let ((t7j (modulo (let* ((v10 4) (w11 v10)) i2) (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1))))) (string-length (let loop ((i12 0) (a13 \"0\")) (if (>= i12 4) a13 (loop (+ i12 1) (string-append a13 (number->string (abs x)))))))) (let ((v14 (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 4) (begin (hash-set! hh15 (substring \"abc\" 0 (modulo (let loop ((i17 0) (s18 -8)) (if (>= i17 0) s18 (loop (+ i17 1) (modulo (+ s18 -3) 99991)))) 3)) (+ -10 -3)) (loop (+ i16 1))) #t)) (hash-ref hh15 (list (modulo (length (list i2 7 i2 i2)) 3)) (modulo 10 (+ 1 (abs x))))))) 18) -7)) (loop (+ i2 1))) #t)) (hash-ref hh1 (substring \"abc\" 0 (modulo x 3)) x))) 101))"
+  },
+  {
+   "i": 213,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "file": [
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 1) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo -3 3)) (string-length (number->string (let ((t3 (string-append (string-append (number->string (abs i2)) (number->string (abs -14))) (string-append (number->string (abs -9)) (number->string (abs -4)))))) (let ((t3j (modulo (cond ((member -5 (list 19 i2)) (let ((f4 (lambda (y5) 12))) (+ (f4 12) (f4 x)))) ((not (<= 13 19)) (modulo (* i2 -20) 9973)) (else (let ((f6 (lambda (y7) -1))) (+ (f6 i2) (f6 9))))) (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1)))))))) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (list (modulo (string-length (number->string (vector-ref (vector (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 4) (begin (hash-set! hh8 (substring \"abc\" 0 (modulo 14 3)) (let ((t10 (number->string (abs 14)))) (let ((t10j (modulo x (string-length t10)))) (string->number (substring t10 t10j (+ t10j 1)))))) (loop (+ i9 1))) #t)) (hash-ref hh8 (substring \"abc\" 0 (modulo x 3)) (string-length (number->string x)))) (let ((t11 (number->string (abs x)))) (let ((t11j (modulo (letrec ((g12 (lambda (m13) (if (<= m13 0) -1 (+ m13 (g12 (- m13 1))))))) (g12 (modulo x 6))) (string-length t11)))) (string->number (substring t11 t11j (+ t11j 1))))) (let ((l14 (vector->list (list->vector (list))))) (if (null? l14) x (list-ref l14 (modulo (length (list 8 x x x)) (length l14)))))) (modulo (let ((l15 (list x))) (if (null? l15) (vector-ref (vector x x -3) (modulo x 3)) (last l15))) 3)))) 3))) (length (hash-keys hh1))))) 101))"
+  },
+  {
+   "i": 228,
+   "want": [
+    4,
+    4,
+    4,
+    4
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     4,
+     1,
+     4
+    ],
+    "file": [
+     1,
+     4,
+     1,
+     4
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (if (member (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 5) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (modulo (* (let ((v3 x)) 19) (+ i2 14)) 9973) 3)) (let ((t4 (list->string (reverse (string->list (number->string (abs 18))))))) (let ((t4j (modulo (let ((v5 x)) i2) (string-length t4)))) (string->number (substring t4 t4j (+ t4j 1)))))) (loop (+ i2 1))) #t)) (hash-ref hh1 (substring \"abc\" 0 (modulo (modulo (vector-ref (vector x x x) (modulo x 3)) (+ 1 (abs (case (modulo 19 4) ((0 1) x) ((2) x) (else x))))) 3)) (case (modulo (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 6) (begin (hash-set! hh6 (substring \"abc\" 0 (modulo x 3)) i7) (loop (+ i7 1))) #t)) (begin (hash-remove! hh6 (list (modulo x 3))) (length (hash-keys hh6)))) 4) ((0 1) (remainder 18 (+ 1 (abs x)))) ((2) (string-length (number->string (abs -20)))) (else (- -5 x))))) (cons (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 6) (begin (hash-set! hh9 (substring \"abc\" 0 (modulo (modulo 3 (+ 1 (abs i10))) 3)) x) (loop (+ i10 1))) #t)) (length (hash-keys hh9))) (reverse (append (list x -10) (list 7 x x))))) (length (cons x (filter (lambda (y16) (let ((hh17 (hash))) (let loop ((i18 0)) (if (< i18 2) (begin (hash-set! hh17 (list (modulo 3 3)) 18) (loop (+ i18 1))) #t)) (hash-has-key? hh17 (modulo y16 4)))) (append (list 4 x) (list x x x))))) (let ((f20 (lambda (y21) (let ((v22 (abs y21))) (string-length (number->string (abs v22))))))) (+ (f20 (let loop ((i23 0) (s24 (let ((vv25 (make-vector 2 0))) (let loop ((i26 0)) (if (< i26 2) (begin (vector-set! vv25 i26 (- x -12)) (loop (+ i26 1))) (vector-ref vv25 (modulo x 2))))))) (if (>= i23 3) s24 (loop (+ i23 1) (modulo (+ s24 (let ((v27 (let ((t28 (number->string (abs i23)))) (let ((t28j (modulo x (string-length t28)))) (string->number (substring t28 t28j (+ t28j 1))))))) (string-length (number->string (abs -11))))) 99991))))) (f20 (min 6 -12)))))) 101))"
+  },
+  {
+   "i": 242,
+   "want": [
+    4,
+    6,
+    8,
+    10
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((vv1 (make-vector 4 0))) (let loop ((i2 0)) (if (< i2 4) (begin (vector-set! vv1 i2 (let ((f3 (lambda (y4) (+ (let ((vv5 (make-vector 1 0))) (let loop ((i6 0)) (if (< i6 1) (begin (vector-set! vv5 i6 x) (loop (+ i6 1))) (vector-ref vv5 (modulo y4 1))))) (length (list y4 -13)))))) (+ (f3 (+ (length (map (lambda (y7) x) (list -11 i2))) (vector-ref (vector (let ((t8 (number->string (abs x)))) (let ((t8j (modulo i2 (string-length t8)))) (string->number (substring t8 t8j (+ t8j 1))))) (let ((l9 (list x))) (if (null? l9) x (last l9))) (remainder -19 (+ 1 (abs i2)))) (modulo (abs x) 3)))) (f3 (let ((v10 (let ((vv11 (make-vector 6 0))) (let loop ((i12 0)) (if (< i12 6) (begin (vector-set! vv11 i12 (- i2 x)) (loop (+ i12 1))) (vector-ref vv11 (modulo (let ((vv13 (make-vector 5 0))) (let loop ((i14 0)) (if (< i14 5) (begin (vector-set! vv13 i14 18) (loop (+ i14 1))) (vector-ref vv13 (modulo i2 5))))) 6))))))) (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 0) (begin (hash-set! hh15 (list (modulo (min 17 i16) 3)) (let ((hh17 (hash))) (let loop ((i18 0)) (if (< i18 4) (begin (hash-set! hh17 (modulo x 4) i2) (loop (+ i18 1))) #t)) (hash-ref hh17 (substring \"abc\" 0 (modulo i16 3)) i16))) (loop (+ i16 1))) #t)) (hash-ref hh15 (substring \"abc\" 0 (modulo x 3)) (+ -18 16)))))))) (loop (+ i2 1))) (vector-ref vv1 (modulo (let ((l19 (list (letrec ((g20 (lambda (m21) (if (<= m21 0) x (+ -20 (g20 (- m21 1))))))) (g20 (modulo 14 6)))))) (if (null? l19) (let ((l22 (filter (lambda (y23) (= -10 -2)) (append (list) (list))))) (if (null? l22) (let ((v25 x)) (let ((hh26 (hash))) (let loop ((i27 0)) (if (< i27 1) (begin (hash-set! hh26 (modulo v25 4) i27) (loop (+ i27 1))) #t)) (length (hash-keys hh26)))) (last l22))) (list-ref l19 (modulo 13 (length l19))))) 4)))))) 101))"
+  },
+  {
+   "i": 244,
+   "want": [
+    3,
+    3,
+    3,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     3,
+     1,
+     1,
+     3
+    ],
+    "file": [
+     3,
+     1,
+     1,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (- (let loop ((i1 0) (s2 (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 0) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo i4 3)) (modulo (* (let* ((v5 i4) (w6 v5)) 14) (let ((v7 i4)) v7)) 9973)) (loop (+ i4 1))) #t)) (begin (hash-remove! hh3 (substring \"abc\" 0 (modulo (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 3) (begin (hash-set! hh8 (list (modulo (let ((f10 (lambda (y11) -11))) (+ (f10 x) (f10 x))) 3)) (string-length (number->string (abs 5)))) (loop (+ i9 1))) #t)) (begin (hash-remove! hh8 (list (modulo (length (list 15)) 3))) (length (hash-keys hh8)))) 3))) (length (hash-keys hh3)))))) (if (>= i1 6) s2 (loop (+ i1 1) (modulo (+ s2 (abs (let ((vv14 (make-vector 6 0))) (let loop ((i15 0)) (if (< i15 6) (begin (vector-set! vv14 i15 (let ((hh16 (hash))) (let loop ((i17 0)) (if (< i17 6) (begin (hash-set! hh16 (substring \"abc\" 0 (modulo i1 3)) i17) (loop (+ i17 1))) #t)) (begin (hash-remove! hh16 (substring \"abc\" 0 (modulo x 3))) (length (hash-keys hh16))))) (loop (+ i15 1))) (vector-ref vv14 (modulo (let ((vv18 (make-vector 1 0))) (let loop ((i19 0)) (if (< i19 1) (begin (vector-set! vv18 i19 x) (loop (+ i19 1))) (vector-ref vv18 (modulo -6 1))))) 6))))))) 99991)))) (let ((v20 (let* ((v21 (let ((t23 (let ((t24 (number->string (abs -10)))) (substring t24 0 (+ 1 (modulo -14 (string-length t24))))))) (let ((t23j (modulo (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 6) (begin (hash-set! hh25 (list (modulo x 3)) i26) (loop (+ i26 1))) #t)) (begin (hash-remove! hh25 (list (modulo x 3))) (length (hash-keys hh25)))) (string-length t23)))) (string->number (substring t23 t23j (+ t23j 1)))))) (w22 -18)) (vector-ref (vector (case (modulo v21 4) ((0 1) w22) ((2) w22) (else w22)) (letrec ((g27 (lambda (m28) (if (<= m28 0) -4 (+ w22 (g27 (- m28 1))))))) (g27 (modulo 11 6))) (case (modulo v21 4) ((0 1) -4) ((2) -11) (else w22))) (modulo (let ((l29 (list -18 v21 x -18))) (if (null? l29) 7 (last l29))) 3))))) (if (string>? (let loop ((i30 0) (a31 \"0\")) (if (>= i30 0) a31 (loop (+ i30 1) (string-append a31 (number->string (abs 7)))))) (number->string (abs 19))) (- (let ((v32 18)) 2) (length (list 15 5 v20 16))) (string-length (number->string (string-length (number->string (abs x))))))))) 101))"
+  },
+  {
+   "i": 246,
+   "want": [
+    2,
+    1,
+    0,
+    9
+   ],
+   "wrong": {
+    "nofuel": [
+     2,
+     1,
+     1,
+     9
+    ],
+    "file": [
+     2,
+     1,
+     1,
+     9
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (+ (- (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 4) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (let ((t3 (string-append (number->string (abs -2)) (number->string (abs 19))))) (let ((t3j (modulo x (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))) 3)) (let loop ((i4 0) (s5 (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 1) (begin (hash-set! hh6 (list (modulo 17 3)) 4) (loop (+ i7 1))) #t)) (begin (hash-remove! hh6 (modulo i2 4)) (length (hash-keys hh6)))))) (if (>= i4 2) s5 (loop (+ i4 1) (modulo (+ s5 12) 99991))))) (loop (+ i2 1))) #t)) (begin (hash-remove! hh1 (list (modulo (let loop ((i8 0) (s9 (string-length (number->string (abs x))))) (if (>= i8 1) s9 (loop (+ i8 1) (modulo (+ s9 -17) 99991)))) 3))) (length (hash-keys hh1)))) (case (modulo x 4) ((0 1) (vector-ref (vector (min x x) (case (modulo -18 4) ((0 1) x) ((2) x) (else x)) (modulo (* -14 -15) 9973)) (modulo x 3))) ((2) (abs (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 2) (begin (hash-set! hh15 (list (modulo i16 3)) i16) (loop (+ i16 1))) #t)) (begin (hash-remove! hh15 (substring \"abc\" 0 (modulo x 3))) (length (hash-keys hh15)))))) (else 11))) (let ((hh17 (hash))) (let loop ((i18 0)) (if (< i18 6) (begin (hash-set! hh17 (modulo (string-length (number->string (abs (let loop ((i19 0) (s20 i18)) (if (>= i19 3) s20 (loop (+ i19 1) (modulo (+ s20 17) 99991))))))) 4) (let ((t21 (list->string (reverse (string->list (string-append (number->string (abs i18)) (number->string (abs i18)))))))) (let ((t21j (modulo (string-length (list->string (reverse (string->list (number->string (abs x)))))) (string-length t21)))) (string->number (substring t21 t21j (+ t21j 1)))))) (loop (+ i18 1))) #t)) (begin (hash-remove! hh17 (substring \"abc\" 0 (modulo (modulo (max x (let ((v22 x)) x)) (+ 1 (abs (min (string-length (number->string x)) x)))) 3))) (length (hash-keys hh17)))))) 101))"
+  },
+  {
+   "i": 248,
+   "want": [
+    0,
+    9,
+    14,
+    18
+   ],
+   "wrong": {
+    "nofuel": [
+     4,
+     9,
+     14,
+     19
+    ],
+    "file": [
+     4,
+     9,
+     14,
+     19
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (abs (let loop ((i1 0) (s2 (+ (let ((hh3 (hash))) (let loop ((i4 0)) (if (< i4 2) (begin (hash-set! hh3 (substring \"abc\" 0 (modulo (let loop ((i5 0) (s6 x)) (if (>= i5 1) s6 (loop (+ i5 1) (modulo (+ s6 s6) 99991)))) 3)) x) (loop (+ i4 1))) #t)) (hash-ref hh3 (substring \"abc\" 0 (modulo x 3)) (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 6) (begin (hash-set! hh7 (modulo i8 4) x) (loop (+ i8 1))) #t)) (begin (hash-remove! hh7 (list (modulo -10 3))) (length (hash-keys hh7)))))) (let loop ((i9 0) (s10 x)) (if (>= i9 4) s10 (loop (+ i9 1) (modulo (+ s10 (let* ((v11 x) (w12 -8)) v11)) 99991))))))) (if (>= i1 2) s2 (loop (+ i1 1) (modulo (+ s2 (let ((t13 (let loop ((i14 0) (a15 \"0\")) (if (>= i14 0) a15 (loop (+ i14 1) (string-append a15 (number->string (abs -5)))))))) (let ((t13j (modulo s2 (string-length t13)))) (string->number (substring t13 t13j (+ t13j 1)))))) 99991)))))) 101))"
+  },
+  {
+   "i": 251,
+   "want": [
+    17,
+    18,
+    19,
+    20
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((v1 (let ((hh2 (hash))) (let loop ((i3 0)) (if (< i3 5) (begin (hash-set! hh2 (modulo (let ((v4 (let ((l5 (reverse (list -1 x -9 -13)))) (if (null? l5) (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 6) (begin (hash-set! hh7 (modulo -10 4) i8) (loop (+ i8 1))) #t)) (begin (hash-remove! hh7 (list (modulo i3 3))) (length (hash-keys hh7)))) (last l5))))) (let ((l9 (vector->list (list->vector (list -1))))) (if (null? l9) (let ((t10 (number->string (abs x)))) (let ((t10j (modulo -9 (string-length t10)))) (string->number (substring t10 t10j (+ t10j 1))))) (list-ref l9 (modulo (let ((hh11 (hash))) (let loop ((i12 0)) (if (< i12 6) (begin (hash-set! hh11 (list (modulo i3 3)) i12) (loop (+ i12 1))) #t)) (hash-ref hh11 (substring \"abc\" 0 (modulo x 3)) v4)) (length l9)))))) 4) (cond ((<= (length (list i3)) 19) (modulo (* (modulo (* -5 6) 9973) (cond ((>= i3 -15) x) ((> x x) i3) ((< i3 -11) x) (else 7))) 9973)) (else (let ((l13 (map (lambda (y14) y14) (list)))) (if (null? l13) (abs 20) (list-ref l13 (modulo 8 (length l13)))))))) (loop (+ i3 1))) #t)) (begin (hash-remove! hh2 (substring \"abc\" 0 (modulo x 3))) (length (hash-keys hh2)))))) (letrec ((g18 (lambda (m19) (if (<= m19 0) (+ (case (modulo (let ((v20 19)) -17) 4) ((0 1) (vector-ref (vector -20 v1 0) (modulo v1 3))) ((2) (case (modulo v1 4) ((0 1) v1) ((2) 3) (else 5))) (else (let ((vv21 (make-vector 4 0))) (let loop ((i22 0)) (if (< i22 4) (begin (vector-set! vv21 i22 i22) (loop (+ i22 1))) (vector-ref vv21 (modulo x 4))))))) (let ((l23 (list 17))) (if (null? l23) x (last l23)))) (+ (if (not (<= x v1)) (let ((l24 (list 4 v1))) (if (null? l24) x (last l24))) (string-length (number->string (abs v1)))) (g18 (- m19 1))))))) (g18 (modulo (let ((f25 (lambda (y26) (string-length (number->string -15))))) (+ (f25 -7) (f25 (let ((l27 (vector->list (list->vector (list))))) (if (null? l27) (abs -15) (last l27)))))) 6))))) 101))"
+  },
+  {
+   "i": 258,
+   "want": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "file": [
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((vv1 (make-vector 3 0))) (let loop ((i2 0)) (if (< i2 3) (begin (vector-set! vv1 i2 (min (let ((vv3 (make-vector 2 0))) (let loop ((i4 0)) (if (< i4 2) (begin (vector-set! vv3 i4 (if (equal? (list 11) (list -15 -5 i4 19)) (string-length (number->string (abs i4))) (vector-ref (vector 5 i4 17) (modulo i2 3)))) (loop (+ i4 1))) (vector-ref vv3 (modulo (abs (vector-ref (vector i2 x 19) (modulo i2 3))) 2))))) (let ((hh5 (hash))) (let loop ((i6 0)) (if (< i6 3) (begin (hash-set! hh5 (substring \"abc\" 0 (modulo (case (modulo (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 0) (begin (hash-set! hh7 (modulo i6 4) i2) (loop (+ i8 1))) #t)) (hash-ref hh7 (substring \"abc\" 0 (modulo x 3)) i2)) 4) ((0 1) (max 18 i2)) ((2) (case (modulo x 4) ((0 1) x) ((2) -9) (else x))) (else (cond ((<= i2 8) -16) (else x)))) 3)) -1) (loop (+ i6 1))) #t)) (begin (hash-remove! hh5 (substring \"abc\" 0 (modulo 10 3))) (length (hash-keys hh5)))))) (loop (+ i2 1))) (vector-ref vv1 (modulo x 3)))))) 101))"
+  },
+  {
+   "i": 260,
+   "want": [
+    0,
+    2,
+    67,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     1,
+     67,
+     3
+    ],
+    "file": [
+     0,
+     1,
+     67,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (cond ((null? (reverse (vector->list (list->vector (append (list x x -2) (list -9 x x)))))) (letrec ((g3 (lambda (m4) (if (<= m4 0) (string-length (number->string -20)) (+ m4 (g3 (- m4 1))))))) (g3 (modulo (let ((hh5 (hash))) (let loop ((i6 0)) (if (< i6 5) (begin (hash-set! hh5 (substring \"abc\" 0 (modulo x 3)) (string-length (number->string (vector-ref (vector -12 i6 -14) (modulo -10 3))))) (loop (+ i6 1))) #t)) (hash-ref hh5 (modulo (let ((hh7 (hash))) (let loop ((i8 0)) (if (< i8 3) (begin (hash-set! hh7 (substring \"abc\" 0 (modulo (let ((l9 (list))) (if (null? l9) i8 (last l9))) 3)) (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 2) (begin (hash-set! hh10 (modulo i11 4) i8) (loop (+ i11 1))) #t)) (hash-ref hh10 (substring \"abc\" 0 (modulo i8 3)) i8))) (loop (+ i8 1))) #t)) (begin (hash-remove! hh7 (list (modulo (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 3) (begin (hash-set! hh12 (list (modulo x 3)) x) (loop (+ i13 1))) #t)) (length (hash-keys hh12))) 3))) (length (hash-keys hh7)))) 4) (let ((v14 (modulo x (+ 1 (abs -15))))) (cond ((>= x x) -11) (else x))))) 6)))) (else (vector-ref (vector (let ((l15 (list (let ((vv16 (make-vector 5 0))) (let loop ((i17 0)) (if (< i17 5) (begin (vector-set! vv16 i17 x) (loop (+ i17 1))) (vector-ref vv16 (modulo x 5))))) (let ((hh18 (hash))) (let loop ((i19 0)) (if (< i19 3) (begin (hash-set! hh18 (list (modulo x 3)) 1) (loop (+ i19 1))) #t)) (hash-ref hh18 (substring \"abc\" 0 (modulo 9 3)) x))))) (if (null? l15) 2 (list-ref l15 (modulo (let ((t20 (let ((t21 (number->string (abs -12)))) (substring t21 0 (+ 1 (modulo -16 (string-length t21))))))) (let ((t20j (modulo (length (list x x x 12)) (string-length t20)))) (string->number (substring t20 t20j (+ t20j 1))))) (length l15))))) (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 3) (begin (hash-set! hh22 (substring \"abc\" 0 (modulo (let ((l24 (append (list) (list i23 i23 i23)))) (if (null? l24) i23 (last l24))) 3)) (let ((v26 (max x i23))) (let ((hh27 (hash))) (let loop ((i28 0)) (if (< i28 0) (begin (hash-set! hh27 (list (modulo i23 3)) i23) (loop (+ i28 1))) #t)) (length (hash-keys hh27))))) (loop (+ i23 1))) #t)) (begin (hash-remove! hh22 (substring \"abc\" 0 (modulo (string-length (list->string (reverse (string->list (number->string (abs x)))))) 3))) (length (hash-keys hh22)))) (let ((vv29 (make-vector 6 0))) (let loop ((i30 0)) (if (< i30 6) (begin (vector-set! vv29 i30 (modulo (* (let ((hh31 (hash))) (let loop ((i32 0)) (if (< i32 6) (begin (hash-set! hh31 (list (modulo x 3)) x) (loop (+ i32 1))) #t)) (hash-ref hh31 (modulo 3 4) 14)) (modulo (* -15 i30) 9973)) 9973)) (loop (+ i30 1))) (vector-ref vv29 (modulo (let ((l33 (list 7 x x 1))) (if (null? l33) (modulo x (+ 1 (abs 1))) (last l33))) 6)))))) (modulo x 3))))) 101))"
+  },
+  {
+   "i": 262,
+   "want": [
+    45,
+    46,
+    47,
+    48
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let loop ((i1 0) (s2 (let loop ((i3 0) (s4 (let ((l5 (map (lambda (y6) (+ y6 17)) (filter (lambda (y7) (>= 13 -17)) (list x -15 x x))))) (if (null? l5) (- x x) (last l5))))) (if (>= i3 2) s4 (loop (+ i3 1) (modulo (+ s4 (let ((vv8 (make-vector 5 0))) (let loop ((i9 0)) (if (< i9 5) (begin (vector-set! vv8 i9 (let ((l10 (cons x (list -18 i9 i9)))) (if (null? l10) -17 (last l10)))) (loop (+ i9 1))) (vector-ref vv8 (modulo (- (modulo (* 11 0) 9973) -12) 5)))))) 99991)))))) (if (>= i1 6) s2 (loop (+ i1 1) (modulo (+ s2 (let ((v12 (let ((vv13 (make-vector 2 0))) (let loop ((i14 0)) (if (< i14 2) (begin (vector-set! vv13 i14 (let ((l15 (list i14))) (if (null? l15) (abs 4) (list-ref l15 (modulo (let ((f16 (lambda (y17) i1))) (+ (f16 x) (f16 x))) (length l15)))))) (loop (+ i14 1))) (vector-ref vv13 (modulo (length (append (list) (list))) 2))))))) (let ((hh19 (hash))) (let loop ((i20 0)) (if (< i20 4) (begin (hash-set! hh19 (substring \"abc\" 0 (modulo (let ((vv21 (make-vector 1 0))) (let loop ((i22 0)) (if (< i22 1) (begin (vector-set! vv21 i22 (let ((vv23 (make-vector 2 0))) (let loop ((i24 0)) (if (< i24 2) (begin (vector-set! vv23 i24 -14) (loop (+ i24 1))) (vector-ref vv23 (modulo 0 2)))))) (loop (+ i22 1))) (vector-ref vv21 (modulo (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 1) (begin (hash-set! hh25 (modulo 11 4) x) (loop (+ i26 1))) #t)) (length (hash-keys hh25))) 1))))) 3)) (let ((vv27 (make-vector 6 0))) (let loop ((i28 0)) (if (< i28 6) (begin (vector-set! vv27 i28 (if (<= v12 -1) 4 3)) (loop (+ i28 1))) (vector-ref vv27 (modulo (let ((l29 (list -12))) (if (null? l29) 11 (last l29))) 6)))))) (loop (+ i20 1))) #t)) (hash-ref hh19 (list (modulo (if (equal? (list) (list -13 10 i1)) (let ((hh30 (hash))) (let loop ((i31 0)) (if (< i31 4) (begin (hash-set! hh30 (list (modulo 11 3)) x) (loop (+ i31 1))) #t)) (hash-ref hh30 (modulo s2 4) -10)) (quotient 5 (+ 1 (abs i1)))) 3)) (+ (let ((hh32 (hash))) (let loop ((i33 0)) (if (< i33 5) (begin (hash-set! hh32 (list (modulo x 3)) s2) (loop (+ i33 1))) #t)) (hash-ref hh32 (modulo -13 4) -15)) (case (modulo -20 4) ((0 1) 2) ((2) 18) (else 10))))))) 99991))))) 101))"
+  },
+  {
+   "i": 271,
+   "want": [
+    1,
+    1,
+    6,
+    1
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     1,
+     6,
+     1
+    ],
+    "file": [
+     0,
+     1,
+     6,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let* ((v1 x) (w2 (let ((t3 (let ((t4 (list->string (reverse (string->list (list->string (reverse (string->list (number->string (abs 18)))))))))) (substring t4 0 (+ 1 (modulo v1 (string-length t4))))))) (let ((t3j (modulo (if (equal? (reverse (list -7 v1)) (vector->list (list->vector (list v1 v1)))) (let ((l6 (vector->list (list->vector (list 14))))) (if (null? l6) (if (> 3 x) 15 x) (last l6))) (let ((t7 (string-append (number->string (abs -11)) (number->string (abs v1))))) (let ((t7j (modulo (length (list 17 -15 x x)) (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1)))))) (string-length t3)))) (string->number (substring t3 t3j (+ t3j 1))))))) (cond ((>= (vector-ref (vector -6 (let ((l8 (list x w2))) (if (null? l8) x (last l8))) (string-length (number->string (abs v1)))) (modulo (letrec ((g9 (lambda (m10) (if (<= m10 0) v1 (+ v1 (g9 (- m10 1))))))) (g9 (modulo w2 6))) 3)) (string-length (number->string (abs x)))) (max (string-length (number->string 12)) (abs (if (<= v1 -12) w2 6)))) ((zero? v1) (let ((vv11 (make-vector 3 0))) (let loop ((i12 0)) (if (< i12 3) (begin (vector-set! vv11 i12 (let ((hh13 (hash))) (let loop ((i14 0)) (if (< i14 6) (begin (hash-set! hh13 (substring \"abc\" 0 (modulo (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 1) (begin (hash-set! hh15 (substring \"abc\" 0 (modulo v1 3)) w2) (loop (+ i16 1))) #t)) (length (hash-keys hh15))) 3)) (let ((v17 x)) w2)) (loop (+ i14 1))) #t)) (begin (hash-remove! hh13 (substring \"abc\" 0 (modulo (if (= v1 v1) x v1) 3))) (length (hash-keys hh13))))) (loop (+ i12 1))) (vector-ref vv11 (modulo (let ((t19 (number->string (abs w2)))) (let ((t19j (modulo (let ((hh20 (hash))) (let loop ((i21 0)) (if (< i21 6) (begin (hash-set! hh20 (substring \"abc\" 0 (modulo i21 3)) i21) (loop (+ i21 1))) #t)) (begin (hash-remove! hh20 (modulo v1 4)) (length (hash-keys hh20)))) (string-length t19)))) (string->number (substring t19 t19j (+ t19j 1))))) 3)))))) (else (string-length (number->string (let ((hh22 (hash))) (let loop ((i23 0)) (if (< i23 5) (begin (hash-set! hh22 (list (modulo (let ((t24 (number->string (abs x)))) (let ((t24j (modulo -19 (string-length t24)))) (string->number (substring t24 t24j (+ t24j 1))))) 3)) (let ((l25 (list v1 w2))) (if (null? l25) i23 (last l25)))) (loop (+ i23 1))) #t)) (hash-ref hh22 (list (modulo (min x x) 3)) (let ((vv26 (make-vector 5 0))) (let loop ((i27 0)) (if (< i27 5) (begin (vector-set! vv26 i27 x) (loop (+ i27 1))) (vector-ref vv26 (modulo -19 5))))))))))))) 101))"
+  },
+  {
+   "i": 274,
+   "want": [
+    0,
+    2,
+    4,
+    6
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((v1 (let ((l2 (map (lambda (y3) (abs (let ((vv4 (make-vector 4 0))) (let loop ((i5 0)) (if (< i5 4) (begin (vector-set! vv4 i5 x) (loop (+ i5 1))) (vector-ref vv4 (modulo x 4))))))) (list (modulo (* 4 x) 9973) (let ((vv6 (make-vector 3 0))) (let loop ((i7 0)) (if (< i7 3) (begin (vector-set! vv6 i7 x) (loop (+ i7 1))) (vector-ref vv6 (modulo x 3))))) (let ((t8 (number->string (abs -18)))) (let ((t8j (modulo -8 (string-length t8)))) (string->number (substring t8 t8j (+ t8j 1))))))))) (if (null? l2) (let ((vv9 (make-vector 3 0))) (let loop ((i10 0)) (if (< i10 3) (begin (vector-set! vv9 i10 (let ((vv11 (make-vector 5 0))) (let loop ((i12 0)) (if (< i12 5) (begin (vector-set! vv11 i12 (let ((l13 (list i10 -4 i12 9))) (if (null? l13) i10 (list-ref l13 (modulo 5 (length l13)))))) (loop (+ i12 1))) (vector-ref vv11 (modulo (vector-ref (vector i10 12 x) (modulo 4 3)) 5)))))) (loop (+ i10 1))) (vector-ref vv9 (modulo (let* ((v14 (case (modulo x 4) ((0 1) 10) ((2) x) (else x))) (w15 (- x x))) (let ((vv16 (make-vector 6 0))) (let loop ((i17 0)) (if (< i17 6) (begin (vector-set! vv16 i17 v14) (loop (+ i17 1))) (vector-ref vv16 (modulo -9 6)))))) 3))))) (last l2))))) (let ((l18 (cons (abs (let loop ((i20 0) (s21 8)) (if (>= i20 6) s21 (loop (+ i20 1) (modulo (+ s21 v1) 99991))))) (list (string-length (number->string 5)) (let loop ((i22 0) (s23 0)) (if (>= i22 3) s23 (loop (+ i22 1) (modulo (+ s23 -5) 99991)))) (let ((f24 (lambda (y25) v1))) (+ (f24 v1) (f24 v1))))))) (if (null? l18) (let* ((v26 (modulo (* (let ((l28 (list 18))) (if (null? l28) v1 (list-ref l28 (modulo v1 (length l28))))) (let ((l29 (list -20 -1))) (if (null? l29) x (last l29)))) 9973)) (w27 v26)) (let ((f30 (lambda (y31) y31))) (+ (f30 (- -11 -2)) (f30 (length (list)))))) (last l18))))) 101))"
+  },
+  {
+   "i": 276,
+   "want": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ],
+    "file": [
+     0,
+     0,
+     0,
+     3
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((t1 (number->string (abs (let ((hh2 (hash))) (let loop ((i3 0)) (if (< i3 2) (begin (hash-set! hh2 (substring \"abc\" 0 (modulo (letrec ((g4 (lambda (m5) (if (<= m5 0) x (+ m5 (g4 (- m5 1))))))) (g4 (modulo (if (> i3 i3) i3 i3) 6))) 3)) i3) (loop (+ i3 1))) #t)) (hash-ref hh2 (substring \"abc\" 0 (modulo (let ((t6 (string-append (number->string (abs x)) (number->string (abs x))))) (let ((t6j (modulo x (string-length t6)))) (string->number (substring t6 t6j (+ t6j 1))))) 3)) (let ((t7 (string-append (number->string (abs x)) (number->string (abs x))))) (let ((t7j (modulo (abs x) (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1))))))))))) (let ((t1j (modulo (if (let ((hh8 (hash))) (let loop ((i9 0)) (if (< i9 6) (begin (hash-set! hh8 (modulo (let ((t10 (list->string (reverse (string->list (number->string (abs x))))))) (let ((t10j (modulo (+ x x) (string-length t10)))) (string->number (substring t10 t10j (+ t10j 1))))) 4) (let ((f11 (lambda (y12) 4))) (+ (f11 (if (<= i9 x) i9 x)) (f11 (let ((l13 (list x i9 19))) (if (null? l13) 1 (last l13))))))) (loop (+ i9 1))) #t)) (hash-has-key? hh8 (list (modulo (string-length (number->string (abs x))) 3)))) (let ((t16 (let loop ((i17 0) (a18 \"0\")) (if (>= i17 3) a18 (loop (+ i17 1) (string-append a18 (number->string (abs (+ 12 x))))))))) (let ((t16j (modulo x (string-length t16)))) (string->number (substring t16 t16j (+ t16j 1))))) (letrec ((g19 (lambda (m20) (if (<= m20 0) (min (+ 8 17) (let ((vv21 (make-vector 2 0))) (let loop ((i22 0)) (if (< i22 2) (begin (vector-set! vv21 i22 11) (loop (+ i22 1))) (vector-ref vv21 (modulo 2 2)))))) (+ (let ((hh23 (hash))) (let loop ((i24 0)) (if (< i24 1) (begin (hash-set! hh23 (substring \"abc\" 0 (modulo i24 3)) i24) (loop (+ i24 1))) #t)) (hash-ref hh23 (list (modulo -9 3)) m20)) (g19 (- m20 1))))))) (g19 (modulo (remainder (modulo x (+ 1 (abs -18))) (+ 1 (abs (let ((hh25 (hash))) (let loop ((i26 0)) (if (< i26 4) (begin (hash-set! hh25 (modulo -1 4) -18) (loop (+ i26 1))) #t)) (hash-ref hh25 (substring \"abc\" 0 (modulo 13 3)) -18))))) 6)))) (string-length t1)))) (string->number (substring t1 t1j (+ t1j 1)))))) 101))"
+  },
+  {
+   "i": 292,
+   "want": [
+    0,
+    4,
+    0,
+    0
+   ],
+   "wrong": {
+    "nofuel": [
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((vv1 (make-vector 3 0))) (let loop ((i2 0)) (if (< i2 3) (begin (vector-set! vv1 i2 (length (reverse (filter (lambda (y4) (not (>= x i2))) (reverse (list x i2 x x)))))) (loop (+ i2 1))) (vector-ref vv1 (modulo (modulo (* (let ((f6 (lambda (y7) (let ((vv8 (make-vector 3 0))) (let loop ((i9 0)) (if (< i9 3) (begin (vector-set! vv8 i9 i9) (loop (+ i9 1))) (vector-ref vv8 (modulo x 3)))))))) (+ (f6 (let ((hh10 (hash))) (let loop ((i11 0)) (if (< i11 0) (begin (hash-set! hh10 (list (modulo (quotient -7 (+ 1 (abs x))) 3)) (length (list x x 11 -5))) (loop (+ i11 1))) #t)) (begin (hash-remove! hh10 (substring \"abc\" 0 (modulo (let ((v12 -14)) x) 3))) (length (hash-keys hh10))))) (f6 (let ((hh15 (hash))) (let loop ((i16 0)) (if (< i16 5) (begin (hash-set! hh15 (modulo (let ((l17 (list i16 x i16))) (if (null? l17) i16 (last l17))) 4) (let ((hh18 (hash))) (let loop ((i19 0)) (if (< i19 3) (begin (hash-set! hh18 (modulo x 4) 10) (loop (+ i19 1))) #t)) (hash-ref hh18 (substring \"abc\" 0 (modulo x 3)) 18))) (loop (+ i16 1))) #t)) (begin (hash-remove! hh15 (list (modulo (vector-ref (vector 16 x -16) (modulo -2 3)) 3))) (length (hash-keys hh15))))))) (let ((hh20 (hash))) (let loop ((i21 0)) (if (< i21 1) (begin (hash-set! hh20 (modulo i21 4) (max (let ((vv22 (make-vector 6 0))) (let loop ((i23 0)) (if (< i23 6) (begin (vector-set! vv22 i23 x) (loop (+ i23 1))) (vector-ref vv22 (modulo -4 6))))) (if (> 10 16) 14 i21))) (loop (+ i21 1))) #t)) (length (hash-keys hh20)))) 9973) 3)))))) 101))"
+  },
+  {
+   "i": 293,
+   "want": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "wrong": {
+    "nofuel": [
+     "blocked",
+     "knob value out of range [0,100]"
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let* ((v1 (let ((l3 (map (lambda (y4) (letrec ((g5 (lambda (m6) (if (<= m6 0) (let ((t7 (number->string (abs y4)))) (let ((t7j (modulo y4 (string-length t7)))) (string->number (substring t7 t7j (+ t7j 1))))) (+ m6 (g5 (- m6 1))))))) (g5 (modulo x 6)))) (append (append (list x x) (list x)) (filter (lambda (y10) (< x y10)) (list 8)))))) (if (null? l3) x (last l3)))) (w2 (- (if (or (> 2 v1) (positive? x)) (letrec ((g11 (lambda (m12) (if (<= m12 0) (let ((v13 -11)) x) (+ x (g11 (- m12 1))))))) (g11 (modulo (let ((vv14 (make-vector 5 0))) (let loop ((i15 0)) (if (< i15 5) (begin (vector-set! vv14 i15 x) (loop (+ i15 1))) (vector-ref vv14 (modulo -12 5))))) 6))) (let ((l16 (reverse (list 15 0 -19 v1)))) (if (null? l16) (string-length (number->string -15)) (list-ref l16 (modulo (min -5 x) (length l16)))))) (vector-ref (vector 2 -15 10) (modulo (if (not (<= -12 v1)) (modulo (* x x) 9973) (let ((t18 (number->string (abs v1)))) (let ((t18j (modulo 16 (string-length t18)))) (string->number (substring t18 t18j (+ t18j 1)))))) 3))))) (vector-ref (vector (let ((hh19 (hash))) (let loop ((i20 0)) (if (< i20 0) (begin (hash-set! hh19 (list (modulo (string-length (number->string (abs -15))) 3)) (string-length (number->string (abs -18)))) (loop (+ i20 1))) #t)) (hash-ref hh19 (substring \"abc\" 0 (modulo (let ((hh21 (hash))) (let loop ((i22 0)) (if (< i22 6) (begin (hash-set! hh21 (modulo (quotient -8 (+ 1 (abs i22))) 4) (cond ((= -9 v1) 16) (else w2))) (loop (+ i22 1))) #t)) (begin (hash-remove! hh21 (substring \"abc\" 0 (modulo -8 3))) (length (hash-keys hh21)))) 3)) (- 14 (let ((hh24 (hash))) (let loop ((i25 0)) (if (< i25 5) (begin (hash-set! hh24 (substring \"abc\" 0 (modulo x 3)) 4) (loop (+ i25 1))) #t)) (hash-ref hh24 (list (modulo x 3)) x))))) x 11) (modulo 13 3)))) 101))"
+  },
+  {
+   "i": 298,
+   "want": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "wrong": {
+    "nofuel": [
+     1,
+     1,
+     1,
+     1
+    ],
+    "file": [
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "src": "(lambda (x) (modulo (abs (let ((hh1 (hash))) (let loop ((i2 0)) (if (< i2 6) (begin (hash-set! hh1 (substring \"abc\" 0 (modulo (abs (string-length (number->string -10))) 3)) (string-length (let ((t3 (number->string (abs (let* ((v4 i2) (w5 18)) 13))))) (substring t3 0 (+ 1 (modulo (let ((hh6 (hash))) (let loop ((i7 0)) (if (< i7 5) (begin (hash-set! hh6 (substring \"abc\" 0 (modulo (modulo (* x i7) 9973) 3)) (case (modulo -6 4) ((0 1) i2) ((2) 5) (else -7))) (loop (+ i7 1))) #t)) (hash-ref hh6 (substring \"abc\" 0 (modulo (let ((l8 (list -15 i2 -8))) (if (null? l8) -1 (list-ref l8 (modulo i2 (length l8))))) 3)) (let ((hh9 (hash))) (let loop ((i10 0)) (if (< i10 2) (begin (hash-set! hh9 (substring \"abc\" 0 (modulo i2 3)) i10) (loop (+ i10 1))) #t)) (length (hash-keys hh9))))) (string-length t3))))))) (loop (+ i2 1))) #t)) (hash-ref hh1 (substring \"abc\" 0 (modulo 3 3)) (let ((t11 (number->string (abs (string-length (number->string (abs 1))))))) (let ((t11j (modulo (let ((hh12 (hash))) (let loop ((i13 0)) (if (< i13 3) (begin (hash-set! hh12 (list (modulo (vector-ref (vector (let ((f14 (lambda (y15) y15))) (+ (f14 -16) (f14 x))) (let ((l16 (list x x))) (if (null? l16) x (last l16))) (cond ((> -9 -3) -3) ((>= i13 i13) x) ((< i13 14) x) (else i13))) (modulo (+ -16 17) 3)) 3)) -11) (loop (+ i13 1))) #t)) (begin (hash-remove! hh12 (modulo -1 4)) (length (hash-keys hh12)))) (string-length t11)))) (string->number (substring t11 t11j (+ t11j 1)))))))) 101))"
+  }
+ ]
+}

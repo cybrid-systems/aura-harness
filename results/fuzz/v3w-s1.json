@@ -1,0 +1,29 @@
+{
+ "summary": {
+  "n": 300,
+  "seed": 1,
+  "times_s": {
+   "apply": 79.77,
+   "trial": 44.32
+  },
+  "mismatch": {
+   "apply": 0,
+   "trial": 0
+  },
+  "blocked": {
+   "apply": 0,
+   "trial": 0
+  },
+  "crash": {
+   "apply": 0,
+   "trial": 0
+  },
+  "timeout": {
+   "apply": 0,
+   "trial": 0
+  },
+  "gen": 3,
+  "shrunk": {}
+ },
+ "bad": []
+}
