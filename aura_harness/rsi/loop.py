@@ -19,7 +19,7 @@ from .proposal import RuleSource
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
-            cfg: M2Config | None = None, world: str = "sim") -> dict:
+            cfg: M2Config | None = None, world: str = "sim", ledger=None) -> dict:
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
     t_start = time.perf_counter()
@@ -54,7 +54,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             if t.heldout:
                 continue
             if cfg.pruner and t.id and t.id % cfg.prune_every == 0 and t.id >= window:
-                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib)
+                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger)
             d = src.p.diagnose(ep) if cfg.critic else None
             if d:
                 critic.note(f"{d[0]}|{d[1]}", t.project)
@@ -137,9 +137,18 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             v0 = time.perf_counter()
             vr = h.verdict(t.id, best, sc, cands[0].why)
             change_s.append(time.perf_counter() - v0)
+            if ledger is not None:
+                for d in blocked:
+                    ledger.event("blocked", t.id, desc=d, why=cands[0].why)
             if vr["verdict"] == "KEEP":
-                tb = vr["table"]
                 c = cands[best]
+                if ledger is not None:
+                    bi = next(j for j, r in enumerate(ok_trials) if r["i"] == best)
+                    ledger.admit("keep", t.id, c, tb, vr["table"], "gate", {
+                        "evidence": sig, "reason": c.why, "candidates": [x.desc for x in cands], "blocked": blocked,
+                        "gate": {"window": [start, t.id], "base": list(base), "chosen": list(cs[bi])},
+                        "retention": sc.get("retention"), "fresh": sc.get("fresh")})
+                tb = vr["table"]
                 lib.add(c.name, tb[COMPONENT[c.name]], c.desc, sig, t.id, t.phase)
                 if c.meta.get("target") == "composition":
                     stats["recomb_kept"] += 1
@@ -156,6 +165,10 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             verdicts.append({"ts": t.id, "verdict": vr["verdict"], "chosen": cands[best].desc if best >= 0 else None,
                              "candidates": [c.desc for c in cands], "blocked": blocked, "scores": sc,
                              "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1)})
+        if ledger is not None:
+            for e in getattr(h, "events", []):
+                if e["op"] == "restart":
+                    ledger.event("restart", e["ts"], why=e["why"], replayed=e["replayed"], ms=e["ms"])
         audit = h.log()
         source = h.source()
         lat = {k: v for k, v in h.lat.items()}
@@ -174,7 +187,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     return out
 
 
-def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib):
+def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger=None):
     """RRSI pruner: ablate each kept plugin (revert to seed); adopt the ablation if the recent window is not worse in
     held-out successes and not more expensive. Goes through the guard (trial + verdict, actor pruner)."""
     cands = prune_candidates(tb)
@@ -196,5 +209,8 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib):
     vr = h.verdict(t.id, best, {"base": base, "prune": True}, "pruner: ablate kept plugins", actor="pruner")
     if vr["verdict"] == "KEEP":
         stats["pruned"].append((t.id, cands[best].desc))
+        if ledger is not None:
+            ledger.admit("prune", t.id, cands[best], tb, vr["table"], "pruner",
+                         {"reason": "pruner: plugin no longer useful", "gate": {"base": list(base), "chosen": list(bs)}})
         return vr["table"]
     return tb

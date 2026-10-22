@@ -614,3 +614,48 @@ tests/                    unit tests (knob size stress, compile equivalence, tri
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+## RSI layer M4: audit, why, diff, one-command rollback
+
+Every admitted change (gate KEEP, prune, blocked trial, supervisor restart, user rollback) is appended to a JSONL ledger. `audit show` explains why (evidence, candidates, gate scores), diffs the Lisp body and the decision table, and prints the rollback command. `audit rollback N` re-applies the pre-change body through the same guarded APPLY (actor `user-rollback`), is itself logged, and works across supervisor crash-restarts (tested with injected crashes). Note: the body diff may show `else`-default reshuffles that are semantically equal; the decision-table diff is the authoritative one.
+
+```
+$ python3 -m aura_harness audit list
+  id  task  op        plugin        change                                   why
+   1    20 keep      compress      compress test-log grep-errors/800        info-lost|test-log           held-out 0->6/10
+   2    34 keep      route-tool    route edit->apply-patch                  tool-error|sed|bad-args      held-out 9->16/17
+   3    72 keep      retry-limit   retry grep|timeout=3                     tool-error|grep|timeout      held-out 20->21/21
+
+$ python3 -m aura_harness audit show 2
+#2 KEEP route-tool: route edit->apply-patch   (task 34, actor gate, target state)
+
+WHY
+  evidence   tool-error|sed|bad-args
+  reason     tool-error sed|bad-args
+  candidates ["route edit->apply-patch", "retry sed|bad-args=0"]
+  gate       {"window": [0, 34], "base": [9, 17, 94091], "chosen": [16, 17, 130974]}
+
+DIFF (body)
+  --- before
+  +++ after
+  @@ -1,7 +1,7 @@
+   (lambda (need) (cond
+  -  ((equal? need "edit") "sed")
+  +  ((equal? need "edit") "apply-patch")
+     ((equal? need "logs") "journal")
+  -  ((equal? need "query-db") "sql")
+     ((equal? need "read") "cat")
+  +  ((equal? need "search") "grep")
+     ((equal? need "test") "pytest")
+  -  (else "grep")))
+  +  (else "sql")))
+
+DIFF (decision table)
+  edit: "sed" -> "apply-patch"
+
+ROLLBACK   python3 -m aura_harness audit rollback 2 --ledger runs/audit-demo/ledger.jsonl
+
+$ python3 -m aura_harness audit rollback 2
+#4 ROLLBACK of #2 (route edit->apply-patch) admitted by the guard
+  edit: "apply-patch" -> "sed"
+```

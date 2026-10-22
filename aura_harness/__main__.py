@@ -32,6 +32,13 @@ def main(argv=None) -> int:
     sub.add_parser("guard")
     sub.add_parser("acceptance")
     sub.add_parser("source")
+    au = sub.add_parser("audit")
+    au.add_argument("action", choices=["run", "list", "show", "rollback", "table"])
+    au.add_argument("id", nargs="?", type=int)
+    au.add_argument("--ledger", default="runs/audit/ledger.jsonl")
+    au.add_argument("--seed", type=int, default=0)
+    au.add_argument("--n", type=int, default=400)
+    au.add_argument("--world", default="sim", choices=["sim", "dev"])
     db = sub.add_parser("dev-bench")
     db.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
     db.add_argument("--n", type=int, default=160)
@@ -73,6 +80,9 @@ def main(argv=None) -> int:
     elif a.cmd == "acceptance":
         from .acceptance import main as acc
         return acc()
+    elif a.cmd == "audit":
+        from .audit import main as aud
+        return aud(a)
     elif a.cmd == "dev-bench":
         from .devbench import run as devb
         print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out))
