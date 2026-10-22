@@ -46,12 +46,12 @@
 ;; knobs-all reads every knob through chunk defines of *knob-chunk* knobs each: rebinding a knob dirties only its
 ;; (small) chunk caller. One flat aggregator calling all N knobs makes every knob rebind O(N^2) in Aura's IR dirty
 ;; cascade (cybrid-systems/aura#4615); AURA_HARNESS_KNOB_CHUNK=0 restores that flat shape for comparison.
-(define *knob-chunk* (let ((v (getenv "AURA_HARNESS_KNOB_CHUNK"))) (if (and (string? v) (string->number v)) (string->number v) 16)))
+(define *knob-chunk* (let ((v (getenv "AURA_HARNESS_KNOB_CHUNK"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 ;; a row reads its knob through knob-row4 (the knob passed as a VALUE), not at 4 call sites: workspace compile time
 ;; grows with call paths (aura#4630), and 4 sites per knob made a chunk caller 4x the sum of every knob's call-path
 ;; weight. With 8 multi-knob fuzz bodies a trivial rebind cost 824 ms vs 232 ms this way (same values).
 ;; AURA_HARNESS_KNOB_ROW4=0 restores the 4-site rows.
-(define *knob-row4* (let ((v (getenv "AURA_HARNESS_KNOB_ROW4"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *knob-row4* (let ((v (getenv "AURA_HARNESS_KNOB_ROW4"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define (knob-row n)
   (if (= *knob-row4* 0) (string-append "(list (" n " 0) (" n " 1) (" n " 2) (" n " 3)) ") (string-append "(knob-row4 " n ") ")))
 (define (take-drop xs k) (let loop ((xs xs) (k k) (acc (list))) (if (or (= k 0) (null? xs)) (cons (reverse acc) xs) (loop (cdr xs) (- k 1) (cons (car xs) acc)))))
@@ -233,11 +233,11 @@
             "(define %hash0 (lambda (h) (%charge 8) h))\n"
             "(define %hash-keys (lambda (h) (let loop ((ks (hash-keys h)) (acc (list))) (%tick) (if (null? ks) (reverse acc) (loop (cdr ks) (cons (let ((k (car ks))) (if (and (string? k) (>= (string-length k) 2) (string=? (substring k 0 2) \"s:\")) (substring k 2 (string-length k)) k)) acc))))))\n")))))
 (define *renamed* (list "make-vector" "string-append" "append"))
-(define *hof-wrap* (let ((v (getenv "AURA_HARNESS_HOF_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *hof-wrap* (let ((v (getenv "AURA_HARNESS_HOF_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define *hofs* (if (= *hof-wrap* 0) (list) (list "map" "filter" "for-each")))
-(define *std-wrap* (let ((v (getenv "AURA_HARNESS_STD_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *std-wrap* (let ((v (getenv "AURA_HARNESS_STD_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define *stdw* (if (= *std-wrap* 0) (list) (list "last" "list-tail" "assq" "even?" "odd?" "zero?" "positive?" "negative?" "expt")))
-(define *hash-wrap* (let ((v (getenv "AURA_HARNESS_HASH_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 1)))
+(define *hash-wrap* (let ((v (getenv "AURA_HARNESS_HASH_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define *hashk* (if (= *hash-wrap* 0) (list) (list "hash-set!" "hash-ref" "hash-has-key?" "hash-remove!")))   ;; key = 2nd argument
 (define *wrapped* (append *hofs* *stdw* (if (= *hash-wrap* 0) (list) (list "hash-keys"))))
 (define *allowed-syms*
@@ -394,7 +394,7 @@
 ;; defines, with the proposed body in place of its target's, and rejects when any w exceeds AURA_HARNESS_PATH_MAX
 ;; (default 1024: weight 1641 already costs ~0.4 s per apply; 0 = off). Texts come from the live workspace source, so the check follows
 ;; rollbacks and restores. A cycle (mutual recursion) counts its back edge as weight 1; fuel bounds it at run time.
-(define *path-max* (let ((v (getenv "AURA_HARNESS_PATH_MAX"))) (if (and (string? v) (string->number v)) (string->number v) 1024)))
+(define *path-max* (let ((v (getenv "AURA_HARNESS_PATH_MAX"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define (count-sub s pat)
   (let loop ((s s) (n 0))
     (let ((i (string-index s pat)))

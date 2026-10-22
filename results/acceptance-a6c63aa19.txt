@@ -1,0 +1,50 @@
+PASS  harness-cycle aura-harness: child-workspace trial + snapshot trial leave the root byte-identical; keep
+      got: OK
+PASS  4583          10 rebinds next to a self-recursive define stay flat (no 4x-per-rebind blow-up)
+      got: (bounded #t)
+PASS  4584          2nd call of a workspace define whose sibling uses filter runs the right define
+      got: (call2 (8 (a)))
+PASS  4585          a host-program loop is not >3x slower after one set-code
+      got: (ratio<3 #t)
+PASS  4586          an error inside a map callback reaches try
+      got: caught
+PASS  4583-linear   rebind 1001-1500 of the same body costs < 1.5x rebind 1-500 (aura#4583, reopened from here)
+      got: (flat #t)
+PASS  4610          1000 deleted child-workspace trials leave root rebind cost < 1.5x (aura#4610, filed from here)
+      got: (flat #t)
+PASS  4615          rebind of f with a 4x bigger caller of f costs < 8x (aura#4615, filed from here)
+      got: ok
+PASS  4617          workspace define calling a file-level fn by name keeps its frame's vector/list (aura#4617, filed from here)
+      got: (0 0)
+PASS  4618          set! of a global in a workspace define stores; no const-fold after set! (aura#4618, filed from here)
+      got: (wrong 0)
+PASS  4619          raise in a while body / non-final when, unless reaches try (aura#4619, filed from here)
+      got: (caught caught caught caught)
+PASS  4620          100M-deep recursion raises a catchable error under a 1.5 GB cap (aura#4620, filed from here)
+      got: depth-error
+PASS  4621          rest parameters in a workspace define (aura#4621, filed from here)
+      got: ((2) (2 3) ((2)) () (1 2) ((1)))
+PASS  4622          a #\( char literal in the first form doesn't make the file runner refuse the file (aura#4622, filed from here)
+      got: (40 1)
+PASS  4623          second identical run of a tree-walked transformer gives the same list (aura#4623, c6a18e8a5 regression, filed from here)
+      got: (R (lambda (need) (%tick) (let loop ((i 0)) (%tick) (loop (+ i 1)))))
+PASS  4623-reader   8-line recursive list reader called twice on equal input gives the same tree (aura#4623 comment)
+      got: (f (f (f (f (f (f x))))))
+PASS  4617-last     a workspace caller reading a define that calls std-lib last gets the right list 200/200 times (aura#4617)
+      got: (last 0)
+PASS  4624          unbound variable inside a map callback raises (aura#4624, filed from here)
+      got: caught
+PASS  4626          two map callbacks from sibling expressions of a workspace define both run (aura#4626, filed from here)
+      got: ((1 1) (2 2))
+PASS  4627          (equal? (list 1 2) want) in a tail-call loop is never #f (aura#4627, c6a18e8a5 regression, filed from here)
+      got: ()
+PASS  4626-sibcall  one inline filter callback in a workspace define called 4x from a sibling list (the knob table) keeps the element every time (aura#4626 comment)
+      got: (1 1 1 1)
+PASS  4629-vec      a fresh (vector x 0 0) in a map callback keeps its length across 10 hot-loop calls (aura#4629 comment, c6a18e8a5 regression)
+      got: (1 1 1 1 1 1 1 1 1 1)
+PASS  4630          workspace compile at call-chain depth 12 (2 call sites per level) costs < 2.5x depth 10 (aura#4630, filed from here)
+      got: ok
+PASS  merge         workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)
+      got: MERGED
+FAIL  4670          frozen server + 10 APPLY requests: no SIGSEGV in the flat-AST walk; the trailing PING answers (aura#4670, filed from here)
+      got: R {"table":{"knobs":[[19,19,19,19]],"budget":4000,"route":{"query-db":"sql","edit":"sed","search":"grep","logs":"journal","test":"pytest","read":"cat"},"max_ste rc=-11

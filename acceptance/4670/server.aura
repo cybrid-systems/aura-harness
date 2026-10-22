@@ -1,0 +1,718 @@
+;; aura-harness control plane. The harness (5 mutable policy defines + 4 protected boundary defines) lives in this
+;; Aura process's workspace. The host (aura_harness/control.py) runs the task environment and the frozen model,
+;; and asks this process for harness decisions, for guarded mutations, and for trials in forked worldlines.
+;;
+;; Protocol: one request per stdin line (tab-separated), one response per stdout line: "R " + JSON.
+;;   TABLE                         materialised decision table of the live harness (every define over its finite domain)
+;;   D comp a b                    one decision (route|compress|retry|ttl|delegate|budget|maxsteps), for latency
+;;   APPLY ts name body why actor  guarded mutation of the live harness (no gate): snapshot, rebind, eval, postcheck
+;;   TRIAL mode ts n {name body why}*   one forked worldline per candidate; mode = ws (workspace :create child, the
+;;                                 live root is never touched) | snap (ast:snapshot / mutate / ast:restore on root).
+;;                                 -> per candidate: blocked reason, or its decision table
+;;   VERDICT ts chosen scores why  KEEP candidate #chosen (ws: `workspace :merge` of its trial child + root post-check;
+;;                                 snap: re-applied to the root through the guard) or ROLLBACK (-1)
+;;   ADMIT name body               dry run of the static guard stage: reason or null, and the instrumented body
+;;   SOURCE [raw] | FIND name | LOG | VERSION | GUARD | COMPACT | PING | QUIT
+;;   (APPLY / TRIAL / VERDICT count as root mutations; every AURA_HARNESS_COMPACT_EVERY of them the root is
+;;    reloaded from its own source after the reply, see compact!)
+;;
+;; Scope guard (outside the workspace, so no proposal can rebind it):
+;;   1. name must be in *mutable*; protected or unknown names are rejected
+;;   2. body must be a single (lambda ...) whose tokens use no protected name and no reflective/mutating primitive
+;;   3. after the rebind + eval-current, the whole decision table must materialise, every value must be in range,
+;;      every routed tool must be in (allowed-tools), and the protected values must equal those captured at startup;
+;;      otherwise the change is undone (ast:restore, or the child worldline is dropped)
+;; Every attempt, blocked or not, is appended to the audit log with actor, reason and harness version.
+
+(define *seed-path* (if (getenv "AURA_HARNESS_SEED") (getenv "AURA_HARNESS_SEED") "aura/harness_seed.aura"))
+
+(define needs (list "search" "read" "edit" "test" "query-db" "logs"))
+(define kinds (list "search-results" "code-file" "test-log" "service-log" "sql-rows" "patch-result" "config"))
+(define tools (list "grep" "rg-json" "lsp-find" "cat" "sed" "apply-patch" "pytest" "pytest-q" "sql" "journal"))
+(define errs (list "timeout" "rate-limit" "bad-args" "not-found"))
+(define facts (list "test-cmd" "repo-layout" "db-schema"))
+(define tkinds (list "bugfix" "feature" "data" "triage" "refactor"))
+(define nsubs (list 1 2 3 4 5 6 7))
+(define strategies (list "none" "head" "tail" "head-tail" "grep-errors" "summarize"))
+
+;; Size stress (AURA_HARNESS_KNOBS=N, default 0): N extra MUTABLE defines knob-0 .. knob-N-1, each a tool-parameter
+;; table over x in {0,1,2,3} with values in [0,100], appended to the seed. They don't affect the task environment;
+;; they make the harness (and so every snapshot / rebind / restore / post-check) N defines bigger. knobs-all (not
+;; mutable) returns every knob's 4 values, so materialize / post-check can read them without eval.
+(define *nknobs* (let ((v (getenv "AURA_HARNESS_KNOBS"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define knob-domain (list 0 1 2 3))
+(define (knob-name i) (string-append "knob-" (number->string i)))
+(define knob-names (let loop ((i (- *nknobs* 1)) (acc (list))) (if (< i 0) acc (loop (- i 1) (cons (knob-name i) acc)))))
+;; knobs-all reads every knob through chunk defines of *knob-chunk* knobs each: rebinding a knob dirties only its
+;; (small) chunk caller. One flat aggregator calling all N knobs makes every knob rebind O(N^2) in Aura's IR dirty
+;; cascade (cybrid-systems/aura#4615); AURA_HARNESS_KNOB_CHUNK=0 restores that flat shape for comparison.
+(define *knob-chunk* (let ((v (getenv "AURA_HARNESS_KNOB_CHUNK"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+;; a row reads its knob through knob-row4 (the knob passed as a VALUE), not at 4 call sites: workspace compile time
+;; grows with call paths (aura#4630), and 4 sites per knob made a chunk caller 4x the sum of every knob's call-path
+;; weight. With 8 multi-knob fuzz bodies a trivial rebind cost 824 ms vs 232 ms this way (same values).
+;; AURA_HARNESS_KNOB_ROW4=0 restores the 4-site rows.
+(define *knob-row4* (let ((v (getenv "AURA_HARNESS_KNOB_ROW4"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define (knob-row n)
+  (if (= *knob-row4* 0) (string-append "(list (" n " 0) (" n " 1) (" n " 2) (" n " 3)) ") (string-append "(knob-row4 " n ") ")))
+(define (take-drop xs k) (let loop ((xs xs) (k k) (acc (list))) (if (or (= k 0) (null? xs)) (cons (reverse acc) xs) (loop (cdr xs) (- k 1) (cons (car xs) acc)))))
+(define (chunks xs k) (if (null? xs) (list) (let ((td (take-drop xs k))) (cons (car td) (chunks (cdr td) k)))))
+(define (knobs-src)
+  (if (= *nknobs* 0) ""
+      (string-append
+       "\n;; ---- mutable size-stress knobs (AURA_HARNESS_KNOBS)\n"
+       (apply string-append (map (lambda (n) (string-append "(define " n " (lambda (x) (cond (else 10))))\n")) knob-names))
+       (if (= *knob-row4* 0) "" "(define knob-row4 (lambda (f) (list (f 0) (f 1) (f 2) (f 3))))\n")
+       (if (= *knob-chunk* 0)
+           (string-append "(define knobs-all (lambda () (list " (apply string-append (map knob-row knob-names)) ")))\n")
+           (let loop ((cs (chunks knob-names *knob-chunk*)) (j 0) (defs "") (calls ""))
+             (if (null? cs)
+                 (string-append defs "(define knobs-all (lambda () (append " calls ")))\n")
+                 (let ((cn (string-append "knobs-chunk-" (number->string j))))
+                   (loop (cdr cs) (+ j 1)
+                         (string-append defs "(define " cn " (lambda () (list " (apply string-append (map knob-row (car cs))) ")))\n")
+                         (string-append calls "(" cn ") ")))))))))
+(define *mutable* (append (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate") knob-names))
+(define *protected* (list "context-budget" "max-steps" "allowed-tools" "sandbox-level"))
+(define *banned* (list "set-code" "eval-current" "eval" "set!" "define" "load" "read-file" "write-file" "getenv"
+                       "system" "shell" "exit" "current-source" "query" "lambda-rebind" "apply" "string->symbol"
+                       ;; a body must not catch the fuel error or jump out of the metered code (R5)
+                       "try" "catch" "raise" "error" "guard" "call/cc" "call-with-current-continuation"
+                       "with-exception-handler" "dynamic-wind"))
+(define *banned-prefixes* (list "%" "mutate:" "ast:" "workspace" "agent:" "fiber:" "query:" "file:" "net:" "process:"))
+
+(define (n->s n) (number->string n))
+(define (join xs sep) (if (null? xs) "" (if (null? (cdr xs)) (car xs) (string-append (car xs) sep (join (cdr xs) sep)))))
+(define (now-ms) (current-time-ms))
+(define (starts-with? s p) (and (>= (string-length s) (string-length p)) (equal? (substring s 0 (string-length p)) p)))
+(define (any? pred xs) (if (null? xs) #f (if (pred (car xs)) #t (any? pred (cdr xs)))))
+(define (all? pred xs) (if (null? xs) #t (if (pred (car xs)) (all? pred (cdr xs)) #f)))
+
+;; ---------------------------------------------------------------- decisions (live workspace defines)
+;; every host entry into harness code refills the fuel; msafe (materialise) also stops at the first exhaustion, so a
+;; runaway candidate costs one budget, not one per table cell
+(define (safe thunk) (fuel-refill!) (try (thunk) (catch (e) "__error__")))
+(define (msafe thunk)
+  (if *fuel-out* "__error__"
+      (begin (fuel-refill!)
+             (try (thunk) (catch (e) (if (and (> *fuel-max* 0) (fuel-out?)) (set! *fuel-out* #t)) "__error__")))))
+(define (materialize)
+  (set! *fuel-out* #f)
+  (let ((route (hash)) (comp (hash)) (retry (hash)) (ttl (hash)) (dele (hash)))
+    (for-each (lambda (n) (hash-set! route n (msafe (lambda () (route-tool n))))) needs)
+    (for-each (lambda (k) (hash-set! comp k (msafe (lambda () (compress k))))) kinds)
+    (for-each (lambda (t) (for-each (lambda (e) (hash-set! retry (string-append t "|" e) (msafe (lambda () (retry-limit t e))))) errs)) tools)
+    (for-each (lambda (f) (hash-set! ttl f (msafe (lambda () (memory-ttl f))))) facts)
+    (for-each (lambda (k) (for-each (lambda (n) (hash-set! dele (string-append k "|" (n->s n)) (msafe (lambda () (delegate k n))))) nsubs)) tkinds)
+    (let ((tb (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele
+                    "budget" (msafe (lambda () (context-budget))) "max_steps" (msafe (lambda () (max-steps)))
+                    "allowed" (msafe (lambda () (allowed-tools))) "sandbox" (msafe (lambda () (sandbox-level))))))
+      (if (> *nknobs* 0) (hash-set! tb "knobs" (msafe (lambda () (knobs-all)))))
+      tb)))
+
+;; ---------------------------------------------------------------- scope guard
+(define *boundary* #f)          ;; protected values captured right after the seed loads
+(define (boundary) (list (safe (lambda () (context-budget))) (safe (lambda () (max-steps)))
+                         (safe (lambda () (allowed-tools))) (safe (lambda () (sandbox-level)))))
+;; native string-index search for every banned symbol at a token boundary: "(w " "(w)" " w " " w)" "'w".
+;; (A string literal such as "query-db" never matches: a quote, not a boundary, precedes it.)
+(define (has? body pat) (>= (string-index body pat) 0))
+(define (uses-symbol? body w)
+  (or (has? body (string-append "(" w " ")) (has? body (string-append "(" w ")")) (has? body (string-append " " w " "))
+      (has? body (string-append " " w ")")) (has? body (string-append "'" w))))
+(define (uses-prefix? body p)
+  (or (has? body (string-append "(" p)) (has? body (string-append " " p)) (has? body (string-append "'" p))))
+(define (first-bad body)
+  (let ((ws (filter (lambda (w) (uses-symbol? body w)) (append *protected* *banned*))))
+    (if (not (null? ws)) (car ws)
+        (let ((ps (filter (lambda (p) (uses-prefix? body p)) *banned-prefixes*)))
+          (if (null? ps) #f (car ps))))))
+;; static check -> #f if fine, else a reason string
+(define (static-check name body)
+  (cond ((member name *protected*) (string-append "protected define: " name))
+        ((not (member name *mutable*)) (string-append "not in mutation allowlist: " name))
+        ((not (starts-with? body "(lambda (")) "body is not a lambda")
+        (else (let ((bad (first-bad body)))
+                (if bad (string-append "forbidden symbol in body: " bad) #f)))))
+(define (in-range? v lo hi) (and (number? v) (integer? v) (>= v lo) (<= v hi)))
+(define (hash-vals h ks) (map (lambda (k) (hash-ref h k "__error__")) ks))
+(define (keys-of2 as bs sep) (apply append (map (lambda (a) (map (lambda (b) (string-append a sep (if (string? b) b (n->s b)))) bs)) as)))
+;; post check on a materialised table -> #f if fine, else a reason string
+(define (post-check tb)
+  (let ((allowed (list-ref *boundary* 2)) (budget (list-ref *boundary* 0)))
+    (cond (*fuel-out* (string-append "fuel exhausted (budget " (n->s *fuel-max*) " steps per call): non-terminating or too expensive"))
+          ((not (equal? (boundary) *boundary*)) "protected boundary value changed")
+          ((not (all? (lambda (t) (and (string? t) (member t allowed))) (hash-vals (hash-ref tb "route" #f) needs)))
+           "routes to a tool outside allowed-tools")
+          ((not (all? (lambda (c) (and (list? c) (= (length c) 2) (member (car c) strategies) (in-range? (cadr c) 50 budget)))
+                      (hash-vals (hash-ref tb "compress" #f) kinds)))
+           "compress value out of range")
+          ((not (all? (lambda (r) (in-range? r 0 5)) (hash-vals (hash-ref tb "retry" #f) (keys-of2 tools errs "|"))))
+           "retry-limit out of range [0,5]")
+          ((not (all? (lambda (r) (in-range? r 0 1000)) (hash-vals (hash-ref tb "ttl" #f) facts)))
+           "memory-ttl out of range [0,1000]")
+          ((not (all? (lambda (d) (member d (list "delegate" "inline"))) (hash-vals (hash-ref tb "delegate" #f) (keys-of2 tkinds nsubs "|"))))
+           "delegate value not delegate|inline")
+          ((and (> *nknobs* 0)
+                (let ((ks (hash-ref tb "knobs" #f)))
+                  (not (and (list? ks) (= (length ks) *nknobs*)
+                            (all? (lambda (row) (and (list? row) (all? (lambda (v) (in-range? v 0 100)) row))) ks)))))
+           "knob value out of range [0,100]")
+          (else #f))))
+
+;; ---------------------------------------------------------------- runaway containment (fuel metering)
+;; A proposed body is arbitrary code: a loop that never ends, unbounded recursion or an allocation bomb would hang
+;; or kill this control plane (Aura has no preemption or step budget a caller can set, and deep recursion is not
+;; bounded by "recursion depth exceeded" on the IR path: the process grows until the OOM killer takes it, aura#4620).
+;; So every
+;; body that passes the token check is parsed (sx-read below; Aura's `read` cannot read from a string) and admitted
+;; only if every free symbol is on an allowlist, then instrumented before the rebind:
+;;   - every lambda, named-let and do body starts with (%tick); a while loop becomes a ticked named let
+;;   - a call of an allocator that can grow a result past its inputs, (make-vector n x) (string-append a ...)
+;;     (append l ...), becomes (%make-vector (list n x)) etc., a wrapper that charges the result size first; using one
+;;     of them as a value (aliasing it past the meter) is rejected
+;; %tick / %charge / the wrappers are WORKSPACE defines (the fuel prelude, loaded with the seed) and the counter is the
+;; host vector %fv, because of Aura bugs found here: set! of a global inside a workspace define is silently dropped and
+;; a comparison after set! of a captured cell constant-folds (aura#4618); calling a file-level function from a
+;; workspace define lets the tree-walker's reclaim free heap objects that only the workspace frame holds (aura#4617; so
+;; no allowlisted name may be a file-level function either: the std-lib iota/range/make-list/assoc/string-join/
+;; string-pad/string-repeat/string-split/string-upcase/string-downcase/symbol->string are left out for that reason,
+;; and last/list-tail/assq/even?/odd?/zero?/positive?/negative?/expt are renamed to workspace %versions, below).
+;; Every host entry into the harness (TABLE / trial materialise, D) refills the counter to *fuel-max*. A body that runs
+;; out makes its trial fail with "fuel exhausted" instead of taking the process down. AURA_HARNESS_FUEL=0 turns the
+;; parse/allowlist/instrument stage off (the token check alone, the pre-R5 guard).
+(define *fuel-max*
+  (let ((v (getenv "AURA_HARNESS_FUEL")))
+    (if (and (string? v) (string->number v)) (string->number v) 100000)))
+(define %fv (make-vector 1 0))
+(define (fuel-refill!) (vector-set! %fv 0 *fuel-max*))
+(define (fuel-out?) (< (vector-ref %fv 0) 0))
+(define *fuel-out* #f)          ;; set when a materialise ran out of fuel (read by post-check)
+(define *fuel-tick* "(%tick)")
+(define (fuel-prelude)
+  (if (= *fuel-max* 0) ""
+      (string-append
+       "\n;; ---- fuel prelude (server.aura runaway containment; not mutable, not shown by SOURCE)\n"
+       "(define %tick (lambda () (vector-set! %fv 0 (- (vector-ref %fv 0) 1)) (if (< (vector-ref %fv 0) 0) (raise \"fuel exhausted\") #f)))\n"
+       "(define %charge (lambda (n) (vector-set! %fv 0 (- (vector-ref %fv 0) n)) (if (< (vector-ref %fv 0) 0) (raise \"fuel exhausted\") #f)))\n"
+       "(define %sz (lambda (n) (if (and (integer? n) (> n 0)) n 0)))\n"
+       "(define %slen (lambda (xs) (let loop ((xs xs) (s 0)) (if (null? xs) s (loop (cdr xs) (if (string? (car xs)) (+ s (string-length (car xs))) s))))))\n"
+       "(define %llen (lambda (xs) (let loop ((xs xs) (s 0)) (if (or (null? xs) (null? (cdr xs))) s (loop (cdr xs) (if (list? (car xs)) (+ s (length (car xs))) s))))))\n"
+       ;; one list argument, built at the call site: a workspace define has no rest parameters ((a . r) binds r to the
+       ;; second argument as-is, (lambda xs ...) takes exactly one argument; aura#4621)
+       "(define %make-vector (lambda (args) (%charge (%sz (car args))) (apply make-vector args)))\n"
+       "(define %string-append (lambda (args) (%charge (quotient (%slen args) 8)) (apply string-append args)))\n"
+       "(define %append (lambda (args) (%charge (%llen args)) (apply append args)))\n"
+       ;; workspace map / filter / for-each (AURA_HARNESS_HOF_WRAP, default on): two callbacks handed to the NATIVE
+       ;; higher-order primitives from sibling expressions of one workspace define get an invalid closure, and map /
+       ;; filter swallow the error into () (aura#4626, #4624). Named-let loops over a workspace call are unaffected.
+       (if (= *hof-wrap* 0) ""
+           (string-append
+            "(define %map (lambda (f xs) (let loop ((xs xs) (acc (list))) (%tick) (if (null? xs) (reverse acc) (loop (cdr xs) (cons (f (car xs)) acc))))))\n"
+            "(define %filter (lambda (f xs) (let loop ((xs xs) (acc (list))) (%tick) (if (null? xs) (reverse acc) (loop (cdr xs) (if (f (car xs)) (cons (car xs) acc) acc))))))\n"
+            "(define %for-each (lambda (f xs) (let loop ((xs xs)) (%tick) (if (null? xs) #t (begin (f (car xs)) (loop (cdr xs)))))))\n"))
+       ;; workspace versions of the allowlisted std-lib functions that are file-level Aura defines (AURA_HARNESS_STD_WRAP,
+       ;; default on): a workspace define calling one by name has its frame's lists reclaimed mid-call (aura#4617); the
+       ;; fuzzer's (last ...) bodies came back wrong on every 5th caller read
+       (if (= *std-wrap* 0) ""
+           (string-append
+            "(define %last (lambda (l) (let loop ((l l)) (%tick) (if (null? (cdr l)) (car l) (loop (cdr l))))))\n"
+            "(define %list-tail (lambda (l k) (let loop ((l l) (k k)) (%tick) (if (= k 0) l (loop (cdr l) (- k 1))))))\n"
+            "(define %assq (lambda (k al) (let loop ((al al)) (%tick) (cond ((null? al) #f) ((eq? (car (car al)) k) (car al)) (else (loop (cdr al)))))))\n"
+            "(define %even? (lambda (n) (= (remainder n 2) 0)))\n"
+            "(define %odd? (lambda (n) (not (= (remainder n 2) 0))))\n"
+            "(define %zero? (lambda (n) (= n 0)))\n"
+            "(define %positive? (lambda (n) (> n 0)))\n"
+            "(define %negative? (lambda (n) (< n 0)))\n"
+            "(define %expt (lambda (b e) (if (not (integer? e)) (raise \"expt: integer exponent only\") (let loop ((k (abs e)) (acc 1)) (%tick) (if (= k 0) (if (< e 0) (/ 1 acc) acc) (loop (- k 1) (* acc b)))))))\n"))
+       ;; hash keys (AURA_HARNESS_HASH_WRAP, default on): hash-set! and (hash ...) silently drop the key "" (aura#4631),
+       ;; so every string key is stored as "s:" + key and hash-keys decodes it; a (hash) table is charged 8 steps
+       ;; because the reclaimer never frees one (aura#4613)
+       (if (= *hash-wrap* 0) ""
+           (string-append
+            "(define %hk (lambda (k) (if (string? k) (string-append \"s:\" k) k)))\n"
+            "(define %hash0 (lambda (h) (%charge 8) h))\n"
+            "(define %hash-keys (lambda (h) (let loop ((ks (hash-keys h)) (acc (list))) (%tick) (if (null? ks) (reverse acc) (loop (cdr ks) (cons (let ((k (car ks))) (if (and (string? k) (>= (string-length k) 2) (string=? (substring k 0 2) \"s:\")) (substring k 2 (string-length k)) k)) acc))))))\n")))))
+(define *renamed* (list "make-vector" "string-append" "append"))
+(define *hof-wrap* (let ((v (getenv "AURA_HARNESS_HOF_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *hofs* (if (= *hof-wrap* 0) (list) (list "map" "filter" "for-each")))
+(define *std-wrap* (let ((v (getenv "AURA_HARNESS_STD_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *stdw* (if (= *std-wrap* 0) (list) (list "last" "list-tail" "assq" "even?" "odd?" "zero?" "positive?" "negative?" "expt")))
+(define *hash-wrap* (let ((v (getenv "AURA_HARNESS_HASH_WRAP"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *hashk* (if (= *hash-wrap* 0) (list) (list "hash-set!" "hash-ref" "hash-has-key?" "hash-remove!")))   ;; key = 2nd argument
+(define *wrapped* (append *hofs* *stdw* (if (= *hash-wrap* 0) (list) (list "hash-keys"))))
+(define *allowed-syms*
+  (append
+   (list "lambda" "let" "let*" "letrec" "letrec*" "if" "cond" "case" "when" "unless" "begin" "and" "or" "else" "=>"
+         "do" "while" "quote"
+         "+" "-" "*" "/" "quotient" "remainder" "modulo" "abs" "min" "max" "=" "<" ">" "<=" ">=" "zero?" "positive?"
+         "negative?" "even?" "odd?" "number?" "integer?" "exact->inexact" "inexact->exact" "round"
+         "floor" "ceiling" "truncate" "sqrt" "expt" "not" "eq?" "eqv?" "equal?" "boolean?" "cons" "car" "cdr" "caar"
+         "cadr" "cdar" "cddr" "caddr" "cdddr" "cadddr" "list" "list?" "pair?" "null?" "length" "list-ref" "list-tail"
+         "member" "memq" "assq" "reverse" "map" "filter" "for-each" "last" "string?" "string-length" "substring"
+         "string=?" "string<?" "string>?" "string-index" "number->string"
+         "string->number" "string-ref" "string->list" "list->string" "char?" "char=?"
+         "symbol?" "procedure?" "vector" "vector?" "vector-ref" "vector-length" "vector-set!" "vector->list"
+         "list->vector" "hash" "hash-ref" "hash-set!" "hash-has-key?" "hash-keys" "hash-remove!" "hash-length"
+         "needs" "kinds" "tools" "errs" "facts" "tkinds" "nsubs" "strategies")
+   *renamed*))
+(define (sx-allowed? a) (or (member a *allowed-syms*) (member a *mutable*)))
+
+;; tokenizer on native string-split passes (a per-char loop in file-level code costs ~2 us/char): split on the double
+;; quote (odd segments are string literals), then pad ( ) ' with spaces and split on whitespace.
+(define (str-has? s p) (>= (string-index s p) 0))
+;; One pass over the code points: plain loops at file level cost ~3-4 us/iteration in Aura, and the std-lib
+;; string-split/string-join are themselves such loops (~4 us/char), so the old pad/split/join tokenizer (9 passes)
+;; cost ~3.8 ms for a 100-char body. Atoms are substring slices, so no per-char consing.
+(define *bad-codes* (list 59 96 44 91 93 123 125 124))     ;; ; ` , [ ] { } |
+(define (tok-flush s st i acc) (if (>= st 0) (cons (substring s st i) acc) acc))
+(define (sx-tokens s)
+  (let loop ((cs (string->list s)) (i 0) (st -1) (acc (list)))
+    (if (null? cs)
+        (reverse (tok-flush s st i acc))
+        (let ((c (car cs)))
+          (cond
+            ((= c 34)                                                  ;; string literal, kept with its quotes
+             (let sloop ((cs2 (cdr cs)) (j (+ i 1)) (prev 0))
+               (cond ((null? cs2) (raise "unbalanced string quote"))
+                     ((= (car cs2) 34)
+                      (if (= prev 92) (raise "escaped quote in string literal"))
+                      (loop (cdr cs2) (+ j 1) -1 (cons (substring s i (+ j 1)) (tok-flush s st i acc))))
+                     (else (sloop (cdr cs2) (+ j 1) (car cs2))))))
+            ((or (= c 32) (= c 9) (= c 10) (= c 13)) (loop (cdr cs) (+ i 1) -1 (tok-flush s st i acc)))
+            ((or (= c 40) (= c 41) (= c 39))
+             (loop (cdr cs) (+ i 1) -1 (cons (substring s i (+ i 1)) (tok-flush s st i acc))))
+            ((member c *bad-codes*) (raise (string-append "unsupported syntax: " (substring s i (+ i 1)))))
+            ((and (= c 35) (pair? (cdr cs)) (= (cadr cs) 92)) (raise "unsupported syntax: #\\"))
+            (else (loop (cdr cs) (+ i 1) (if (>= st 0) st i) acc)))))))
+;; reader: atoms stay as their source text (a string), a list is an Aura list, 'x is ("quote" x)
+(define (sx-read ts)
+  (if (null? ts) (raise "unbalanced parens: unexpected end")
+      (let ((t (car ts)))
+        (cond ((equal? t "(") (sx-read-list (cdr ts) (list)))
+              ((equal? t ")") (raise "unbalanced parens: unexpected )"))
+              ((equal? t "'") (let ((r (sx-read (cdr ts)))) (cons (list "quote" (car r)) (cdr r))))
+              (else (cons t (cdr ts)))))))
+(define (sx-read-list ts acc)
+  (cond ((null? ts) (raise "unbalanced parens: unexpected end"))
+        ((equal? (car ts) ")") (cons (reverse acc) (cdr ts)))
+        (else (let ((r (sx-read ts))) (sx-read-list (cdr r) (cons (car r) acc))))))
+(define (sx-parse body)
+  (let ((r (sx-read (sx-tokens body))))
+    (if (not (null? (cdr r))) (raise "trailing text after the lambda"))
+    (car r)))
+(define (sx-emit x)                 ;; one native string-append per list (string-join is a std-lib loop)
+  (cond ((string? x) x)
+        ((null? x) "()")
+        (else (apply string-append (cons "(" (sx-emit-tail x))))))
+(define (sx-emit-tail xs)
+  (if (null? (cdr xs)) (list (sx-emit (car xs)) ")")
+      (cons (sx-emit (car xs)) (cons " " (sx-emit-tail (cdr xs))))))
+
+;; scoped allowlist walk + instrumentation -> transformed tree, or raise a reason
+(define (sx-literal? a)
+  (or (starts-with? a "\"") (string->number a) (member a (list "#t" "#f" "#true" "#false"))))
+(define (sx-names ps)               ;; lambda formals: x | (a b) | (a . r)
+  (cond ((string? ps) (list ps))
+        ((null? ps) (list))
+        ((list? ps) (filter (lambda (p) (not (equal? p "."))) (map (lambda (p) (if (string? p) p (raise "bad lambda formals"))) ps)))
+        (else (raise "bad lambda formals"))))
+(define (sx-atom a env)
+  (cond ((sx-literal? a) a)
+        ((member a env) a)
+        ((member a *renamed*) (raise (string-append "allocator used as a value (call it directly): " a)))
+        ((or (member a *hashk*) (and (> *hash-wrap* 0) (equal? a "hash"))) (raise (string-append "hash operation used as a value (call it directly): " a)))
+        ((member a *wrapped*) (string-append "%" a))
+        ((sx-allowed? a) a)
+        (else (raise (string-append "symbol not allowed: " a)))))
+(define (sx-body xs env) (if (null? xs) (raise "empty body") (map (lambda (x) (sx-xf x env)) xs)))
+(define (sx-bind-names bs) (map (lambda (b) (if (and (list? b) (= (length b) 2) (string? (car b))) (car b) (raise "bad let binding"))) bs))
+(define (sx-binds bs env) (map (lambda (b) (list (car b) (sx-xf (cadr b) env))) bs))
+(define (sx-xf x env)
+  (cond
+    ((string? x) (sx-atom x env))
+    ((null? x) x)
+    ((and (string? (car x)) (not (member (car x) env)))
+     (let ((h (car x)) (n (length x)))
+       (cond
+         ((equal? h "quote") x)
+         ((equal? h "lambda")
+          (if (< n 3) (raise "bad lambda"))
+          (let ((env2 (append (sx-names (cadr x)) env)))
+            (cons "lambda" (cons (cadr x) (cons *fuel-tick* (sx-body (cddr x) env2))))))
+         ((and (equal? h "let") (> n 3) (string? (cadr x)))          ;; named let: a loop
+          (let* ((bs (caddr x)) (vs (sx-bind-names bs)) (env2 (cons (cadr x) (append vs env))))
+            (cons "let" (cons (cadr x) (cons (sx-binds bs env) (cons *fuel-tick* (sx-body (cdddr x) env2)))))))
+         ((member h (list "let" "let*" "letrec" "letrec*"))
+          (if (or (< n 3) (not (list? (cadr x)))) (raise (string-append "bad " h)))
+          (let* ((bs (cadr x)) (vs (sx-bind-names bs)) (env2 (append vs env)))
+            (cons h (cons (cond ((equal? h "let") (sx-binds bs env))
+                                ((equal? h "let*") (let loop ((bs bs) (e env) (acc (list)))
+                                                     (if (null? bs) (reverse acc)
+                                                         (loop (cdr bs) (cons (caar bs) e) (cons (list (caar bs) (sx-xf (cadar bs) e)) acc)))))
+                                (else (sx-binds bs env2)))
+                          (sx-body (cddr x) env2)))))
+         ((equal? h "do")                                            ;; (do ((v init step)...) (test res...) cmd...)
+          (if (or (< n 3) (not (list? (cadr x))) (not (list? (caddr x))) (null? (caddr x))) (raise "bad do"))
+          (let* ((specs (cadr x))
+                 (vs (map (lambda (s) (if (and (list? s) (>= (length s) 2) (string? (car s))) (car s) (raise "bad do spec"))) specs))
+                 (env2 (append vs env)))
+            (cons "do" (cons (map (lambda (s) (cons (car s) (cons (sx-xf (cadr s) env) (map (lambda (y) (sx-xf y env2)) (cddr s))))) specs)
+                             (cons (map (lambda (y) (sx-xf y env2)) (caddr x))
+                                   (cons *fuel-tick* (map (lambda (y) (sx-xf y env2)) (cdddr x))))))))
+         ((equal? h "while")                                         ;; -> (let %while () (if test (begin body... (%while)) #f))
+          ;; not kept as `while`: Aura's while discards an error raised in its body and treats an error in its test as
+          ;; true, so a fuel error inside a while never stops it (aura#4619)
+          (if (< n 2) (raise "bad while"))
+          (list "let" "%while" (list) *fuel-tick*
+                (list "if" (sx-xf (cadr x) env) (cons "begin" (append (map (lambda (y) (sx-xf y env)) (cddr x)) (list (list "%while")))) "#f")))
+         ((equal? h "case")                                          ;; datum lists are data
+          (if (< n 2) (raise "bad case"))
+          (cons "case" (cons (sx-xf (cadr x) env)
+                             (map (lambda (cl) (if (and (list? cl) (pair? cl))
+                                                   (cons (if (equal? (car cl) "else") "else" (car cl)) (map (lambda (y) (sx-xf y env)) (cdr cl)))
+                                                   (raise "bad case clause")))
+                                  (cddr x)))))
+         ((member h *renamed*) (list (string-append "%" h) (cons "list" (map (lambda (y) (sx-xf y env)) (cdr x)))))
+         ((member h *hofs*)
+          (if (not (= n 3)) (raise (string-append h " takes one function and one list (n-ary map drops lists, aura#4616)")))
+          (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
+         ((member h *stdw*) (cons (string-append "%" h) (map (lambda (y) (sx-xf y env)) (cdr x))))
+         ((member h *hashk*)
+          (if (< n 3) (raise (string-append "bad " h)))
+          (cons h (cons (sx-xf (cadr x) env) (cons (list "%hk" (sx-xf (caddr x) env)) (map (lambda (y) (sx-xf y env)) (cdddr x))))))
+         ((and (> *hash-wrap* 0) (equal? h "hash"))                 ;; (hash k v ...) -> (%hash0 (hash (%hk k) v ...))
+          (list "%hash0" (cons "hash" (let loop ((as (cdr x)) (k #t) (acc (list)))
+                                        (if (null? as) (reverse acc)
+                                            (loop (cdr as) (not k) (cons (if k (list "%hk" (sx-xf (car as) env)) (sx-xf (car as) env)) acc)))))))
+         (else (map (lambda (y) (sx-xf y env)) x)))))
+    (else (map (lambda (y) (sx-xf y env)) x))))
+;; -> (list reason-or-#f instrumented-body)
+;; call-path weight limit (aura#4630): a workspace define is compiled in time ~ its number of call PATHS through other
+;; workspace defines, 2^depth when each level calls the one below at two sites; a rebind anywhere in the chain pays it
+;; again (depth 14: 1.8 s compile, 1 s per rebind; the multi-knob fuzzer OOM-killed the control plane). Fuel bounds run
+;; time, not compile time, so admission computes w(m) = 1 + sum over m's call sites of w(callee) over the mutable
+;; defines, with the proposed body in place of its target's, and rejects when any w exceeds AURA_HARNESS_PATH_MAX
+;; (default 1024: weight 1641 already costs ~0.4 s per apply; 0 = off). Texts come from the live workspace source, so the check follows
+;; rollbacks and restores. A cycle (mutual recursion) counts its back edge as weight 1; fuel bounds it at run time.
+(define *path-max* (let ((v (getenv "AURA_HARNESS_PATH_MAX"))) (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define (count-sub s pat)
+  (let loop ((s s) (n 0))
+    (let ((i (string-index s pat)))
+      (if (< i 0) n (loop (substring s (+ i (string-length pat)) (string-length s)) (+ n 1))))))
+(define (define-text src name)        ;; text of (define name ...) up to the next top-level define (native scans only)
+  (let ((i (string-index src (string-append "(define " name " "))))
+    (if (< i 0) ""
+        (let* ((rest (substring src (+ i 1) (string-length src))) (j (string-index rest " (define ")))
+          (if (< j 0) rest (substring rest 0 j))))))
+(define (callee-counts text)
+  (let loop ((ms *mutable*) (acc (list)))
+    (if (null? ms) acc
+        (let ((k (count-sub text (string-append "(" (car ms) " "))))
+          (loop (cdr ms) (if (> k 0) (cons (cons (car ms) k) acc) acc))))))
+(define (path-weight-max name body)   ;; -> (list max-weight heaviest-define)
+  (let* ((src (current-source :workspace))
+         (edges (map (lambda (m) (cons m (callee-counts (if (equal? m name) body (define-text src m))))) *mutable*))
+         (memo (make-vector 1 (list))))
+    (letrec ((w (lambda (m stack)
+                  (let ((hit (assoc m (vector-ref memo 0))))
+                    (cond (hit (cdr hit))
+                          ((member m stack) 1)
+                          (else
+                           (let ((v (let loop ((es (cdr (assoc m edges))) (acc 1))
+                                      (if (or (null? es) (> acc *path-max*)) acc
+                                          (loop (cdr es) (+ acc (* (cdr (car es)) (w (car (car es)) (cons m stack)))))))))
+                             (vector-set! memo 0 (cons (cons m v) (vector-ref memo 0)))
+                             v)))))))
+      (let loop ((ms *mutable*) (best 0) (who ""))
+        (if (null? ms) (list best who)
+            (let ((v (w (car ms) (list))))
+              (if (> v best) (loop (cdr ms) v (car ms)) (loop (cdr ms) best who))))))))
+(define (path-check name body)
+  (if (<= *path-max* 0) #f
+      (let ((r (path-weight-max name body)))
+        (if (> (car r) *path-max*)
+            (string-append "call-path weight " (number->string (car r)) " of " (cadr r) " exceeds AURA_HARNESS_PATH_MAX "
+                           (number->string *path-max*) " (workspace compile is exponential in call depth, aura#4630)")
+            #f))))
+(define (admit name body)
+  (let ((sr (or (static-check name body) (path-check name body))))
+    (cond (sr (list sr body))
+          ((= *fuel-max* 0) (list #f body))
+          (else (try (let ((tree (sx-parse body)))
+                       (if (not (and (list? tree) (equal? (car tree) "lambda"))) (raise "body is not a lambda"))
+                       (list #f (sx-emit (sx-xf tree (list)))))
+                     (catch (e) (list (string-append "rejected by parser: " (if (string? e) e "parse error")) body)))))))
+;; source without the instrumentation (for SOURCE / the LLM proposer's context); COMPACT keeps the real text
+(define (str-replace s a b)
+  (let loop ((s s) (acc (list)))
+    (let ((i (string-index s a)))
+      (if (< i 0) (apply string-append (reverse (cons s acc)))
+          (loop (substring s (+ i (string-length a)) (string-length s)) (cons b (cons (substring s 0 i) acc)))))))
+;; drop every top-level (define %... ) form (the fuel prelude; current-source prints the workspace as one begin form)
+(define (sx-close s i)              ;; index just past the form that opens at s[i] = "(" (string literals skipped)
+  (let loop ((j (+ i 1)) (d 1) (instr #f))
+    (if (or (= d 0) (>= j (string-length s))) j
+        ;; char codes, not #\( #\" literals: Aura's top-level paren pre-scan counts those as delimiters (aura#4622)
+        (let ((c (char->integer (string-ref s j))))
+          (cond (instr (loop (+ j 1) d (not (= c 34))))
+                ((= c 34) (loop (+ j 1) d #t))
+                ((= c 40) (loop (+ j 1) (+ d 1) #f))
+                ((= c 41) (loop (+ j 1) (- d 1) #f))
+                (else (loop (+ j 1) d #f)))))))
+(define (drop-pct-defines s)
+  (let ((i (string-index s "(define %")))
+    (if (< i 0) s
+        (let* ((j (sx-close s i)) (i0 (if (and (> i 0) (equal? (substring s (- i 1) i) " ")) (- i 1) i)))
+          (drop-pct-defines (string-append (substring s 0 i0) (substring s j (string-length s))))))))
+;; (%name (list a b)) -> (name a b): drop the "(list " after the wrapper name and its matching ")"
+(define (unwrap-call s w)
+  (let* ((pat (string-append "(%" w " (list ")) (i (string-index s pat)))
+    (if (< i 0) s
+        (let* ((li (+ i (string-length w) 3)) (lj (sx-close s li)))
+          (unwrap-call (string-append (substring s 0 i) "(" w " " (substring s (+ li 6) (- lj 1)) (substring s lj (string-length s))) w)))))
+;; current-source prints a multi-form body as (begin (%tick) X): give back plain X when X is one form, so cleaned
+;; source is byte-identical to the fuel-off source
+(define (unwrap-tick-begin s)
+  (let* ((pat (string-append "(begin " *fuel-tick* " ")) (i (string-index s pat)))
+    (if (< i 0) s
+        (let* ((bj (sx-close s i)) (ci (+ i (string-length pat))) (ce (- bj 1)) (x (substring s ci ce))
+               (one (if (equal? (substring s ci (+ ci 1)) "(") (= (sx-close s ci) ce)
+                        (and (< (string-index x " ") 0) (< (string-index x "(") 0)))))
+          (unwrap-tick-begin (string-append (substring s 0 i) (if one x (string-append "(begin " x ")"))
+                                            (substring s bj (string-length s))))))))
+;; (%w X) -> X
+(define (unwrap1 s w)
+  (let* ((pat (string-append "(%" w " ")) (i (string-index s pat)))
+    (if (< i 0) s
+        (let ((j (sx-close s i)))
+          (unwrap1 (string-append (substring s 0 i) (substring s (+ i (string-length pat)) (- j 1)) (substring s j (string-length s))) w)))))
+(define (clean-source s)
+  (let loop ((s (unwrap1 (unwrap1 (str-replace (unwrap-tick-begin (drop-pct-defines s)) (string-append " " *fuel-tick*) "") "hk") "hash0"))
+             (rs *renamed*))
+    (if (null? rs) (unhof s *wrapped*) (loop (unwrap-call s (car rs)) (cdr rs)))))
+(define (unhof s hs) (if (null? hs) s (unhof (str-replace s (string-append "%" (car hs)) (car hs)) (cdr hs))))
+
+;; ---------------------------------------------------------------- audit log + version
+(define *version* 0)
+(define *log* (list))           ;; newest first
+(define *seq* 0)
+(define (log! ts op name why actor reason extra)
+  (set! *seq* (+ *seq* 1))
+  (set! *log* (cons (hash "seq" *seq* "ts" ts "op" op "name" name "why" why "actor" actor "reason" reason
+                          "version" *version* "extra" extra)
+                    *log*)))
+(define *blocked* 0)
+
+;; ---------------------------------------------------------------- compaction (cybrid-systems/aura#4583)
+;; Every mutate:rebind on a workspace pays for all earlier ones (time and memory grow with the rebind history;
+;; aura#4583, reopened). Reloading the root from its own current source (set-code + eval-current) drops that
+;; history: per-rebind cost goes back to the fresh-process level. The harness keeps its own audit log, so nothing it
+;; needs is lost. COMPACT_EVERY root mutations (env AURA_HARNESS_COMPACT_EVERY; default 0 = never). Measured: it resets the
+;; per-workspace history of #4583, but not the leak left by deleted trial children (aura#4610), which dominates
+;; a long ws-mode run, so it is off by default.
+(define *compact-every*
+  (let ((v (getenv "AURA_HARNESS_COMPACT_EVERY")))
+    (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *root-muts* 0)
+(define *compactions* 0)
+(define (compact!)
+  (set-code (current-source :workspace)) (eval-current)
+  (set! *root-muts* 0) (set! *compactions* (+ *compactions* 1)))
+(define (note-root-mut!)
+  (set! *root-muts* (+ *root-muts* 1))
+  (if (and (> *compact-every* 0) (>= *root-muts* *compact-every*)) (compact!)))
+
+;; rebind on the ACTIVE workspace + eval-current; -> #f if fine, else reason
+(define (raw-apply name body why)
+  (let ((r (try (begin (mutate:rebind name body why) (eval-current) #t) (catch (e) (list "error" e)))))
+    (if (eq? r #t) #f "rebind/eval failed")))
+
+;; guarded apply on the root with snapshot rollback -> (list ok? reason table ms)
+(define (guarded-root-apply! name body0 why)
+  (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)))
+    (if sr (list #f sr #f (- (now-ms) t0))
+        (let* ((snap (ast:snapshot (string-append "pre-" name)))
+               (ar (raw-apply name body why))
+               (tb (if ar #f (materialize)))
+               (pr (if ar ar (post-check tb))))
+          (if pr
+              (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+              (list #t "" tb (- (now-ms) t0)))))))
+
+;; ---------------------------------------------------------------- trials (forked worldlines)
+;; (name body why) of the last TRIAL, in order; *trial-ws* holds the kept child id per trial (#f in snap mode)
+(define *trials* (list))
+(define *trial-ws* (list))
+(define *wcount* 0)
+;; ws mode: one child workspace per candidate; the root stays live and untouched.
+;; keep? = #t keeps a passing child alive so VERDICT can promote it with `workspace :merge`; its id is the 5th
+;; element of the result (#f when the child was deleted).
+(define *kept* (list))          ;; child workspaces kept by the last TRIAL (deleted at VERDICT / next TRIAL)
+(define (drop-kept!)
+  (for-each (lambda (w) (try (workspace :delete w) (catch (e) #f))) *kept*)
+  (set! *kept* (list)))
+(define (trial-ws name body0 why . keep)
+  (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)) (keep? (and (pair? keep) (car keep))))
+    (if sr (list #f sr #f 0 #f)
+        (begin
+          (set! *wcount* (+ *wcount* 1))
+          (let* ((w (workspace :create (string-append "trial-" (n->s *wcount*)))))
+            (workspace :switch w)
+            (let* ((ar (raw-apply name body why))
+                   (tb (if ar #f (materialize)))
+                   (pr (if ar ar (post-check tb))))
+              (workspace :switch 0)
+              (eval-current)
+              (if (and keep? (not pr))
+                  (set! *kept* (cons w *kept*))
+                  (workspace :delete w))
+              (if pr (list #f pr #f (- (now-ms) t0) #f)
+                  (list #t "" tb (- (now-ms) t0) (if keep? w #f)))))))))
+
+;; promote a kept trial child into the root with `workspace :merge` (child defines override the parent's), then
+;; re-run the post-check on the root under a snapshot -> (list ok? reason table ms)
+(define (merge-root! w)
+  (let* ((t0 (now-ms)) (snap (ast:snapshot "pre-merge"))
+         (mr (try (begin (workspace :merge w) (eval-current) #f) (catch (e) "merge/eval failed")))
+         (tb (if mr #f (materialize)))
+         (pr (if mr mr (post-check tb))))
+    (if pr
+        (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+        (list #t "" tb (- (now-ms) t0)))))
+;; snap mode: ast:snapshot, mutate the root, materialise, ast:restore
+(define (trial-snap name body0 why)
+  (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)))
+    (if sr (list #f sr #f 0)
+        (let* ((snap (ast:snapshot "trial"))
+               (ar (raw-apply name body why))
+               (tb (if ar #f (materialize)))
+               (pr (if ar ar (post-check tb))))
+          (ast:restore snap) (eval-current)
+          (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))
+
+(define (trial-reply r i)
+  (hash "i" i "ok" (car r) "reason" (cadr r) "table" (caddr r) "ms" (list-ref r 3)))
+
+;; ---------------------------------------------------------------- in-process latency (BENCH n)
+;; Aura only has a millisecond clock, so each step is looped and averaged. Runs on the live process; every step that
+;; changes the harness is undone, and the version/log are restored afterwards.
+(define (times n thunk) (if (<= n 0) #t (begin (thunk n) (times (- n 1) thunk))))
+(define (us-per n thunk) (let ((t0 (now-ms))) (times n thunk) (/ (* 1000.0 (- (now-ms) t0)) n)))
+(define bench-a "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 3) (else 1)))")
+(define bench-b "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 2) (else 1)))")
+(define (bench n)
+  (let* ((v0 *version*) (l0 *log*) (s0 (ast:snapshot "bench-base"))
+         (r-call (us-per (* 50 n) (lambda (i) (retry-limit "sql" "rate-limit"))))
+         (r-mat (us-per n (lambda (i) (materialize))))
+         (r-static (us-per (* 10 n) (lambda (i) (static-check "retry-limit" bench-a))))
+         (r-admit (us-per (* 10 n) (lambda (i) (admit "retry-limit" bench-a))))
+         (r-rebind (us-per n (lambda (i) (mutate:rebind "retry-limit" (if (even? i) bench-a bench-b) "bench") (eval-current))))
+         (r-snap (us-per n (lambda (i) (ast:snapshot "bench"))))
+         (r-restore (us-per n (lambda (i) (ast:restore s0) (eval-current))))
+         (r-apply (us-per n (lambda (i) (guarded-root-apply! "retry-limit" (if (even? i) bench-a bench-b) "bench"))))
+         (r-ws (us-per n (lambda (i) (trial-ws "retry-limit" bench-a "bench"))))
+         (r-snapt (us-per n (lambda (i) (trial-snap "retry-limit" bench-a "bench"))))
+         (r-block (us-per (* 10 n) (lambda (i) (static-check "context-budget" "(lambda () 8000)")))))
+    (ast:restore s0) (eval-current)
+    (set! *version* v0) (set! *log* l0)
+    (hash "n" n "decision_call_us" r-call "materialize_table_us" r-mat "static_check_us" r-static "admit_us" r-admit
+          "rebind_eval_us" r-rebind "snapshot_us" r-snap "restore_eval_us" r-restore
+          "guarded_apply_us" r-apply "trial_ws_us" r-ws "trial_snap_us" r-snapt "blocked_check_us" r-block)))
+
+;; ---------------------------------------------------------------- protocol
+(define (reply h) (display "R ") (display (json-encode h)) (newline))
+(define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
+(define (fnum fs i) (string->number (field fs i)))
+(define (take-trials fs i n acc)
+  (if (= n 0) (reverse acc)
+      (take-trials fs (+ i 3) (- n 1) (cons (list (field fs i) (field fs (+ i 1)) (field fs (+ i 2))) acc))))
+
+(define (do-trials mode ts cands actor)
+  (let loop ((cs cands) (i 0) (acc (list)))
+    (if (null? cs) (begin (set! *trial-ws* (reverse *trial-ws*)) (reverse acc))
+        (let* ((c (car cs))
+               (r (if (equal? mode "snap") (trial-snap (car c) (cadr c) (caddr c)) (trial-ws (car c) (cadr c) (caddr c) #t))))
+          (set! *trial-ws* (cons (if (> (length r) 4) (list-ref r 4) #f) *trial-ws*))
+          (if (not (car r))
+              (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" (car c) (caddr c) actor (cadr r) (cadr c)))
+              (log! ts (string-append "trial-" mode) (car c) (caddr c) actor "" (cadr c)))
+          (loop (cdr cs) (+ i 1) (cons (trial-reply r i) acc))))))
+
+(define (decide fs)
+  (let ((c (field fs 1)) (a (field fs 2)) (b (field fs 3)))
+    (cond ((equal? c "route") (route-tool a))
+          ((equal? c "compress") (compress a))
+          ((equal? c "retry") (retry-limit a b))
+          ((equal? c "ttl") (memory-ttl a))
+          ((equal? c "delegate") (delegate a (string->number b)))
+          ((equal? c "budget") (context-budget))
+          ((equal? c "maxsteps") (max-steps))
+          (else "__unknown__"))))
+
+(define (handle fs)
+  (let ((cmd (field fs 0)))
+    (cond
+      ((equal? cmd "D") (reply (hash "v" (safe (lambda () (decide fs))))))
+      ((equal? cmd "TABLE") (reply (hash "table" (materialize) "version" *version*)))
+      ((equal? cmd "APPLY")
+       (let* ((ts (fnum fs 1)) (name (field fs 2)) (body (field fs 3)) (why (field fs 4)) (actor (field fs 5))
+              (r (guarded-root-apply! name body why)))
+         (if (car r)
+             (begin (set! *version* (+ *version* 1)) (log! ts "keep-ungated" name why actor "" body)
+                    (reply (hash "ok" #t "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+             (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" name why actor (cadr r) body)
+                    (reply (hash "ok" #f "blocked" #t "reason" (cadr r) "version" *version* "ms" (list-ref r 3)))))))
+      ((equal? cmd "TRIAL")
+       (let* ((mode (field fs 1)) (ts (fnum fs 2)) (actor (field fs 3)) (n (fnum fs 4))
+              (cands (take-trials fs 5 n (list))) (t0 (now-ms)))
+         (drop-kept!)
+         (set! *trials* cands)
+         (set! *trial-ws* (list))
+         (let ((rs (do-trials mode ts cands actor)))
+           (reply (hash "trials" rs "ms" (- (now-ms) t0) "version" *version*)))))
+      ((equal? cmd "VERDICT")
+       (let* ((ts (fnum fs 1)) (chosen (fnum fs 2)) (scores (field fs 3)) (why (field fs 4)) (actor (field fs 5)))
+         (if (and (>= chosen 0) (< chosen (length *trials*)))
+             ;; ws mode: merge the kept child (aura#4589 fixed); snap mode: re-apply through the guard
+             (let* ((c (list-ref *trials* chosen))
+                    (w (if (< chosen (length *trial-ws*)) (list-ref *trial-ws* chosen) #f))
+                    (r (if w (merge-root! w) (guarded-root-apply! (car c) (cadr c) (caddr c)))))
+               (drop-kept!)
+               (if (car r)
+                   (begin (set! *version* (+ *version* 1)) (log! ts "keep" (car c) why actor scores (cadr c))
+                          (reply (hash "verdict" "KEEP" "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+                   (begin (log! ts "rollback" (car c) why actor (string-append "promote failed: " (cadr r)) scores)
+                          (reply (hash "verdict" "ROLLBACK" "version" *version* "reason" (cadr r))))))
+             (begin (drop-kept!) (log! ts "rollback" "" why actor scores "")
+                    (reply (hash "verdict" "ROLLBACK" "version" *version*))))))
+      ((equal? cmd "ADMIT")         ;; dry run of the guard's static stage: reason (or null) + the instrumented body
+       (let ((ad (admit (field fs 1) (field fs 2)))) (reply (hash "reason" (car ad) "body" (cadr ad) "fuel" *fuel-max*))))
+      ((equal? cmd "SOURCE")
+       (let ((src (current-source :workspace)))
+         (reply (hash "source" (if (equal? (field fs 1) "raw") src (clean-source src)) "version" *version*))))
+      ((equal? cmd "FIND")
+       (reply (hash "name" (field fs 1) "node" (let ((r (try (query :find (field fs 1)) (catch (e) #f)))) (if (number? r) r #f)))))
+      ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
+      ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked* "compactions" *compactions*
+                                            "root_muts" *root-muts* "compact_every" *compact-every*)))
+      ((equal? cmd "COMPACT") (compact!) (reply (hash "ok" #t "compactions" *compactions*)))
+      ((equal? cmd "GUARD") (reply (hash "mutable" *mutable* "protected" *protected* "boundary" *boundary*)))
+      ((equal? cmd "BENCH") (reply (bench (fnum fs 1))))
+      ((equal? cmd "PING") (reply (hash "pong" #t "version" *version*)))
+      (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
+
+(define (serve)
+  (let ((line (read-line)))
+    (if (or (eof-object? line) (equal? line "QUIT"))
+        #t
+        (let ((fs (string-split line "\t")))
+          (handle fs)
+          (if (member (field fs 0) (list "APPLY" "TRIAL" "VERDICT")) (note-root-mut!))
+          (serve)))))
+
+(set-code (string-append (read-file *seed-path*) (knobs-src) (fuel-prelude)))
+(eval-current)
+(set! *boundary* (boundary))
+(define *seed-snap* (ast:snapshot "seed"))
+(reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary* "knobs" *nknobs* "fuel" *fuel-max*))
+(serve)

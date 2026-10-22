@@ -1,0 +1,45 @@
+;; aura-harness seed harness (version 0), loaded with set-code + eval-current.
+;; Every harness component is a separate workspace define. The first five are the MUTABLE policy layer the proposer
+;; may rewrite (mutate:rebind, guarded by server.aura); the last four are the PROTECTED runtime boundary that no
+;; proposal may touch. The guard lives in server.aura, outside the workspace, so it cannot be rebound itself.
+;; Flat conds, compiled from tables by the proposer. (This was a workaround for cybrid-systems/aura#4583 / #4584,
+;; both fixed upstream.)
+
+;; ---- mutable: tool routing. which tool serves a capability the task needs
+(define route-tool
+  (lambda (need)
+    (cond ((equal? need "search") "grep")
+          ((equal? need "read") "cat")
+          ((equal? need "edit") "sed")
+          ((equal? need "test") "pytest")
+          ((equal? need "query-db") "sql")
+          ((equal? need "logs") "journal")
+          (else "cat"))))
+
+;; ---- mutable: context compression / output truncation per tool-output kind -> (strategy limit-tokens)
+;;   strategies: none | head | tail | head-tail | grep-errors | summarize
+(define compress
+  (lambda (kind)
+    (cond (else (list "head" 800)))))
+
+;; ---- mutable: retry / error policy. extra attempts after a tool error of this kind
+(define retry-limit
+  (lambda (tool err)
+    (cond (else 1))))
+
+;; ---- mutable: memory promotion. carry a learned project fact to later tasks for this many tasks (0 = never)
+(define memory-ttl
+  (lambda (fact)
+    (cond (else 0))))
+
+;; ---- mutable: sub-agent orchestration. run each subtask in a fresh sub-agent context, or inline
+(define delegate
+  (lambda (kind nsub)
+    (cond (else "inline"))))
+
+;; ---- PROTECTED runtime boundary (never in the mutation allowlist)
+(define context-budget (lambda () 4000))
+(define max-steps (lambda () 30))
+(define allowed-tools
+  (lambda () (list "grep" "rg-json" "lsp-find" "cat" "sed" "apply-patch" "pytest" "pytest-q" "sql" "journal")))
+(define sandbox-level (lambda () "restricted"))

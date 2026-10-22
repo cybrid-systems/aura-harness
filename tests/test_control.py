@@ -214,10 +214,11 @@ class PathWeightTests(unittest.TestCase):
     def setUp(self):
         from aura_harness.control import AuraHarness
         os.environ["AURA_HARNESS_KNOBS"] = "4"
+        os.environ["AURA_HARNESS_PATH_MAX"] = "1024"   # opt-in since aura#4630 is fixed (default 0 = off)
         try:
             self.h = AuraHarness("ws")
         finally:
-            os.environ.pop("AURA_HARNESS_KNOBS", None)
+            os.environ.pop("AURA_HARNESS_KNOBS", None); os.environ.pop("AURA_HARNESS_PATH_MAX", None)
 
     def tearDown(self):
         self.h.close()
@@ -270,13 +271,13 @@ class HofWrapTests(unittest.TestCase):
         finally:
             h.close()
 
-    def test_native_hofs_hit_aura_4626(self):
-        # documents the Aura bug the wrap avoids; flip to assertEqual once aura#4626 is fixed on the pin
+    def test_native_hofs_correct_aura_4626(self):
+        # aura#4626 is fixed on the pin (a6c63aa19): native HOFs are right, so the wrap is off by default
         from aura_harness.harness import Candidate
         h = self.start("0")
         try:
             r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
-            self.assertNotEqual(r.get("table", {}).get("knobs"), [[42] * 4])
+            self.assertEqual(r.get("table", {}).get("knobs"), [[42] * 4])
         finally:
             h.close()
 
@@ -314,13 +315,13 @@ class HashWrapTests(unittest.TestCase):
         finally:
             h.close()
 
-    def test_unwrapped_hits_aura_4631(self):
-        # documents the Aura bug the wrap avoids; flip once aura#4631 is fixed on the pin
+    def test_unwrapped_correct_aura_4631(self):
+        # aura#4631 is fixed on the pin (a6c63aa19): the unwrapped path is right, so the wrap is off by default
         from aura_harness.harness import Candidate
         h = self.start("0")
         try:
             r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=self.BODY))
-            self.assertNotEqual(r.get("table", {}).get("knobs"), self.WANT)
+            self.assertEqual(r.get("table", {}).get("knobs"), self.WANT)
         finally:
             h.close()
 
@@ -361,15 +362,15 @@ class StdWrapTests(unittest.TestCase):
         finally:
             h.close()
 
-    def test_file_level_last_hits_aura_4617(self):
-        # documents the Aura bug the wrap avoids; flip once aura#4617 is fixed on the pin
+    def test_file_level_last_correct_aura_4617(self):
+        # aura#4617 is fixed on the pin (a6c63aa19): the unwrapped path is right, so the wrap is off by default
         h = self.start("0")
         try:
             body = "(lambda (x) (length (list 5 6 0 (last (list x (list x))))))"
             from aura_harness.harness import Candidate
             r = h.apply(1, Candidate("knob-0", None, "t", "t", "t", raw_aura=body))
             reads = [r.get("table", {}).get("knobs")] + [h.table().get("knobs") for _ in range(11)]
-            self.assertNotEqual(reads, [[[4, 4, 4, 4]]] * 12)
+            self.assertEqual(reads, [[[4, 4, 4, 4]]] * 12)
         finally:
             h.close()
 

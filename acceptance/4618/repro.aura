@@ -22,7 +22,7 @@
 (row "ws define: let-over-lambda counter, 2 calls" (list 1 2) (list (counter) (counter)))
 (row "ws define: (< n 0) after set! n -1" #t (neg?))
 (row "ws define: set! of a let local" 1 (local))
-(row "rebound ws define: set! ws global" 10 (g))
+(row "rebound ws define: set! ws global (wsv was 2)" 12 (g))
 (row "file define: let-over-lambda counter" (list 1 2) (list (fc) (fc)))
 (row "file define: set! host global" 1 (begin (set! hostv 0) (file-bump)))
 (display (list "wrong" (length *wrong*)))

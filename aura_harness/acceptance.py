@@ -37,6 +37,7 @@ CHECKS = {
     "4629-vec": "a fresh (vector x 0 0) in a map callback keeps its length across 10 hot-loop calls (aura#4629 comment, c6a18e8a5 regression)",
     "4630": "workspace compile at call-chain depth 12 (2 call sites per level) costs < 2.5x depth 10 (aura#4630, filed from here)",
     "merge": "workspace :merge child overrides the parent's define (cybrid-systems/aura#4589, filed from here)",
+    "4670": "frozen server + 10 APPLY requests: no SIGSEGV in the flat-AST walk; the trailing PING answers (aura#4670, filed from here)",
 }
 
 
@@ -52,12 +53,21 @@ def run_check(name: str) -> tuple[bool, str]:
     try:
         cap = MEM_CAP.get(name)
         pre = (lambda: resource.setrlimit(resource.RLIMIT_AS, (cap << 20, cap << 20))) if cap else None
-        p = subprocess.run([aura, "repro.aura"], cwd=str(d), env=env, capture_output=True, text=True, timeout=120,
-                           preexec_fn=pre)
+        prog = (d / "program.txt").read_text().strip() if (d / "program.txt").exists() else "repro.aura"
+        stdin = (d / "stdin.txt").read_text() if (d / "stdin.txt").exists() else None
+        if stdin is not None:
+            env["AURA_HARNESS_KNOBS"] = "1"
+        p = subprocess.run([aura, prog], cwd=str(d), env=env, capture_output=True, text=True, timeout=120,
+                           preexec_fn=pre, input=stdin, errors="replace")
     except subprocess.TimeoutExpired:
         return False, "timeout"
     lines = [l for l in p.stdout.splitlines() if l.strip() and not l.startswith("⚠")]
     got = lines[-1].strip() if lines else f"(no output, rc={p.returncode}) {p.stderr[-200:]}"
+    if (d / "expect-contains.txt").exists():   # a frozen server + request trace: pass when the last reply contains it
+        want = (d / "expect-contains.txt").read_text().strip()
+        reps = [l for l in lines if l.startswith("R ")]
+        last = reps[-1] if reps else f"(no reply, rc={p.returncode})"
+        return want in last and p.returncode == 0, (last[:160] + ("" if p.returncode == 0 else f" rc={p.returncode}"))
     return got == (d / "expect.txt").read_text().strip(), got
 
 
