@@ -32,6 +32,11 @@ def main(argv=None) -> int:
     sub.add_parser("guard")
     sub.add_parser("acceptance")
     sub.add_parser("source")
+    db = sub.add_parser("dev-bench")
+    db.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
+    db.add_argument("--n", type=int, default=160)
+    db.add_argument("--jobs", type=int, default=4)
+    db.add_argument("--out", default="runs/dev")
     rb = sub.add_parser("rsi-bench")
     rb.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     rb.add_argument("--n", type=int, default=400)
@@ -68,6 +73,9 @@ def main(argv=None) -> int:
     elif a.cmd == "acceptance":
         from .acceptance import main as acc
         return acc()
+    elif a.cmd == "dev-bench":
+        from .devbench import run as devb
+        print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out))
     elif a.cmd == "rsi-bench":
         from .rsi.bench import run as rsib
         print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out, a.set))

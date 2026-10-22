@@ -478,6 +478,45 @@ Full tables (vetoes, prunes, recombinations, archive size) are in `results/rsi/m
 * The budget, critic and pruner are within noise. The critic does what RRSI claims at noise 1.0 (16.6 vetoes per stream, fewer bad KEEPs: 6.0 vs 8.2, the same success). The pruner finds almost nothing to remove (0.2 prunes per stream): the gate rarely admits useless edits here.
 * "All M2" stacks fresh validation's cost on top. The recommended setting from this table is **recombination on, everything else off**. The defaults stay off so that the bench stays comparable.
 
+### M3: real developer trajectories (build / test / fix)
+
+`aura_harness/devenv.py`. The task stream is now small generated Python repos with seeded bugs. A scripted, deterministic developer "model" runs the fix loop with **real tools on real files**:
+
+1. Read `harness.cfg` for the test layout (skipped if `memory-ttl` carries it).
+2. Run the tests: `python3 -m unittest discover`, verbose for `pytest`, quiet for `pytest-q`, since the image has no pytest.
+3. Find the failing function (`grep -rn` / `rg --json` / an ast scan) and `cat` its file.
+4. Try inverse edits (`sed -i 's/OLD/NEW/'`, unescaped as a naive agent writes it, or exact-replace `apply-patch`), re-running the tests after each.
+
+Every harness plugin decides something real:
+* routing picks the command;
+* `compress` truncates the real output (head / tail / head-tail / grep-errors / outline);
+* `retry-limit` handles the sandbox's tool faults, which are injected deterministically by (seed, task, step, attempt);
+* `memory-ttl` carries the test layout, which moves at the shift;
+* `delegate` gives each bug of a multi-bug task a fresh sub-agent context.
+
+Context is measured as kept chars / 4. The episodes have the same failure-mode schema as the simulator, so the proposer, the Aura control plane, the gate, retention and the M2 pieces run **unchanged**. A decision-trace cache keeps the gate's replays affordable: an episode is reused only if the new table agrees on every entry the run consulted (tested).
+
+Splits (ModularRSI / 2609.38372 style): evolution on repos `api` / `web` / `etl`. The gate scores tasks from `billing` / `search`, which the proposer never sees. After evolution the final harness is evaluated on 40 *fresh* held-out-repo tasks and 30 tasks from `geo`, an OOD repo with longer, differently laid-out modules that no evolution step ever touched. The proposer is the scripted rule proposer. `AURA_HARNESS_LLM_URL` plugs in a local OpenAI-compatible model, but no number here uses one, and none was available on the box.
+
+`python3 -m aura_harness dev-bench`, 5 seeds × 160 tasks, on `a6c63aa19` (`results/dev/`):
+
+| config | stream success | fresh held-out success | tokens / task | OOD success | OOD tokens / task | KEEP / ROLLBACK |
+|---|---|---|---|---|---|---|
+| frozen seed harness | 0.0% | 0.0% | 1,694 | 0.0% | 1,700 | – |
+| RSI loop (M1) | 76.5% | **95.5%** | 12,831 | **74.7%** | 11,121 | 4.2 / 3.8 |
+| RSI + recombination | 76.5% | 95.5% | 12,831 | 74.7% | 11,121 | 4.2 / 3.8 |
+| RSI + retention (ρ=0.05) | 76.8% | 95.5% | 12,941 | 74.0% | 11,018 | 4.2 / 3.6 |
+
+* **The seed harness solves nothing.** Its `head/800` truncation of the verbose test log cuts the failure section every time, so the developer never learns which test failed. That is a real, common harness bug.
+* **The loop finds the fixes in 3–5 KEEPs.** On seed 0 these were `compress test-log grep-errors/800`, `route edit->apply-patch` (the naive `sed` breaks on `/` and `*`) and `retry grep|timeout=3`. The truncation fix is the mechanism 2609.38372 reports as emergent.
+* **The gains transfer.** 95.5% on fresh held-out-repo tasks and 74.7% on the OOD repo. Tokens/task rise because the harness now actually does the work; frozen tokens are low only because it gives up after one test run.
+* **Recombination and retention change nothing here.** With only ~4 KEEPs per stream there is little to recombine or forget.
+* **Caveats:**
+  * The "model" is scripted, not an LLM. Its fix rules know this bug catalogue, so this measures the *harness's* effect on a fixed developer policy, not coding ability.
+  * Repos are small and generated.
+  * Tool faults are injected.
+  * Stream success (76.5%) is below held-out because it includes every task solved before the fixes landed.
+
 ## Known Aura issues
 
 ### Re-pin to `a6c63aa19` (2026-10-22)

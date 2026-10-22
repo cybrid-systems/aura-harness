@@ -1,0 +1,360 @@
+[
+ {
+  "config": "frozen seed harness",
+  "seed": 0,
+  "stream_success": 0.0,
+  "keep": 0,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1661.1,
+  "ood_success": 0.0,
+  "ood_tokens": 1717.8666666666666,
+  "wall_s": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 1,
+  "stream_success": 0.0,
+  "keep": 0,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1687.3,
+  "ood_success": 0.0,
+  "ood_tokens": 1735.3333333333333,
+  "wall_s": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 2,
+  "stream_success": 0.0,
+  "keep": 0,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1661.1,
+  "ood_success": 0.0,
+  "ood_tokens": 1691.3666666666666,
+  "wall_s": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 3,
+  "stream_success": 0.0,
+  "keep": 0,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1746.025,
+  "ood_success": 0.0,
+  "ood_tokens": 1673.9,
+  "wall_s": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 4,
+  "stream_success": 0.0,
+  "keep": 0,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1713.5,
+  "ood_success": 0.0,
+  "ood_tokens": 1682.9333333333334,
+  "wall_s": null
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 0,
+  "stream_success": 0.775,
+  "keep": 3,
+  "rollback": 6,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 102.91
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 1,
+  "stream_success": 0.78125,
+  "keep": 4,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 14817.875,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13974.866666666667,
+  "wall_s": 74.06
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 2,
+  "stream_success": 0.74375,
+  "keep": 4,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 13644.35,
+  "ood_success": 0.7,
+  "ood_tokens": 10775.733333333334,
+  "wall_s": 82.68
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 3,
+  "stream_success": 0.76875,
+  "keep": 4,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=10"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12493.7,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 8739.966666666667,
+  "wall_s": 66.77
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 4,
+  "stream_success": 0.75625,
+  "keep": 6,
+  "rollback": 3,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0",
+   "ttl test-cmd=40",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 10252.025,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 11831.366666666667,
+  "wall_s": 101.13
+ },
+ {
+  "config": "RSI + recombination (M2 pick)",
+  "seed": 0,
+  "stream_success": 0.775,
+  "keep": 3,
+  "rollback": 6,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 102.37
+ },
+ {
+  "config": "RSI + recombination (M2 pick)",
+  "seed": 1,
+  "stream_success": 0.78125,
+  "keep": 4,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 14817.875,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13974.866666666667,
+  "wall_s": 75.77
+ },
+ {
+  "config": "RSI + recombination (M2 pick)",
+  "seed": 2,
+  "stream_success": 0.74375,
+  "keep": 4,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 13644.35,
+  "ood_success": 0.7,
+  "ood_tokens": 10775.733333333334,
+  "wall_s": 82.27
+ },
+ {
+  "config": "RSI + recombination (M2 pick)",
+  "seed": 3,
+  "stream_success": 0.76875,
+  "keep": 4,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=10"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12493.7,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 8739.966666666667,
+  "wall_s": 69.87
+ },
+ {
+  "config": "RSI + recombination (M2 pick)",
+  "seed": 4,
+  "stream_success": 0.75625,
+  "keep": 6,
+  "rollback": 3,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0",
+   "ttl test-cmd=40",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 10252.025,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 11831.366666666667,
+  "wall_s": 102.77
+ },
+ {
+  "config": "RSI + retention (rho=0.05)",
+  "seed": 0,
+  "stream_success": 0.775,
+  "keep": 3,
+  "rollback": 6,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 105.15
+ },
+ {
+  "config": "RSI + retention (rho=0.05)",
+  "seed": 1,
+  "stream_success": 0.78125,
+  "keep": 4,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 14817.875,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13974.866666666667,
+  "wall_s": 73.88
+ },
+ {
+  "config": "RSI + retention (rho=0.05)",
+  "seed": 2,
+  "stream_success": 0.74375,
+  "keep": 5,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=10",
+   "ttl test-cmd=20"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.9,
+  "heldout_tokens": 13127.4,
+  "ood_success": 0.6666666666666666,
+  "ood_tokens": 9905.2,
+  "wall_s": 101.03
+ },
+ {
+  "config": "RSI + retention (rho=0.05)",
+  "seed": 3,
+  "stream_success": 0.76875,
+  "keep": 4,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=10"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12493.7,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 8739.966666666667,
+  "wall_s": 5.49
+ },
+ {
+  "config": "RSI + retention (rho=0.05)",
+  "seed": 4,
+  "stream_success": 0.76875,
+  "keep": 5,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 1.0,
+  "heldout_tokens": 11320.2,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 12183.166666666666,
+  "wall_s": 116.21
+ }
+]

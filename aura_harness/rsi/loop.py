@@ -19,14 +19,18 @@ from .proposal import RuleSource
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
-            cfg: M2Config | None = None) -> dict:
+            cfg: M2Config | None = None, world: str = "sim") -> dict:
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
     t_start = time.perf_counter()
     h = backend or (SupervisedAura(worldlines) if supervise else AuraHarness(worldlines))
     pool = ProcessPoolExecutor(jobs) if jobs > 1 else None
     pmap = pool.map if pool else map
-    stream = make_stream(seed, n, shift)
+    if world == "dev":
+        from ..devenv import make_stream as dev_stream
+        stream = dev_stream(seed, n, shift)
+    else:
+        stream = make_stream(seed, n, shift)
     src = RuleSource(min_evidence=min_evidence, noise=noise, seed=seed)
     lib = Library()
     cfg = cfg or M2Config()
@@ -162,6 +166,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out = summarize(label, seed, n, shift, eps, verdicts, audit, source, lat, gate_s, change_s,
                     time.perf_counter() - t_start, src)
     out["library"] = lib.summary()
+    out["final_table"] = tb
     out["m2"] = dict(stats, archive=len(archive), archive_members=archive)
     out["restarts"] = getattr(h, "restarts", 0)
     if retention is not None:

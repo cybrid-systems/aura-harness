@@ -258,6 +258,9 @@ def fact_version(seed: int, project: str, fact: str, tid: int, shift: int) -> in
 
 
 def run_task(task: Task, table: dict, mem: Memory, seed: int, shift: int = 200) -> Episode:
+    if getattr(task, "dev", False):              # M3: real developer trajectories (devenv.py)
+        from .devenv import run_dev
+        return run_dev(task, table, mem, seed)
     ep = Episode(task)
     fact = FACT_OF[task.kind]
     cur = fact_version(seed, task.project, fact, task.id, shift)
