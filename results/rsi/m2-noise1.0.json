@@ -1,0 +1,1236 @@
+[
+ {
+  "success": 0.4,
+  "heldout_success": 0.4,
+  "cost_per_task": 7434.435,
+  "keep": 8,
+  "rollback": 17,
+  "windows": [
+   0.3,
+   0.36,
+   0.35,
+   0.59
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.15,
+  "config": "M1 loop (retention off)",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.35,
+  "heldout_success": 0.355,
+  "cost_per_task": 6380.5275,
+  "keep": 6,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.49,
+   0.26,
+   0.24
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.81,
+  "config": "M1 loop (retention off)",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.2725,
+  "heldout_success": 0.31,
+  "cost_per_task": 6857.315,
+  "keep": 11,
+  "rollback": 21,
+  "windows": [
+   0.26,
+   0.34,
+   0.17,
+   0.32
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 3,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 6,
+   "delegate": 0
+  },
+  "wall_s": 2.46,
+  "config": "M1 loop (retention off)",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.4175,
+  "heldout_success": 0.46,
+  "cost_per_task": 7066.5025,
+  "keep": 9,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.57,
+   0.36,
+   0.33
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.35,
+  "config": "M1 loop (retention off)",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 6
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 8000.65,
+  "keep": 7,
+  "rollback": 21,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.42
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 2.84,
+  "config": "M1 loop (retention off)",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.4,
+  "heldout_success": 0.4,
+  "cost_per_task": 7434.435,
+  "keep": 8,
+  "rollback": 17,
+  "windows": [
+   0.3,
+   0.36,
+   0.35,
+   0.59
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.79,
+  "config": "+ proposal budget (4 -> 2)",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 16,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.3575,
+  "heldout_success": 0.37,
+  "cost_per_task": 6648.7775,
+  "keep": 5,
+  "rollback": 22,
+  "windows": [
+   0.41,
+   0.49,
+   0.26,
+   0.27
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.53,
+  "config": "+ proposal budget (4 -> 2)",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 12,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.255,
+  "heldout_success": 0.3,
+  "cost_per_task": 6748.545,
+  "keep": 10,
+  "rollback": 26,
+  "windows": [
+   0.26,
+   0.34,
+   0.17,
+   0.25
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 1,
+   "retry-limit": 1,
+   "memory-ttl": 6,
+   "delegate": 0
+  },
+  "wall_s": 2.39,
+  "config": "+ proposal budget (4 -> 2)",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 24,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 6
+  }
+ },
+ {
+  "success": 0.3675,
+  "heldout_success": 0.41,
+  "cost_per_task": 6794.05,
+  "keep": 7,
+  "rollback": 23,
+  "windows": [
+   0.41,
+   0.57,
+   0.26,
+   0.23
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 4,
+   "delegate": 0
+  },
+  "wall_s": 1.77,
+  "config": "+ proposal budget (4 -> 2)",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 20,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 8000.65,
+  "keep": 7,
+  "rollback": 21,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.42
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 2.11,
+  "config": "+ proposal budget (4 -> 2)",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 21,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.405,
+  "heldout_success": 0.4,
+  "cost_per_task": 7526.275,
+  "keep": 7,
+  "rollback": 20,
+  "windows": [
+   0.3,
+   0.37,
+   0.35,
+   0.6
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 1.23,
+  "config": "+ critic (>= 2 projects)",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 14,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 2
+  }
+ },
+ {
+  "success": 0.3575,
+  "heldout_success": 0.37,
+  "cost_per_task": 6941.61,
+  "keep": 5,
+  "rollback": 22,
+  "windows": [
+   0.41,
+   0.49,
+   0.27,
+   0.26
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 0.73,
+  "config": "+ critic (>= 2 projects)",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 17,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 2
+  }
+ },
+ {
+  "success": 0.2675,
+  "heldout_success": 0.305,
+  "cost_per_task": 7499.885,
+  "keep": 8,
+  "rollback": 24,
+  "windows": [
+   0.26,
+   0.34,
+   0.16,
+   0.31
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 4,
+   "delegate": 0
+  },
+  "wall_s": 0.97,
+  "config": "+ critic (>= 2 projects)",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 21,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.4125,
+  "heldout_success": 0.46,
+  "cost_per_task": 7111.875,
+  "keep": 5,
+  "rollback": 22,
+  "windows": [
+   0.42,
+   0.54,
+   0.33,
+   0.36
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 0.96,
+  "config": "+ critic (>= 2 projects)",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 17,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 7981.2325,
+  "keep": 5,
+  "rollback": 23,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.42
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 1.35,
+  "config": "+ critic (>= 2 projects)",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 14,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.4,
+  "heldout_success": 0.4,
+  "cost_per_task": 7434.435,
+  "keep": 8,
+  "rollback": 17,
+  "windows": [
+   0.3,
+   0.36,
+   0.35,
+   0.59
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.43,
+  "config": "+ pruner (every 100)",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.35,
+  "heldout_success": 0.355,
+  "cost_per_task": 6380.5275,
+  "keep": 6,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.49,
+   0.26,
+   0.24
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.96,
+  "config": "+ pruner (every 100)",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.2725,
+  "heldout_success": 0.31,
+  "cost_per_task": 6857.315,
+  "keep": 11,
+  "rollback": 21,
+  "windows": [
+   0.26,
+   0.34,
+   0.17,
+   0.32
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 3,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 6,
+   "delegate": 0
+  },
+  "wall_s": 2.55,
+  "config": "+ pruner (every 100)",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.4175,
+  "heldout_success": 0.46,
+  "cost_per_task": 7066.5025,
+  "keep": 9,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.57,
+   0.36,
+   0.33
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.49,
+  "config": "+ pruner (every 100)",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 6
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 8000.65,
+  "keep": 7,
+  "rollback": 21,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.42
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 2.83,
+  "config": "+ pruner (every 100)",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.225,
+  "heldout_success": 0.225,
+  "cost_per_task": 5158.3475,
+  "keep": 12,
+  "rollback": 25,
+  "windows": [
+   0.3,
+   0.36,
+   0.13,
+   0.11
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 7,
+   "retry-limit": 0,
+   "memory-ttl": 4,
+   "delegate": 0
+  },
+  "wall_s": 3.22,
+  "config": "+ fresh one-use validation",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 12,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.3425,
+  "heldout_success": 0.355,
+  "cost_per_task": 6529.665,
+  "keep": 4,
+  "rollback": 24,
+  "windows": [
+   0.41,
+   0.49,
+   0.25,
+   0.22
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 1,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.87,
+  "config": "+ fresh one-use validation",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 3,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 7,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.305,
+  "heldout_success": 0.34,
+  "cost_per_task": 6745.145,
+  "keep": 11,
+  "rollback": 20,
+  "windows": [
+   0.26,
+   0.31,
+   0.21,
+   0.44
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 3,
+   "compress": 5,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.49,
+  "config": "+ fresh one-use validation",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 11,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.3775,
+  "heldout_success": 0.42,
+  "cost_per_task": 7030.89,
+  "keep": 7,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.57,
+   0.26,
+   0.27
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.13,
+  "config": "+ fresh one-use validation",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 7,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 7364.9175,
+  "keep": 6,
+  "rollback": 19,
+  "windows": [
+   0.36,
+   0.61,
+   0.39,
+   0.44
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.0,
+  "config": "+ fresh one-use validation",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 0,
+   "recomb_kept": 0,
+   "fresh_checks": 6,
+   "archive": 1
+  }
+ },
+ {
+  "success": 0.4,
+  "heldout_success": 0.4,
+  "cost_per_task": 7434.435,
+  "keep": 8,
+  "rollback": 17,
+  "windows": [
+   0.3,
+   0.36,
+   0.35,
+   0.59
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.32,
+  "config": "+ library recombination",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 13,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.35,
+  "heldout_success": 0.355,
+  "cost_per_task": 6380.5275,
+  "keep": 6,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.49,
+   0.26,
+   0.24
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.18,
+  "config": "+ library recombination",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 20,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.2725,
+  "heldout_success": 0.31,
+  "cost_per_task": 6857.315,
+  "keep": 11,
+  "rollback": 21,
+  "windows": [
+   0.26,
+   0.34,
+   0.17,
+   0.32
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 3,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 6,
+   "delegate": 0
+  },
+  "wall_s": 2.98,
+  "config": "+ library recombination",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 27,
+   "recomb_kept": 0,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.4175,
+  "heldout_success": 0.46,
+  "cost_per_task": 7078.0075,
+  "keep": 9,
+  "rollback": 21,
+  "windows": [
+   0.41,
+   0.57,
+   0.36,
+   0.33
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 2.96,
+  "config": "+ library recombination",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 25,
+   "recomb_kept": 1,
+   "fresh_checks": 0,
+   "archive": 4
+  }
+ },
+ {
+  "success": 0.4475,
+  "heldout_success": 0.455,
+  "cost_per_task": 7930.225,
+  "keep": 8,
+  "rollback": 19,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.41
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 4,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 3.02,
+  "config": "+ library recombination",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 0,
+   "critic_veto": 0,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 25,
+   "recomb_kept": 2,
+   "fresh_checks": 0,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.2475,
+  "heldout_success": 0.23,
+  "cost_per_task": 7004.2775,
+  "keep": 5,
+  "rollback": 29,
+  "windows": [
+   0.3,
+   0.36,
+   0.19,
+   0.14
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 1.12,
+  "config": "all M2",
+  "seed": 0,
+  "retention": null,
+  "m2": {
+   "budget_cut": 17,
+   "critic_veto": 21,
+   "fresh_veto": 1,
+   "pruned": [
+    [
+     200,
+     "prune compress"
+    ],
+    [
+     300,
+     "prune route-tool"
+    ]
+   ],
+   "recombined": 5,
+   "recomb_kept": 0,
+   "fresh_checks": 6,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.3425,
+  "heldout_success": 0.355,
+  "cost_per_task": 6529.665,
+  "keep": 4,
+  "rollback": 24,
+  "windows": [
+   0.41,
+   0.49,
+   0.25,
+   0.22
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 1,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 0.95,
+  "config": "all M2",
+  "seed": 1,
+  "retention": null,
+  "m2": {
+   "budget_cut": 5,
+   "critic_veto": 17,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 8,
+   "recomb_kept": 0,
+   "fresh_checks": 4,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.2375,
+  "heldout_success": 0.28,
+  "cost_per_task": 6874.2925,
+  "keep": 5,
+  "rollback": 27,
+  "windows": [
+   0.26,
+   0.34,
+   0.15,
+   0.2
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 0,
+   "retry-limit": 1,
+   "memory-ttl": 4,
+   "delegate": 0
+  },
+  "wall_s": 0.89,
+  "config": "all M2",
+  "seed": 2,
+  "retention": null,
+  "m2": {
+   "budget_cut": 8,
+   "critic_veto": 22,
+   "fresh_veto": 1,
+   "pruned": [],
+   "recombined": 6,
+   "recomb_kept": 0,
+   "fresh_checks": 6,
+   "archive": 3
+  }
+ },
+ {
+  "success": 0.3575,
+  "heldout_success": 0.395,
+  "cost_per_task": 6826.9425,
+  "keep": 5,
+  "rollback": 25,
+  "windows": [
+   0.41,
+   0.55,
+   0.24,
+   0.23
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 2,
+   "retry-limit": 0,
+   "memory-ttl": 3,
+   "delegate": 0
+  },
+  "wall_s": 1.08,
+  "config": "all M2",
+  "seed": 3,
+  "retention": null,
+  "m2": {
+   "budget_cut": 9,
+   "critic_veto": 19,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 8,
+   "recomb_kept": 0,
+   "fresh_checks": 5,
+   "archive": 2
+  }
+ },
+ {
+  "success": 0.45,
+  "heldout_success": 0.46,
+  "cost_per_task": 8020.2575,
+  "keep": 7,
+  "rollback": 20,
+  "windows": [
+   0.36,
+   0.61,
+   0.41,
+   0.42
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 0,
+   "compress": 3,
+   "retry-limit": 0,
+   "memory-ttl": 2,
+   "delegate": 0
+  },
+  "wall_s": 1.65,
+  "config": "all M2",
+  "seed": 4,
+  "retention": null,
+  "m2": {
+   "budget_cut": 13,
+   "critic_veto": 13,
+   "fresh_veto": 0,
+   "pruned": [],
+   "recombined": 12,
+   "recomb_kept": 2,
+   "fresh_checks": 7,
+   "archive": 2
+  }
+ }
+]

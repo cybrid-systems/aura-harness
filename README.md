@@ -449,6 +449,35 @@ Design: [docs/rsi-design.md](docs/rsi-design.md), which maps eight harness-RSI p
 * **The retention gate doesn't pay off in this simulator.** It costs 0–1 point of success. Vetoes come mostly after the distribution shift at task 200, where forgetting a phase-0 adaptation is the *right* call. The only gain is a marginal one at noise 1.0 with the strict setting (+0.1 / +0.3 points held-out), within seed noise. It stays **off by default**. It's there for streams where old skills should be protected (M3's multi-repo trajectories), and the cost of turning it on is now measured.
 * Zero supervisor restarts in these runs: the rule proposer's flat-cond bodies don't trigger #4670; fuzzed bodies do.
 
+### M2: proposal budget, critic, pruner, fresh validation, recombination, Pareto archive
+
+`aura_harness/rsi/m2.py`. Every piece is a flag on `M2Config`, and all of them are off by default. With every flag off the loop is M1 (tested).
+
+* **Proposal budget** (RRSI): the number of candidates per step is annealed from 4 to 2 over the stream.
+* **Critic** (RRSI): vetoes a proposal whose evidence comes from only one project, i.e. a "benchmark-specific" fix.
+* **Pruner** (RRSI): every 100 tasks it ablates each kept plugin back to the seed. The ablation is adopted (guarded) if the recent window doesn't get worse.
+* **Fresh validation** (2610.18813): a second, independent hash split of the held-out tasks. The gate scores only half of them. Admission also requires no loss on the other half, and each of those tasks is used for one admission only.
+* **Recombination** (PluginRSI): admitted library variants of the same plugin re-enter as `composition` candidates.
+* **Pareto archive** (Harmony): admitted states over (success, tokens, retention regressions). This is bookkeeping only in M2.
+
+`rsi-bench --set m2`, 5 seeds × 400 tasks. Mean success (held-out); each row adds one piece to the M1 loop:
+
+| config | clean | noise 0.3 | noise 1.0 |
+|---|---|---|---|
+| M1 loop | 63.4% (64.0) | 62.9% (64.6) | 37.8% (39.7) |
+| + proposal budget | 64.2% (65.3), +8% tokens | 62.1% (63.9) | 36.6% (38.8) |
+| + critic | 62.4% (63.5) | 62.3% (64.2) | 37.9% (39.9) |
+| + pruner | 63.3% (64.0) | 62.9% (64.6) | 37.8% (39.7) |
+| + fresh one-use validation | **54.9%** (55.9) | 58.3% (60.0) | 34.0% (36.0) |
+| + library recombination | **64.2%** (64.7) | **63.2%** (64.9) | 37.8% (39.6) |
+| all M2 | 54.2% (55.0) | 58.9% (60.8) | 32.7% (34.4) |
+
+Full tables (vetoes, prunes, recombinations, archive size) are in `results/rsi/m2-noise*.md`. Read them carefully:
+* **Recombination is the only consistent win**, and a small one: +0.8 / +0.3 / 0.0 points. 1.2–1.4 recombined variants are kept per stream, out of 14–22 offered.
+* **Fresh validation hurts a lot (−4.6 to −8.5 points).** It vetoes only ~1 admission per stream. The cost comes from the gate seeing half the held-out tasks (about 10 instead of 20 per window), which makes it noisier. A one-use split is only affordable with more validation data than this 80-task window has. The admission rule is sound; the budget for it isn't there.
+* The budget, critic and pruner are within noise. The critic does what RRSI claims at noise 1.0 (16.6 vetoes per stream, fewer bad KEEPs: 6.0 vs 8.2, the same success). The pruner finds almost nothing to remove (0.2 prunes per stream): the gate rarely admits useless edits here.
+* "All M2" stacks fresh validation's cost on top. The recommended setting from this table is **recombination on, everything else off**. The defaults stay off so that the bench stays comparable.
+
 ## Known Aura issues
 
 ### Re-pin to `a6c63aa19` (2026-10-22)

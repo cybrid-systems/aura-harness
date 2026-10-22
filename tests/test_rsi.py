@@ -90,3 +90,58 @@ class AuraRSITests(unittest.TestCase):
             h.close()
         finally:
             del os.environ["AURA_HARNESS_KNOBS"]
+
+
+class M2PureTests(unittest.TestCase):
+    def test_pareto(self):
+        from aura_harness.rsi.m2 import pareto_insert
+        a = {"success": .5, "tokens": 100, "regress": 0}
+        b = {"success": .6, "tokens": 90, "regress": 0}
+        c = {"success": .7, "tokens": 200, "regress": 0}
+        arc = pareto_insert(pareto_insert(pareto_insert([], a), b), c)
+        self.assertEqual(arc, [b, c])
+
+    def test_budget_anneals(self):
+        from aura_harness.rsi.m2 import M2Config, budget_k
+        cfg = M2Config(budget=True)
+        self.assertEqual([budget_k(cfg, t, 400) for t in (0, 200, 400)], [4, 3, 2])
+
+    def test_critic_needs_two_projects(self):
+        from aura_harness.rsi.m2 import Critic
+        c = Critic()
+        c.note("s", "api")
+        self.assertTrue(c.veto("s"))
+        c.note("s", "web")
+        self.assertFalse(c.veto("s"))
+
+    def test_fresh_split_is_independent_of_heldout(self):
+        from aura_harness.env import heldout_of
+        from aura_harness.rsi.m2 import fresh_of
+        ho = [t for t in range(4000) if heldout_of(t)]
+        frac = sum(map(fresh_of, ho)) / len(ho)
+        self.assertTrue(0.4 < frac < 0.6)
+
+    def test_prune_candidates_only_for_changed_plugins(self):
+        from aura_harness.rsi.m2 import prune_candidates
+        tb = seed_table()
+        self.assertEqual(prune_candidates(tb), [])
+        tb["ttl"] = dict(tb["ttl"], **{"test-cmd": 40})
+        self.assertEqual([c.desc for c in prune_candidates(tb)], ["prune memory-ttl"])
+
+
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class M2AuraTests(unittest.TestCase):
+    def test_default_cfg_equals_m1(self):
+        from aura_harness.agent import run_stream
+        from aura_harness.rsi.loop import run_rsi
+        from aura_harness.rsi.m2 import M2Config
+        a = run_stream("aura-gated", 3, n=240)
+        b = run_rsi(3, n=240, cfg=M2Config())
+        self.assertEqual(key(a), key(b))
+
+    def test_recombined_keep_goes_through_guard(self):
+        from aura_harness.rsi.loop import run_rsi
+        from aura_harness.rsi.m2 import M2Config
+        r = run_rsi(0, n=400, cfg=M2Config(recombine=True, pruner=True))
+        self.assertGreater(r["keep"], 0)
+        self.assertGreater(r["m2"]["recombined"], 0)

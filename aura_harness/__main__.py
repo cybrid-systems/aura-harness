@@ -38,6 +38,7 @@ def main(argv=None) -> int:
     rb.add_argument("--noise", type=float, default=0.0)
     rb.add_argument("--jobs", type=int, default=3)
     rb.add_argument("--out", default="runs/rsi")
+    rb.add_argument("--set", default="m1", choices=["m1", "m2"])
     a = ap.parse_args(argv)
 
     if a.cmd == "bench":
@@ -69,7 +70,7 @@ def main(argv=None) -> int:
         return acc()
     elif a.cmd == "rsi-bench":
         from .rsi.bench import run as rsib
-        print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out))
+        print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out, a.set))
     elif a.cmd == "source":
         from .control import AuraHarness
         h = AuraHarness()
