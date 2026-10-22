@@ -1,0 +1,562 @@
+[
+ {
+  "success": 0.6175,
+  "heldout_success": 0.635,
+  "cost_per_task": 9452.6,
+  "keep": 10,
+  "rollback": 12,
+  "windows": [
+   0.4,
+   0.71,
+   0.59,
+   0.77
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 2,
+   "delegate": 2
+  },
+  "wall_s": 1.94,
+  "config": "rsi, no retention (= legacy gated)",
+  "seed": 0,
+  "retention": null
+ },
+ {
+  "success": 0.59,
+  "heldout_success": 0.585,
+  "cost_per_task": 6806.5575,
+  "keep": 14,
+  "rollback": 8,
+  "windows": [
+   0.55,
+   0.64,
+   0.47,
+   0.7
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 5,
+   "retry-limit": 1,
+   "memory-ttl": 5,
+   "delegate": 1
+  },
+  "wall_s": 2.18,
+  "config": "rsi, no retention (= legacy gated)",
+  "seed": 1,
+  "retention": null
+ },
+ {
+  "success": 0.68,
+  "heldout_success": 0.72,
+  "cost_per_task": 8890.38,
+  "keep": 11,
+  "rollback": 8,
+  "windows": [
+   0.56,
+   0.85,
+   0.66,
+   0.65
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 4,
+   "delegate": 1
+  },
+  "wall_s": 1.8,
+  "config": "rsi, no retention (= legacy gated)",
+  "seed": 2,
+  "retention": null
+ },
+ {
+  "success": 0.6825,
+  "heldout_success": 0.675,
+  "cost_per_task": 8819.9925,
+  "keep": 12,
+  "rollback": 5,
+  "windows": [
+   0.58,
+   0.84,
+   0.61,
+   0.7
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 3,
+   "delegate": 2
+  },
+  "wall_s": 1.64,
+  "config": "rsi, no retention (= legacy gated)",
+  "seed": 3,
+  "retention": null
+ },
+ {
+  "success": 0.5975,
+  "heldout_success": 0.585,
+  "cost_per_task": 7916.7975,
+  "keep": 13,
+  "rollback": 6,
+  "windows": [
+   0.56,
+   0.76,
+   0.49,
+   0.58
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 6,
+   "delegate": 1
+  },
+  "wall_s": 1.85,
+  "config": "rsi, no retention (= legacy gated)",
+  "seed": 4,
+  "retention": null
+ },
+ {
+  "success": 0.6175,
+  "heldout_success": 0.635,
+  "cost_per_task": 9452.6,
+  "keep": 10,
+  "rollback": 12,
+  "windows": [
+   0.4,
+   0.71,
+   0.59,
+   0.77
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 2,
+   "delegate": 2
+  },
+  "wall_s": 2.31,
+  "config": "rsi + retention rho=0.05, decay 50",
+  "seed": 0,
+  "retention": {
+   "checks": 5,
+   "vetoes": 0,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.555,
+  "heldout_success": 0.555,
+  "cost_per_task": 6712.1275,
+  "keep": 14,
+  "rollback": 9,
+  "windows": [
+   0.55,
+   0.64,
+   0.43,
+   0.6
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 4,
+   "retry-limit": 2,
+   "memory-ttl": 5,
+   "delegate": 0
+  },
+  "wall_s": 2.57,
+  "config": "rsi + retention rho=0.05, decay 50",
+  "seed": 1,
+  "retention": {
+   "checks": 9,
+   "vetoes": 2,
+   "spent": 2.36
+  }
+ },
+ {
+  "success": 0.68,
+  "heldout_success": 0.72,
+  "cost_per_task": 8858.7875,
+  "keep": 10,
+  "rollback": 8,
+  "windows": [
+   0.56,
+   0.85,
+   0.66,
+   0.65
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 4,
+   "delegate": 1
+  },
+  "wall_s": 1.85,
+  "config": "rsi + retention rho=0.05, decay 50",
+  "seed": 2,
+  "retention": {
+   "checks": 5,
+   "vetoes": 1,
+   "spent": 0.94
+  }
+ },
+ {
+  "success": 0.68,
+  "heldout_success": 0.675,
+  "cost_per_task": 9063.3275,
+  "keep": 12,
+  "rollback": 5,
+  "windows": [
+   0.58,
+   0.84,
+   0.61,
+   0.69
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 3,
+   "delegate": 2
+  },
+  "wall_s": 2.35,
+  "config": "rsi + retention rho=0.05, decay 50",
+  "seed": 3,
+  "retention": {
+   "checks": 6,
+   "vetoes": 1,
+   "spent": 2.74
+  }
+ },
+ {
+  "success": 0.5975,
+  "heldout_success": 0.585,
+  "cost_per_task": 7916.7975,
+  "keep": 13,
+  "rollback": 6,
+  "windows": [
+   0.56,
+   0.76,
+   0.49,
+   0.58
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 6,
+   "delegate": 1
+  },
+  "wall_s": 2.06,
+  "config": "rsi + retention rho=0.05, decay 50",
+  "seed": 4,
+  "retention": {
+   "checks": 6,
+   "vetoes": 0,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.6175,
+  "heldout_success": 0.635,
+  "cost_per_task": 9452.6,
+  "keep": 10,
+  "rollback": 12,
+  "windows": [
+   0.4,
+   0.71,
+   0.59,
+   0.77
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 2,
+   "delegate": 2
+  },
+  "wall_s": 2.18,
+  "config": "rsi + retention rho=0.02, decay 100",
+  "seed": 0,
+  "retention": {
+   "checks": 5,
+   "vetoes": 0,
+   "spent": 0.09
+  }
+ },
+ {
+  "success": 0.555,
+  "heldout_success": 0.54,
+  "cost_per_task": 7294.4375,
+  "keep": 16,
+  "rollback": 8,
+  "windows": [
+   0.55,
+   0.64,
+   0.41,
+   0.62
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 5,
+   "retry-limit": 2,
+   "memory-ttl": 5,
+   "delegate": 2
+  },
+  "wall_s": 2.79,
+  "config": "rsi + retention rho=0.02, decay 100",
+  "seed": 1,
+  "retention": {
+   "checks": 11,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.675,
+  "heldout_success": 0.71,
+  "cost_per_task": 8737.5875,
+  "keep": 9,
+  "rollback": 10,
+  "windows": [
+   0.56,
+   0.85,
+   0.63,
+   0.66
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 3,
+   "delegate": 1
+  },
+  "wall_s": 1.95,
+  "config": "rsi + retention rho=0.02, decay 100",
+  "seed": 2,
+  "retention": {
+   "checks": 6,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.68,
+  "heldout_success": 0.675,
+  "cost_per_task": 9088.7275,
+  "keep": 11,
+  "rollback": 6,
+  "windows": [
+   0.58,
+   0.84,
+   0.61,
+   0.69
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 3,
+   "delegate": 2
+  },
+  "wall_s": 1.94,
+  "config": "rsi + retention rho=0.02, decay 100",
+  "seed": 3,
+  "retention": {
+   "checks": 6,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.5975,
+  "heldout_success": 0.585,
+  "cost_per_task": 7916.7975,
+  "keep": 13,
+  "rollback": 6,
+  "windows": [
+   0.56,
+   0.76,
+   0.49,
+   0.58
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 6,
+   "delegate": 1
+  },
+  "wall_s": 2.1,
+  "config": "rsi + retention rho=0.02, decay 100",
+  "seed": 4,
+  "retention": {
+   "checks": 6,
+   "vetoes": 0,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.625,
+  "heldout_success": 0.64,
+  "cost_per_task": 9353.95,
+  "keep": 9,
+  "rollback": 12,
+  "windows": [
+   0.4,
+   0.71,
+   0.62,
+   0.77
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 2,
+   "delegate": 1
+  },
+  "wall_s": 2.11,
+  "config": "rsi + retention strict (rho=0, no decay)",
+  "seed": 0,
+  "retention": {
+   "checks": 6,
+   "vetoes": 1,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.555,
+  "heldout_success": 0.54,
+  "cost_per_task": 7294.4375,
+  "keep": 16,
+  "rollback": 8,
+  "windows": [
+   0.55,
+   0.64,
+   0.41,
+   0.62
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 2,
+   "compress": 5,
+   "retry-limit": 2,
+   "memory-ttl": 5,
+   "delegate": 2
+  },
+  "wall_s": 2.69,
+  "config": "rsi + retention strict (rho=0, no decay)",
+  "seed": 1,
+  "retention": {
+   "checks": 11,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.675,
+  "heldout_success": 0.71,
+  "cost_per_task": 8737.5875,
+  "keep": 9,
+  "rollback": 10,
+  "windows": [
+   0.56,
+   0.85,
+   0.63,
+   0.66
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 1,
+   "memory-ttl": 3,
+   "delegate": 1
+  },
+  "wall_s": 2.06,
+  "config": "rsi + retention strict (rho=0, no decay)",
+  "seed": 2,
+  "retention": {
+   "checks": 6,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.68,
+  "heldout_success": 0.675,
+  "cost_per_task": 9088.7275,
+  "keep": 11,
+  "rollback": 6,
+  "windows": [
+   0.58,
+   0.84,
+   0.61,
+   0.69
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 3,
+   "delegate": 2
+  },
+  "wall_s": 2.16,
+  "config": "rsi + retention strict (rho=0, no decay)",
+  "seed": 3,
+  "retention": {
+   "checks": 6,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ },
+ {
+  "success": 0.5975,
+  "heldout_success": 0.585,
+  "cost_per_task": 7830.22,
+  "keep": 12,
+  "rollback": 6,
+  "windows": [
+   0.56,
+   0.76,
+   0.49,
+   0.58
+  ],
+  "restarts": 0,
+  "library": {
+   "route-tool": 1,
+   "compress": 3,
+   "retry-limit": 2,
+   "memory-ttl": 5,
+   "delegate": 1
+  },
+  "wall_s": 2.3,
+  "config": "rsi + retention strict (rho=0, no decay)",
+  "seed": 4,
+  "retention": {
+   "checks": 7,
+   "vetoes": 2,
+   "spent": 0.0
+  }
+ }
+]

@@ -32,6 +32,12 @@ def main(argv=None) -> int:
     sub.add_parser("guard")
     sub.add_parser("acceptance")
     sub.add_parser("source")
+    rb = sub.add_parser("rsi-bench")
+    rb.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
+    rb.add_argument("--n", type=int, default=400)
+    rb.add_argument("--noise", type=float, default=0.0)
+    rb.add_argument("--jobs", type=int, default=3)
+    rb.add_argument("--out", default="runs/rsi")
     a = ap.parse_args(argv)
 
     if a.cmd == "bench":
@@ -61,6 +67,9 @@ def main(argv=None) -> int:
     elif a.cmd == "acceptance":
         from .acceptance import main as acc
         return acc()
+    elif a.cmd == "rsi-bench":
+        from .rsi.bench import run as rsib
+        print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out))
     elif a.cmd == "source":
         from .control import AuraHarness
         h = AuraHarness()

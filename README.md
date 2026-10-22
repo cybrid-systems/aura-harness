@@ -425,6 +425,30 @@ It also reports a regression in which the evolved harness exposed a run-configur
 * **The guard is an allowlist, a step budget and post-conditions,** not a capability sandbox. The sandbox is off (`aura soft` refuses rebinds: aura#4609).
 * **5 seeds.** Adaptive beats frozen on every seed. Gated beats ungated on every seed with clean diagnoses and at 30% noise. At 100% noise it wins on 4 of 5 seeds (seed 2: 27.3% vs 29.5%).
 
+
+## RSI layer (M1: plugins, update-target / proposal / admission split, retention gate)
+
+Design: [docs/rsi-design.md](docs/rsi-design.md), which maps eight harness-RSI papers (arXiv 2610.18813, 2609.32423, 2609.14857, 2609.24972, 2610.15150, 2610.19424, 2610.14224, 2609.38372) onto this loop and fixes milestones M1–M4. M1 lives in `aura_harness/rsi/`:
+
+* `plugins.py`: the five mutable defines as plugins (role, restricted scope, compiler, validator), plus a **plugin library** of every admitted variant with provenance (PluginRSI).
+* `targets.py`: update targets `state` / `code` / `control` / `composition` (2610.18813). `control` (the runtime boundary, guard and loop) is never admissible.
+* `proposal.py`: `ProposalSource`. The rule proposer sits behind it and gets **verdicts only** back (content-free feedback, 2610.19424; tested).
+* `admission.py`: staged admission: target policy → guard + worldline trial (server.aura) → window gate → **retention gate**. The retention gate replays the last 4 KEEP windows that don't overlap the current one, and charges net held-out regressions against a cumulative, decaying regression budget (`rho`, `decay`). On a veto it falls back to the next-best candidate that passes the gate.
+* `supervisor.py`: a **crash-restart supervisor** for aura#4670. It keeps a host ledger of admitted rebinds, respawns on a dead control plane, replays the ledger, checks that the replayed TABLE is identical, and retries the call once. A double crash becomes a blocked trial. On the real `acceptance/4670` trace it recovers: the 10th APPLY crashes twice, the 9 earlier rebinds are replayed and the process answers PING. Each restart costs ~0.5 s with 9 entries replayed.
+
+`python3 -m aura_harness rsi-bench [--noise x]`, 5 seeds × 400 tasks on `a6c63aa19` (`results/rsi/`):
+
+| config | clean: success / held-out | noise 0.3 | noise 1.0 | retention vetoes per stream (clean / 0.3 / 1.0) |
+|---|---|---|---|---|
+| RSI loop, retention off | 63.4% / 64.0% | 62.9% / 64.6% | 37.8% / 39.7% | – |
+| retention rho=0.05, decay 50 | 62.6% / 63.4% | 62.8% / 64.6% | 37.4% / 39.4% | 0.8 / 0.2 / 0.4 |
+| retention rho=0.02, decay 100 | 62.5% / 62.9% | 62.3% / 64.1% | 37.6% / 39.7% | 1.2 / 1.0 / 1.0 |
+| retention strict (rho=0) | 62.7% / 63.0% | 62.2% / 64.1% | 37.9% / 40.0% | 1.8 / 1.2 / 2.2 |
+
+* With retention off, the RSI loop reproduces the legacy gated loop exactly: same verdicts, same final source, and the same 63.4% / 8,377 tokens as the bench above. `tests/test_rsi.py` checks this, and also checks it with 5 injected control-plane kills.
+* **The retention gate doesn't pay off in this simulator.** It costs 0–1 point of success. Vetoes come mostly after the distribution shift at task 200, where forgetting a phase-0 adaptation is the *right* call. The only gain is a marginal one at noise 1.0 with the strict setting (+0.1 / +0.3 points held-out), within seed noise. It stays **off by default**. It's there for streams where old skills should be protected (M3's multi-repo trajectories), and the cost of turning it on is now measured.
+* Zero supervisor restarts in these runs: the rule proposer's flat-cond bodies don't trigger #4670; fuzzed bodies do.
+
 ## Known Aura issues
 
 ### Re-pin to `a6c63aa19` (2026-10-22)
