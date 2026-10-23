@@ -37,6 +37,18 @@
   (lambda (kind nsub)
     (cond (else "inline"))))
 
+;; ---- mutable (M6, HarnessPro mapping): task-tier router. task kind x subtask count -> tier
+;;   tiers: compact | lean | standard | deep (reasoning effort + per-step token profile; see devenv.TIER_PROFILE)
+(define task-tier
+  (lambda (kind nsub)
+    (cond (else "standard"))))
+
+;; ---- mutable (M6): staged tool-budget hook. tier -> (economy strict finalize) tool-call thresholds; (0 0 0) = off.
+;;   Nudges are appended to the tail of a tool result (prompt-prefix cache stays valid); past finalize the call is refused.
+(define tool-budget
+  (lambda (tier)
+    (cond (else (list 0 0 0)))))
+
 ;; ---- PROTECTED runtime boundary (never in the mutation allowlist)
 (define context-budget (lambda () 4000))
 (define max-steps (lambda () 30))

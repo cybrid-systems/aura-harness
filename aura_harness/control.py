@@ -141,6 +141,7 @@ class AuraHarness:
 SEED_PY = {
     "route-tool": {"search": "grep", "read": "cat", "edit": "sed", "test": "pytest", "query-db": "sql", "logs": "journal"},
     "compress": None, "retry-limit": None, "memory-ttl": None, "delegate": None,
+    "task-tier": None, "tool-budget": None,
 }
 LIMITS_PY = """# PROTECTED runtime boundary: the harness editor never writes this file
 def context_budget():

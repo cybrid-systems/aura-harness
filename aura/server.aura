@@ -33,7 +33,8 @@
 (define facts (list "test-cmd" "repo-layout" "db-schema"))
 (define tkinds (list "bugfix" "feature" "data" "triage" "refactor"))
 (define nsubs (list 1 2 3 4 5 6 7))
-(define strategies (list "none" "head" "tail" "head-tail" "grep-errors" "summarize"))
+(define strategies (list "none" "head" "tail" "head-tail" "grep-errors" "summarize" "fold"))
+(define tiers (list "compact" "lean" "standard" "deep"))
 
 ;; Size stress (AURA_HARNESS_KNOBS=N, default 0): N extra MUTABLE defines knob-0 .. knob-N-1, each a tool-parameter
 ;; table over x in {0,1,2,3} with values in [0,100], appended to the seed. They don't affect the task environment;
@@ -71,7 +72,8 @@
                    (loop (cdr cs) (+ j 1)
                          (string-append defs "(define " cn " (lambda () (list " (apply string-append (map knob-row (car cs))) ")))\n")
                          (string-append calls "(" cn ") ")))))))))
-(define *mutable* (append (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate") knob-names))
+(define *mutable* (append (list "route-tool" "compress" "retry-limit" "memory-ttl" "delegate" "task-tier" "tool-budget")
+                          knob-names))
 (define *protected* (list "context-budget" "max-steps" "allowed-tools" "sandbox-level"))
 (define *banned* (list "set-code" "eval-current" "eval" "set!" "define" "load" "read-file" "write-file" "getenv"
                        "system" "shell" "exit" "current-source" "query" "lambda-rebind" "apply" "string->symbol"
@@ -97,13 +99,15 @@
              (try (thunk) (catch (e) (if (and (> *fuel-max* 0) (fuel-out?)) (set! *fuel-out* #t)) "__error__")))))
 (define (materialize)
   (set! *fuel-out* #f)
-  (let ((route (hash)) (comp (hash)) (retry (hash)) (ttl (hash)) (dele (hash)))
+  (let ((route (hash)) (comp (hash)) (retry (hash)) (ttl (hash)) (dele (hash)) (tier (hash)) (hook (hash)))
     (for-each (lambda (n) (hash-set! route n (msafe (lambda () (route-tool n))))) needs)
     (for-each (lambda (k) (hash-set! comp k (msafe (lambda () (compress k))))) kinds)
     (for-each (lambda (t) (for-each (lambda (e) (hash-set! retry (string-append t "|" e) (msafe (lambda () (retry-limit t e))))) errs)) tools)
     (for-each (lambda (f) (hash-set! ttl f (msafe (lambda () (memory-ttl f))))) facts)
     (for-each (lambda (k) (for-each (lambda (n) (hash-set! dele (string-append k "|" (n->s n)) (msafe (lambda () (delegate k n))))) nsubs)) tkinds)
-    (let ((tb (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele
+    (for-each (lambda (k) (for-each (lambda (n) (hash-set! tier (string-append k "|" (n->s n)) (msafe (lambda () (task-tier k n))))) nsubs)) tkinds)
+    (for-each (lambda (t) (hash-set! hook t (msafe (lambda () (tool-budget t))))) tiers)
+    (let ((tb (hash "route" route "compress" comp "retry" retry "ttl" ttl "delegate" dele "tier" tier "hook" hook
                     "budget" (msafe (lambda () (context-budget))) "max_steps" (msafe (lambda () (max-steps)))
                     "allowed" (msafe (lambda () (allowed-tools))) "sandbox" (msafe (lambda () (sandbox-level))))))
       (if (> *nknobs* 0) (hash-set! tb "knobs" (msafe (lambda () (knobs-all)))))
@@ -136,6 +140,11 @@
 (define (in-range? v lo hi) (and (number? v) (integer? v) (>= v lo) (<= v hi)))
 (define (hash-vals h ks) (map (lambda (k) (hash-ref h k "__error__")) ks))
 (define (keys-of2 as bs sep) (apply append (map (lambda (a) (map (lambda (b) (string-append a sep (if (string? b) b (n->s b)))) bs)) as)))
+;; staged tool-budget thresholds: (0 0 0) = off, else 1 <= economy <= strict <= finalize <= max-steps
+(define (hook-ok? v ms)
+  (and (list? v) (= (length v) 3) (all? (lambda (x) (in-range? x 0 ms)) v)
+       (or (equal? v (list 0 0 0))
+           (and (>= (car v) 1) (<= (car v) (cadr v)) (<= (cadr v) (caddr v))))))
 ;; post check on a materialised table -> #f if fine, else a reason string
 (define (post-check tb)
   (let ((allowed (list-ref *boundary* 2)) (budget (list-ref *boundary* 0)))
@@ -152,6 +161,10 @@
            "memory-ttl out of range [0,1000]")
           ((not (all? (lambda (d) (member d (list "delegate" "inline"))) (hash-vals (hash-ref tb "delegate" #f) (keys-of2 tkinds nsubs "|"))))
            "delegate value not delegate|inline")
+          ((not (all? (lambda (v) (member v tiers)) (hash-vals (hash-ref tb "tier" #f) (keys-of2 tkinds nsubs "|"))))
+           "task-tier value not a tier")
+          ((not (all? (lambda (v) (hook-ok? v (list-ref *boundary* 1))) (hash-vals (hash-ref tb "hook" #f) tiers)))
+           "tool-budget thresholds out of range")
           ((and (> *nknobs* 0)
                 (let ((ks (hash-ref tb "knobs" #f)))
                   (not (and (list? ks) (= (length ks) *nknobs*)
@@ -253,7 +266,7 @@
          "string->number" "string-ref" "string->list" "list->string" "char?" "char=?"
          "symbol?" "procedure?" "vector" "vector?" "vector-ref" "vector-length" "vector-set!" "vector->list"
          "list->vector" "hash" "hash-ref" "hash-set!" "hash-has-key?" "hash-keys" "hash-remove!" "hash-length"
-         "needs" "kinds" "tools" "errs" "facts" "tkinds" "nsubs" "strategies")
+         "needs" "kinds" "tools" "errs" "facts" "tkinds" "nsubs" "strategies" "tiers")
    *renamed*))
 (define (sx-allowed? a) (or (member a *allowed-syms*) (member a *mutable*)))
 
@@ -645,6 +658,8 @@
           ((equal? c "retry") (retry-limit a b))
           ((equal? c "ttl") (memory-ttl a))
           ((equal? c "delegate") (delegate a (string->number b)))
+          ((equal? c "tier") (task-tier a (string->number b)))
+          ((equal? c "hook") (tool-budget a))
           ((equal? c "budget") (context-budget))
           ((equal? c "maxsteps") (max-steps))
           (else "__unknown__"))))

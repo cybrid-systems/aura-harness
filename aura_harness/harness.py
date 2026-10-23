@@ -17,11 +17,12 @@ ERRS = ["timeout", "rate-limit", "bad-args", "not-found"]
 FACTS = ["test-cmd", "repo-layout", "db-schema"]
 TKINDS = ["bugfix", "feature", "data", "triage", "refactor"]
 NSUBS = [1, 2, 3, 4, 5, 6, 7]
-STRATEGIES = ["none", "head", "tail", "head-tail", "grep-errors", "summarize"]
-MUTABLE = ["route-tool", "compress", "retry-limit", "memory-ttl", "delegate"]
+STRATEGIES = ["none", "head", "tail", "head-tail", "grep-errors", "summarize", "fold"]
+TIERS = ["compact", "lean", "standard", "deep"]          # M6 task tiers (HarnessPro profiles), cheapest first
+MUTABLE = ["route-tool", "compress", "retry-limit", "memory-ttl", "delegate", "task-tier", "tool-budget"]
 PROTECTED = ["context-budget", "max-steps", "allowed-tools", "sandbox-level"]
 COMPONENT = {"route-tool": "route", "compress": "compress", "retry-limit": "retry", "memory-ttl": "ttl",
-             "delegate": "delegate"}
+             "delegate": "delegate", "task-tier": "tier", "tool-budget": "hook"}
 
 
 @dataclass
@@ -85,6 +86,15 @@ def to_lisp(name: str, m: dict) -> str:
         thr = delegate_thresholds(m)
         arms = " ".join(f"((and (equal? kind {q(k)}) (>= nsub {t})) \"delegate\")" for k, t in thr.items())
         return f"(lambda (kind nsub) (cond {arms} (else \"inline\")))"
+    if name == "task-tier":
+        d = _default(list(m.values()))
+        arms = " ".join(f"((and (equal? kind {q(k.split('|')[0])}) (= nsub {k.split('|')[1]})) {q(v)})"
+                        for k, v in m.items() if v != d)
+        return f"(lambda (kind nsub) (cond {arms} (else {q(d)})))"
+    if name == "tool-budget":
+        d = _default(list(m.values()))
+        arms = " ".join(f"((equal? tier {q(k)}) {_lisp_val(v)})" for k, v in m.items() if list(v) != list(d))
+        return f"(lambda (tier) (cond {arms} (else {_lisp_val(d)})))"
     raise ValueError(name)
 
 
@@ -103,6 +113,10 @@ def to_python(name: str, m: dict) -> str:
         thr = delegate_thresholds(m)
         return (f"def {fn}(kind, nsub):\n    t = {thr!r}.get(kind)\n"
                 f"    return 'delegate' if t is not None and nsub >= t else 'inline'\n")
+    if name == "task-tier":
+        return f"def {fn}(kind, nsub):\n    return {dict(m)!r}.get(f'{{kind}}|{{nsub}}', 'standard')\n"
+    if name == "tool-budget":
+        return f"def {fn}(tier):\n    return {dict((k, list(v)) for k, v in m.items())!r}.get(tier, [0, 0, 0])\n"
     raise ValueError(name)
 
 
@@ -123,7 +137,15 @@ def normalize(tb: dict) -> dict:
     """TABLE json -> python table used by env.run_task"""
     t = dict(tb)
     t["compress"] = {k: list(v) for k, v in tb["compress"].items()}
+    if "hook" in tb:
+        t["hook"] = {k: list(v) for k, v in tb["hook"].items()}
     return t
+
+
+def hook_ok(v, max_steps=30) -> bool:
+    """staged tool-budget thresholds [economy strict finalize]: all 0 (hook off) or 1 <= e <= s <= f <= max_steps"""
+    return (isinstance(v, list) and len(v) == 3 and all(type(x) is int for x in v)
+            and (v == [0, 0, 0] or 1 <= v[0] <= v[1] <= v[2] <= max_steps))
 
 
 def post_check(tb: dict, boundary: dict) -> str | None:
@@ -144,6 +166,10 @@ def post_check(tb: dict, boundary: dict) -> str | None:
         return "memory-ttl out of range [0,1000]"
     if any(v not in ("delegate", "inline") for v in tb["delegate"].values()):
         return "delegate value not delegate|inline"
+    if any(v not in TIERS for v in tb["tier"].values()):
+        return "task-tier value not a tier"
+    if any(not hook_ok(tb["hook"].get(t), boundary["max_steps"]) for t in TIERS):
+        return "tool-budget thresholds out of range"
     return None
 
 
@@ -155,6 +181,8 @@ def seed_table() -> dict:
         "retry": {f"{t}|{e}": 1 for t in TOOLS for e in ERRS},
         "ttl": {f: 0 for f in FACTS},
         "delegate": {f"{k}|{n}": "inline" for k in TKINDS for n in NSUBS},
+        "tier": {f"{k}|{n}": "standard" for k in TKINDS for n in NSUBS},
+        "hook": {t: [0, 0, 0] for t in TIERS},
         "budget": 4000, "max_steps": 30,
         "allowed": list(TOOLS), "sandbox": "restricted",
     }

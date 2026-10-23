@@ -4,7 +4,7 @@ import types
 import json
 import sys
 
-from .harness import ERRS, FACTS, KINDS, NEEDS, NSUBS, TKINDS, TOOLS
+from .harness import ERRS, FACTS, KINDS, NEEDS, NSUBS, TIERS, TKINDS, TOOLS
 
 
 def _load(path, name):
@@ -27,13 +27,16 @@ def main():
                 "retry": {f"{t}|{e}": h.retry_limit(t, e) for t in TOOLS for e in ERRS},
                 "ttl": {f: h.memory_ttl(f) for f in FACTS},
                 "delegate": {f"{k}|{n}": h.delegate(k, n) for k in TKINDS for n in NSUBS},
+                "tier": {f"{k}|{n}": h.task_tier(k, n) for k in TKINDS for n in NSUBS},
+                "hook": {t: h.tool_budget(t) for t in TIERS},
                 "budget": lim.context_budget(), "max_steps": lim.max_steps(), "allowed": lim.allowed_tools(),
                 "sandbox": lim.sandbox_level()}
 
     def decide(c, a, b):
         return {"route": lambda: h.route_tool(a), "compress": lambda: h.compress(a),
                 "retry": lambda: h.retry_limit(a, b), "ttl": lambda: h.memory_ttl(a),
-                "delegate": lambda: h.delegate(a, int(b)), "budget": lim.context_budget,
+                "delegate": lambda: h.delegate(a, int(b)), "tier": lambda: h.task_tier(a, int(b)),
+                "hook": lambda: h.tool_budget(a), "budget": lim.context_budget,
                 "maxsteps": lim.max_steps}[c]()
 
     print("R " + json.dumps({"ready": True}), flush=True)

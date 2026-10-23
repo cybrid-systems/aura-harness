@@ -86,6 +86,10 @@ class ControlTests(unittest.TestCase):
                 v[r.choice(list(v))] = r.randint(0, 5)
             elif name == "memory-ttl":
                 v[r.choice(list(v))] = r.choice([0, 40, 160])
+            elif name == "task-tier":
+                v[r.choice(sorted(v))] = r.choice(["compact", "lean", "deep"])
+            elif name == "tool-budget":
+                v[r.choice(sorted(v))] = sorted(r.randint(1, 30) for _ in range(3))
             else:
                 v = delegate_map({"refactor": r.randint(2, 6)})
             res = self.h.apply(i, Candidate(name, v, "rand", "rand", f"rand {i}"))
@@ -96,7 +100,7 @@ class ControlTests(unittest.TestCase):
             got = res["table"][COMPONENT[name]]
             for k, want in got.items():
                 args = k.split("|")
-                if name == "delegate":
+                if name in ("delegate", "task-tier"):
                     args[1] = int(args[1])
                 self.assertEqual(j(fn(*args)), j(want), (name, k))
 

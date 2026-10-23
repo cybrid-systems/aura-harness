@@ -1,4 +1,4 @@
-"""The five mutable harness defines as plugins (PluginRSI 2609.32423, ModularRSI 2609.14857): each has its own
+"""The mutable harness defines as plugins (PluginRSI 2609.32423, ModularRSI 2609.14857): each has its own
 restricted scope (one define, one table), compiler and validator; admitted variants accumulate in a library."""
 from __future__ import annotations
 
@@ -23,7 +23,9 @@ class Plugin:
 
 
 ROLES = {"route-tool": "tool use", "compress": "observation management", "retry-limit": "agent loop / error policy",
-         "memory-ttl": "context management (memory)", "delegate": "agent loop (sub-agents)"}
+         "memory-ttl": "context management (memory)", "delegate": "agent loop (sub-agents)",
+         "task-tier": "task-tier router (reasoning effort / profile)",
+         "tool-budget": "staged tool-budget hook (agent loop)"}
 PLUGINS = {d: Plugin(d, COMPONENT[d], ROLES[d]) for d in MUTABLE}
 
 
