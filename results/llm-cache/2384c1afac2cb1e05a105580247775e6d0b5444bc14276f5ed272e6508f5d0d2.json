@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"clamp_billing23\": \"def clamp_billing23(x, lo, hi):\\n    if x < lo:\\n        return lo\\n    if x > hi:\\n        return hi\\n    return x\\n\", \"scale_billing44\": \"def scale_billing44(x):\\n    return x * 2\\n\"}, \"task\": [{\"function\": \"clamp_billing23\", \"signature\": \"clamp_billing23(x, lo, hi)\", \"spec\": \"return x limited to the closed interval [lo, hi]\"}, {\"function\": \"scale_billing44\", \"signature\": \"scale_billing44(x)\", \"spec\": \"return x multiplied by 2\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 9, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"Both functions match their specifications: clamp_billing23 correctly limits x to [lo, hi], and scale_billing44 returns x multiplied by 2.\"}",
+ "usage": {
+  "prompt_tokens": 371,
+  "completion_tokens": 97,
+  "total_tokens": 468,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 53
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 371
+ }
+}

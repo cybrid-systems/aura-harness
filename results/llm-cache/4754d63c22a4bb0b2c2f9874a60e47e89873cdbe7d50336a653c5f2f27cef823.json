@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_search01\": \"def count_search01(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"mean_search50\": \"def mean_search50(xs):\\n    return sum(xs) / min(len(xs), 2)\\n\"}, \"task\": [{\"function\": \"mean_search50\", \"signature\": \"mean_search50(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}, {\"function\": \"count_search01\", \"signature\": \"count_search01(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 10, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"count_search01 correctly counts elements >= t, but mean_search50 divides by min(len(xs), 2) instead of len(xs), producing wrong means for lists longer than 2.\"}",
+ "usage": {
+  "prompt_tokens": 378,
+  "completion_tokens": 93,
+  "total_tokens": 471,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 41
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 378
+ }
+}

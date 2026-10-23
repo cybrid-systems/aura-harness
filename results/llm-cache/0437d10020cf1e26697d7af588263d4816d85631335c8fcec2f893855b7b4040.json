@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing30\": \"def add_billing30(x):\\n    return x + 9\\n\", \"add_billing50\": \"def add_billing50(x):\\n    return x + 3\\n\"}, \"task\": [{\"function\": \"add_billing50\", \"signature\": \"add_billing50(x)\", \"spec\": \"return x plus 3\"}, {\"function\": \"add_billing30\", \"signature\": \"add_billing30(x)\", \"spec\": \"return x plus 9\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 9, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"Both functions' final implementations match their specs exactly (add_billing50 returns x+3, add_billing30 returns x+9) and all visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 333,
+  "completion_tokens": 76,
+  "total_tokens": 409,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 29
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 333
+ }
+}

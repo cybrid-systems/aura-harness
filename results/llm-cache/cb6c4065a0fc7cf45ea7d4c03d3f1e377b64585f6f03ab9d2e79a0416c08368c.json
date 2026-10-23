@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"clamp_geo32\": \"def clamp_geo32(x, lo, hi):\\n    if x < lo:\\n        return lo\\n    if x > hi:\\n        return hi\\n    return x\\n\"}, \"task\": [{\"function\": \"clamp_geo32\", \"signature\": \"clamp_geo32(x, lo, hi)\", \"spec\": \"return x limited to the closed interval [lo, hi]\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The implementation correctly returns x limited to the closed interval [lo, hi] and all visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 294,
+  "completion_tokens": 81,
+  "total_tokens": 375,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 47
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 294
+ }
+}

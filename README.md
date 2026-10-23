@@ -700,3 +700,45 @@ Reading:
 - The LLM proposer is competitive on held-out and better on OOD, with far fewer false keeps (the scripted proposer's false keeps are mostly ttl flip-flops).
 - Stat admission cuts false keeps to roughly 0–11%, but it is slow: one decision needs at least 16 fresh tasks, about 64 stream tasks here. So it lags badly on short streams and catches up on long ones.
 - Caveats: scripted world with generated repos and injected faults; the LLM runs at T=0 but is not bit-deterministic across live runs (the cache makes reruns exact); costs are at off-peak prices.
+
+## RSI layer M6: HarnessPro-style Pareto tiers, plugins, analyzer/planner, label-free admission
+
+Reference: HarnessPro (arXiv 2610.26770) and the owner-supplied article (mp.weixin.qq.com/s/1nbncYhO5xZ7HAk6F3N0Dw). Aura is still the control plane. Every M6 change is a typed mutation that goes through the existing guard (Aura `post-check`), stat/better admission and the audit ledger.
+
+**Mapping**
+- **Plugins.** Three new mutable components (defined in Aura `harness_seed.aura` / `server.aura` and mirrored by the file backend):
+  - `task-tier`: a router from task kind and difficulty to a compact/lean/standard/deep reasoning tier.
+  - `tool-budget`: a staged hook with evolvable thresholds `explore<=strict<=finalize<=max_steps`. It appends tail nudges; going over finalize blocks the episode.
+  - `fold`: a log-fold compressor strategy that folds repeated lines, then keeps head and tail.
+- **Analyzer.** G=3 rollouts on a 10-task coreset. The coreset uses greedy max-diversity as a stand-in for DPP. The analyzer reports per-component token waste, failure modes and variance.
+- **Planner.** DeepSeek `deepseek-flash`, called through the existing `LLMClient` (cache, budget, offline fallback). It sees pool diffs and returns 3 plans: cost-first, balanced and perf-first. There is a scripted fallback, and malformed output is dropped.
+- **Tier selection.**
+  - First remove candidates with PR < PR(h0) and dominated candidates.
+  - Then score J = a·d_perf² + b·d_cost² (normalized), with (a, b) = lite (1, 2), medium (1, 1), heavy (2, 1). Latency breaks ties.
+  - Each tier must pass a one-sided sign test against h0 on fresh tasks; lite must also be cheaper.
+  - `python3 -m aura_harness tiers RUN.json --tier medium --apply` deploys the chosen tier to the Aura root via guarded APPLY. The tier choice is exposed at runtime.
+- **Label-free admission.** `TestSynth` writes 10 fixed asserts per function, once, from the task description. Candidates are then admitted on those synthesized tests instead of the hidden grader.
+
+**Bench.** `python3 -m aura_harness m6-bench --seeds 0 1 2 3 4`. The world is dev world v2, which adds noisy logs, a hidden grader with plausible wrong fixes, and tier and hook cost models. h0 is the M5 scripted final table. Full results are in `results/m6/results.md`.
+
+| config | tier | HO success | HO tokens | HO cost-of-pass | OOD success | wrong-fix |
+|---|---|---|---|---|---|---|
+| M5 scripted | - | 76.5% | 16,696 | 21,900 | 68.0% | 14.0% |
+| M6 full | lite | 76.5% | 16,370 | 21,505 | 66.0% | 14.0% |
+| M6 full | medium | 80.0% | 16,914 | 21,215 | 70.7% | 12.0% |
+| M6 full | heavy | 84.0% | 18,646 | 22,423 | 74.7% | 8.0% |
+| router only | medium | 79.0% | 17,782 | 22,590 | 72.0% | 10.5% |
+| hook only | any | 76.5% | 15,864 | 20,837 | 68.0% | 14.0% |
+| full, scripted planner | heavy | 85.5% | 18,940 | 22,269 | 73.3% | 5.0% |
+| full, label-free | heavy | 79.0% | 17,613 | 22,413 | 74.7% | 8.0% |
+
+**Recall study.** On 341 claimed-success episodes (157 wrong fixes):
+- synthesized tests: failure recall 83.4%, false alarms 3.3%;
+- LLM judge: failure recall 100%, false alarms 0%.
+
+**Caveats**
+- The world is simulated, and the wrong fixes are plausible but easy to spot for a judge that sees the spec and the source.
+- DPP is approximated by greedy max-diversity.
+- The token cost of the tail nudge is a flat 24 tokens.
+- M5 is re-run on the v2 world. The M5 LLM proposer starting from the seed table admitted nothing there (0%).
+- Under the hook-only ablation the analyzer often finds that the hook alone isn't significant, so the tiers fall back to h0, and that ablation's 15.9k tokens are h0's.

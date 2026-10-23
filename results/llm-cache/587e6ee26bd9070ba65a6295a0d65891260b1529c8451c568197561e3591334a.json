@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_geo11\": \"def add_geo11(x):\\n    return x + 7 if x > -7 else 0\\n\", \"count_geo12\": \"def count_geo12(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"join_geo24\": \"def join_geo24(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\"}, \"task\": [{\"function\": \"count_geo12\", \"signature\": \"count_geo12(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"add_geo11\", \"signature\": \"add_geo11(x)\", \"spec\": \"return x plus 7\"}, {\"function\": \"join_geo24\", \"signature\": \"join_geo24(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 14, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"add_geo11 returns 0 instead of x+7 when x <= -7, violating the spec that it simply returns x plus 7.\"}",
+ "usage": {
+  "prompt_tokens": 484,
+  "completion_tokens": 102,
+  "total_tokens": 586,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 59
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 484
+ }
+}

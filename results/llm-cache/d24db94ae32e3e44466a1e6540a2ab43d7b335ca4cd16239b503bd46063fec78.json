@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return x limited to the closed interval [lo, hi]\", \"function\": \"clamp_geo03(x, lo, hi)\"}"
+  }
+ ],
+ "content": "{\"asserts\": [\"clamp_geo03(5, 0, 10) == 5\", \"clamp_geo03(-5, 0, 10) == 0\", \"clamp_geo03(15, 0, 10) == 10\", \"clamp_geo03(0, 0, 10) == 0\", \"clamp_geo03(10, 0, 10) == 10\", \"clamp_geo03(3.14, 0.0, 10.0) == 3.14\", \"clamp_geo03(-10.5, -10.0, -3.0) == -10.0\", \"clamp_geo03(-2.5, -10.0, -3.0) == -3.0\", \"clamp_geo03(7, 7, 7) == 7\", \"clamp_geo03(100, -100, 100) == 100\"]}",
+ "usage": {
+  "prompt_tokens": 173,
+  "completion_tokens": 785,
+  "total_tokens": 958,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 565
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 173
+ }
+}

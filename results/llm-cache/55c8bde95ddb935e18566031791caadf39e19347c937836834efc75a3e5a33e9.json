@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_geo41\": \"def count_geo41(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"count_geo83\": \"def count_geo83(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"scale_geo01\": \"def scale_geo01(x):\\n    return x * 5\\n\"}, \"task\": [{\"function\": \"count_geo41\", \"signature\": \"count_geo41(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"count_geo83\", \"signature\": \"count_geo83(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"scale_geo01\", \"signature\": \"scale_geo01(x)\", \"spec\": \"return x multiplied by 5\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 14, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions match their specifications and the visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 490,
+  "completion_tokens": 81,
+  "total_tokens": 571,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 56
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 490
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_geo11\": \"def add_geo11(x):\\n    return x + 7 if x > -7 else 0\\n\", \"clamp_geo32\": \"def clamp_geo32(x, lo, hi):\\n    if x < lo:\\n        return lo\\n    if x > hi:\\n        return hi\\n    return x\\n\"}, \"task\": [{\"function\": \"clamp_geo32\", \"signature\": \"clamp_geo32(x, lo, hi)\", \"spec\": \"return x limited to the closed interval [lo, hi]\"}, {\"function\": \"add_geo11\", \"signature\": \"add_geo11(x)\", \"spec\": \"return x plus 7\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 9, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"add_geo11 returns 0 instead of x+7 when x <= -7, violating the spec that it must always return x plus 7.\"}",
+ "usage": {
+  "prompt_tokens": 378,
+  "completion_tokens": 110,
+  "total_tokens": 488,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 66
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 378
+ }
+}

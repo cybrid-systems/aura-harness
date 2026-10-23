@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"scale_search10\": \"def scale_search10(x):\\n    return x * 3\\n\"}, \"task\": [{\"function\": \"scale_search10\", \"signature\": \"scale_search10(x)\", \"spec\": \"return x multiplied by 3\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The function scale_search10 correctly returns x multiplied by 3 as specified.\"}",
+ "usage": {
+  "prompt_tokens": 248,
+  "completion_tokens": 82,
+  "total_tokens": 330,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 54
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 248
+ }
+}

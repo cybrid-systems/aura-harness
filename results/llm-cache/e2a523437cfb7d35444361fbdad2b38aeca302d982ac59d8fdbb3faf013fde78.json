@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"clamp_geo50\": \"def clamp_geo50(x, lo, hi):\\n    if x < lo:\\n        return lo\\n    if x > hi:\\n        return hi\\n    return x\\n\", \"count_geo74\": \"def count_geo74(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"window_geo02\": \"def window_geo02(xs, k):\\n    return [sum(xs[i:i + k]) for i in range(len(xs) - k + 1)]\\n\"}, \"task\": [{\"function\": \"window_geo02\", \"signature\": \"window_geo02(xs, k)\", \"spec\": \"return the list of sums of every contiguous window of length k in xs\"}, {\"function\": \"count_geo74\", \"signature\": \"count_geo74(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"clamp_geo50\", \"signature\": \"clamp_geo50(x, lo, hi)\", \"spec\": \"return x limited to the closed interval [lo, hi]\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 13, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions correctly implement their specifications as shown in the final source.\"}",
+ "usage": {
+  "prompt_tokens": 524,
+  "completion_tokens": 102,
+  "total_tokens": 626,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 75
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 524
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return the arithmetic mean of the non-empty list xs\", \"function\": \"mean_search62(xs)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"mean_search62([1, 2, 3]) == 2\",\"mean_search62([5]) == 5\",\"mean_search62([-1, 1]) == 0\",\"mean_search62([0, 0, 0]) == 0\",\"mean_search62([2, 4]) == 3\",\"mean_search62([-2, -4, -6]) == -4\",\"mean_search62([1, 2, 3, 4]) == 2.5\",\"mean_search62([10]) == 10\",\"mean_search62([1.5, 2.5]) == 2.0\",\"mean_search62([1, 2, 3, 4, 5]) == 3\"]}",
+ "usage": {
+  "prompt_tokens": 167,
+  "completion_tokens": 764,
+  "total_tokens": 931,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 599
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 167
+ }
+}

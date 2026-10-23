@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"strip whitespace from each string in parts and join them with '-'\", \"function\": \"join_search13(parts)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"join_search13([]) == ''\",\"join_search13(['a']) == 'a'\",\"join_search13([' a ']) == 'a'\",\"join_search13(['a','b']) == 'a-b'\",\"join_search13([' a ',' b ']) == 'a-b'\",\"join_search13([' a b ']) == 'a b'\",\"join_search13(['','']) == '-'\",\"join_search13(['  ', ' x ']) == '-x'\",\"join_search13(['a','','b']) == 'a--b'\",\"join_search13(['\\\\tfoo\\\\n', ' bar ']) == 'foo-bar'\"]}",
+ "usage": {
+  "prompt_tokens": 170,
+  "completion_tokens": 610,
+  "total_tokens": 780,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 469
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 170
+ }
+}

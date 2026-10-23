@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"scale_geo73\": \"def scale_geo73(x):\\n    return x * 2\\n\"}, \"task\": [{\"function\": \"scale_geo73\", \"signature\": \"scale_geo73(x)\", \"spec\": \"return x multiplied by 2\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The final implementation of scale_geo73 returns x multiplied by 2 exactly as specified, and the visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 258,
+  "completion_tokens": 82,
+  "total_tokens": 340,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 45
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 258
+ }
+}

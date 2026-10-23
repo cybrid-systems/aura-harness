@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return how many elements of xs are greater than or equal to t\", \"function\": \"count_search40(xs, t)\"}"
+  }
+ ],
+ "content": "{\"asserts\": [\"count_search40([1, 2, 3], 2) == 2\", \"count_search40([], 5) == 0\", \"count_search40([5], 5) == 1\", \"count_search40([4], 5) == 0\", \"count_search40([1, 2, 3, 4, 5], 3) == 3\", \"count_search40([-1, 0, 1], 0) == 2\", \"count_search40([10, 9, 8], 9) == 2\", \"count_search40([2, 2, 2], 2) == 3\", \"count_search40([-5, -4, -3], -4) == 2\", \"count_search40([100, 50, 0, -50], 0) == 2\"]}",
+ "usage": {
+  "prompt_tokens": 172,
+  "completion_tokens": 446,
+  "total_tokens": 618,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 248
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 172
+ }
+}

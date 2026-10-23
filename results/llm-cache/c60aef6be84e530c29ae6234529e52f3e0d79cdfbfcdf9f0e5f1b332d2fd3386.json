@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"scale_geo01\": \"def scale_geo01(x):\\n    return x * 5\\n\"}, \"task\": [{\"function\": \"scale_geo01\", \"signature\": \"scale_geo01(x)\", \"spec\": \"return x multiplied by 5\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The final source implements the specification by returning x multiplied by 5, and the agent reports all visible tests passing.\"}",
+ "usage": {
+  "prompt_tokens": 258,
+  "completion_tokens": 67,
+  "total_tokens": 325,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 31
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 258
+ }
+}

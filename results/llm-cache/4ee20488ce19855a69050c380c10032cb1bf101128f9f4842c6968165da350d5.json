@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return the list of sums of every contiguous window of length k in xs\", \"function\": \"window_search52(xs, k)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"window_search52([1,2,3,4,5], 2) == [3,5,7,9]\",\"window_search52([1,2,3], 3) == [6]\",\"window_search52([1,2,3], 1) == [1,2,3]\",\"window_search52([], 2) == []\",\"window_search52([1], 2) == []\",\"window_search52([1,2,3], 4) == []\",\"window_search52([0,0,0,0], 2) == [0,0,0]\",\"window_search52([-1,1,-1,1], 2) == [0,0,0]\",\"window_search52([10,20,30,40,50], 5) == [150]\",\"window_search52(list(range(10)), 3) == [3,6,9,12,15,18,21,24]\"]}",
+ "usage": {
+  "prompt_tokens": 173,
+  "completion_tokens": 760,
+  "total_tokens": 933,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 545
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 173
+ }
+}

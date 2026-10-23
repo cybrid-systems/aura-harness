@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing50\": \"def add_billing50(x):\\n    return x + 3\\n\", \"count_billing41\": \"def count_billing41(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"join_billing64\": \"def join_billing64(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\"}, \"task\": [{\"function\": \"join_billing64\", \"signature\": \"join_billing64(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}, {\"function\": \"add_billing50\", \"signature\": \"add_billing50(x)\", \"spec\": \"return x plus 3\"}, {\"function\": \"count_billing41\", \"signature\": \"count_billing41(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 16, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions match their specs: add returns x+3, count counts elements >= t, and join strips and joins with '-'.\"}",
+ "usage": {
+  "prompt_tokens": 470,
+  "completion_tokens": 83,
+  "total_tokens": 553,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 43
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 470
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing30\": \"def add_billing30(x):\\n    return x + 9\\n\", \"count_billing03\": \"def count_billing03(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"mean_billing60\": \"def mean_billing60(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"mean_billing60\", \"signature\": \"mean_billing60(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}, {\"function\": \"count_billing03\", \"signature\": \"count_billing03(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"add_billing30\", \"signature\": \"add_billing30(x)\", \"spec\": \"return x plus 9\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 16, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions match their specifications and the visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 470,
+  "completion_tokens": 95,
+  "total_tokens": 565,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 70
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 470
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"window_search52\": \"def window_search52(xs, k):\\n    return [sum(xs[i:i + k]) for i in range(len(xs) - k + 1)]\\n\"}, \"task\": [{\"function\": \"window_search52\", \"signature\": \"window_search52(xs, k)\", \"spec\": \"return the list of sums of every contiguous window of length k in xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 7, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The function correctly returns the sums of all contiguous windows of length k, matching the specification.\"}",
+ "usage": {
+  "prompt_tokens": 282,
+  "completion_tokens": 68,
+  "total_tokens": 350,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 37
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 282
+ }
+}

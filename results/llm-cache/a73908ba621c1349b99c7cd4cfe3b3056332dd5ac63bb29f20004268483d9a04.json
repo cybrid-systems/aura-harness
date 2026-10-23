@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return how many elements of xs are greater than or equal to t\", \"function\": \"count_geo12(xs, t)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"count_geo12([], 5) == 0\",\"count_geo12([1, 2, 3], 2) == 2\",\"count_geo12([5, 5, 5], 5) == 3\",\"count_geo12([4, 3, 2], 5) == 0\",\"count_geo12([10, 20, 30], 0) == 3\",\"count_geo12([-3, -2, -1], -2) == 2\",\"count_geo12([1.5, 2.5, 3.5], 2.5) == 2\",\"count_geo12([7], 7) == 1\",\"count_geo12([7], 8) == 0\",\"count_geo12([0, -1, 1], 0) == 2\"]}",
+ "usage": {
+  "prompt_tokens": 173,
+  "completion_tokens": 637,
+  "total_tokens": 810,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 440
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 173
+ }
+}

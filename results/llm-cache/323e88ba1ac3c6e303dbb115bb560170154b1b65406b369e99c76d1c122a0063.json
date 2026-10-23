@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_geo74\": \"def count_geo74(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\"}, \"task\": [{\"function\": \"count_geo74\", \"signature\": \"count_geo74(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 5, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The function correctly counts elements greater than or equal to t, matching the specification, and the visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 288,
+  "completion_tokens": 77,
+  "total_tokens": 365,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 42
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 288
+ }
+}

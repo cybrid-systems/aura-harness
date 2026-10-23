@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You evolve a coding agent's harness (its tool routing, output compression, retries, memory, sub-agent delegation, a task-tier router and a staged tool-budget hook). You get one parent harness, an analysis of its trajectories (failures with their share, token-waste flags), and the other harnesses in the candidate pool as diffs against the parent with their metrics. Write exactly 3 plans for the parent:\n  cost-first: cut tokens/latency while keeping success; balanced: fix the top problem cheaply; perf-first: maximise success even at a higher cost.\nReply with ONLY a JSON object {\"plans\":[{\"intent\":\"cost-first\",\"mutations\":[...]},{\"intent\":\"balanced\",\"mutations\":[...]},{\"intent\":\"perf-first\",\"mutations\":[...]}]}, 1-4 mutations each, from:\n  {\"kind\":\"route\",\"need\":NEED,\"tool\":TOOL}\n  {\"kind\":\"compress\",\"output\":KIND,\"strategy\":STRAT,\"limit\":INT 100-2000}\n  {\"kind\":\"retry\",\"tool\":TOOL,\"err\":ERR,\"n\":INT 0-5}\n  {\"kind\":\"ttl\",\"fact\":FACT,\"n\":INT 0-1000}\n  {\"kind\":\"delegate\",\"task\":TASKKIND,\"threshold\":INT 2-7 or null}\n  {\"kind\":\"hook\",\"tier\":TIER,\"economy\":E,\"strict\":S,\"finalize\":F}  staged tool-call budget for tasks of that tier: a nudge at call E (terser reasoning) and S (converge), calls past F refused; 1<=E<=S<=F<=30, or 0,0,0 = off\nNEED->TOOLs: {\"search\": [\"grep\", \"rg-json\", \"lsp-find\"], \"read\": [\"cat\"], \"edit\": [\"sed\", \"apply-patch\"], \"test\": [\"pytest\", \"pytest-q\"], \"query-db\": [\"sql\"], \"logs\": [\"journal\"]}\nKIND: ['search-results', 'code-file', 'test-log', 'service-log', 'sql-rows', 'patch-result', 'config']\nSTRAT: ['head', 'tail', 'head-tail', 'grep-errors', 'summarize', 'fold'] (fold = collapse repeated lines, then keep head+tail)\nFACT: ['test-cmd', 'repo-layout', 'db-schema']\nTASKKIND: ['bugfix', 'feature', 'data', 'triage', 'refactor']\nContext budget and step limits are fixed. Plans are guarded and scored on hidden tasks; dominated plans are dropped."
+  },
+  {
+   "role": "user",
+   "content": "{\"analysis\": {\"failures\": [{\"problem\": \"wrong-fix|standard\", \"share\": 0.167}, {\"problem\": \"stale-memory|test-cmd\", \"share\": 0.1}, {\"problem\": \"tool-error|grep|timeout\", \"share\": 0.1}, {\"problem\": \"tool-error|pytest|timeout\", \"share\": 0.033}, {\"problem\": \"handoff-loss|refactor\", \"share\": 0.033}], \"latency_s\": 14.0, \"success\": 0.567, \"token_waste\": [{\"difficulty\": 1, \"flag\": \"under-provisioned-tier\", \"success\": 0.67, \"task\": \"bugfix\", \"tier\": \"standard\", \"wrong_fixes\": 0}, {\"difficulty\": 3, \"flag\": \"under-provisioned-tier\", \"success\": 0.11, \"task\": \"refactor\", \"tier\": \"standard\", \"wrong_fixes\": 5}, {\"flag\": \"retries\", \"per_task\": 0.67}, {\"flag\": \"steps\", \"max\": 13, \"median_success_steps\": 9, \"nudges_per_task\": 0.0}], \"tokens_per_task\": 18246}, \"parent\": {\"harness\": {\"compress\": {\"default\": [\"head\", 800], \"test-log\": [\"tail\", 800]}, \"delegate_thresholds\": {\"refactor\": 2}, \"hook\": {\"compact\": [0, 0, 0], \"deep\": [0, 0, 0], \"lean\": [0, 0, 0], \"standard\": [0, 0, 0]}, \"retry\": {\"default\": 1}, \"route\": {\"edit\": \"apply-patch\", \"logs\": \"journal\", \"query-db\": \"sql\", \"read\": \"cat\", \"search\": \"grep\", \"test\": \"pytest\"}, \"tier\": {\"default\": \"standard\"}, \"ttl\": {\"db-schema\": 0, \"repo-layout\": 0, \"test-cmd\": 40}}, \"latency_s\": 9.7, \"success\": 0.75, \"tokens_per_task\": 13450}, \"pool\": []}"
+  }
+ ],
+ "content": "{\"plans\":[{\"intent\":\"cost-first\",\"mutations\":[{\"kind\":\"compress\",\"output\":\"search-results\",\"strategy\":\"fold\",\"limit\":500},{\"kind\":\"compress\",\"output\":\"code-file\",\"strategy\":\"fold\",\"limit\":600},{\"kind\":\"ttl\",\"fact\":\"test-cmd\",\"n\":120},{\"kind\":\"retry\",\"tool\":\"grep\",\"err\":\"timeout\",\"n\":2}]},{\"intent\":\"balanced\",\"mutations\":[{\"kind\":\"retry\",\"tool\":\"grep\",\"err\":\"timeout\",\"n\":2},{\"kind\":\"retry\",\"tool\":\"pytest\",\"err\":\"timeout\",\"n\":1},{\"kind\":\"ttl\",\"fact\":\"test-cmd\",\"n\":100},{\"kind\":\"compress\",\"output\":\"test-log\",\"strategy\":\"grep-errors\",\"limit\":600}]},{\"intent\":\"perf-first\",\"mutations\":[{\"kind\":\"retry\",\"tool\":\"grep\",\"err\":\"timeout\",\"n\":3},{\"kind\":\"retry\",\"tool\":\"pytest\",\"err\":\"timeout\",\"n\":2},{\"kind\":\"compress\",\"output\":\"test-log\",\"strategy\":\"tail\",\"limit\":1200},{\"kind\":\"delegate\",\"task\":\"refactor\",\"threshold\":3}]}]}",
+ "usage": {
+  "prompt_tokens": 1136,
+  "completion_tokens": 1166,
+  "total_tokens": 2302,
+  "prompt_tokens_details": {
+   "cached_tokens": 512
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 910
+  },
+  "prompt_cache_hit_tokens": 512,
+  "prompt_cache_miss_tokens": 624
+ }
+}

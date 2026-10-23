@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"join_search43\": \"def join_search43(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\", \"scale_search51\": \"def scale_search51(x):\\n    return x * 2 if x < 9 else x\\n\"}, \"task\": [{\"function\": \"scale_search51\", \"signature\": \"scale_search51(x)\", \"spec\": \"return x multiplied by 2\"}, {\"function\": \"join_search43\", \"signature\": \"join_search43(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 9, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"scale_search51 only doubles x when x < 9 and otherwise returns x unchanged, which violates the spec requiring x multiplied by 2.\"}",
+ "usage": {
+  "prompt_tokens": 351,
+  "completion_tokens": 107,
+  "total_tokens": 458,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 66
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 351
+ }
+}

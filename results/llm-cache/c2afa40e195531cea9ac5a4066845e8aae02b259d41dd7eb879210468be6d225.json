@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_search63\": \"def add_search63(x):\\n    return x + 6\\n\", \"join_search03\": \"def join_search03(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\"}, \"task\": [{\"function\": \"add_search63\", \"signature\": \"add_search63(x)\", \"spec\": \"return x plus 6\"}, {\"function\": \"join_search03\", \"signature\": \"join_search03(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 12, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"Both functions match their specs: add_search63 returns x+6 and join_search03 strips each part and joins with '-'.\"}",
+ "usage": {
+  "prompt_tokens": 343,
+  "completion_tokens": 65,
+  "total_tokens": 408,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 27
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 343
+ }
+}

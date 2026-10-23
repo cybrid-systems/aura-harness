@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"mean_billing54\": \"def mean_billing54(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"mean_billing54\", \"signature\": \"mean_billing54(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The implementation correctly returns the arithmetic mean of a non-empty list, and all visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 269,
+  "completion_tokens": 84,
+  "total_tokens": 353,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 52
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 269
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing50\": \"def add_billing50(x):\\n    return x + 3\\n\", \"join_billing31\": \"def join_billing31(parts):\\n    return (\\\"-\\\" if len(parts) < 3 else \\\"+\\\").join(p.strip() for p in parts)\\n\", \"mean_billing32\": \"def mean_billing32(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"add_billing50\", \"signature\": \"add_billing50(x)\", \"spec\": \"return x plus 3\"}, {\"function\": \"join_billing31\", \"signature\": \"join_billing31(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}, {\"function\": \"mean_billing32\", \"signature\": \"mean_billing32(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 15, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"join_billing31 joins with '+' instead of '-' when parts has 3 or more elements, violating the spec.\"}",
+ "usage": {
+  "prompt_tokens": 458,
+  "completion_tokens": 133,
+  "total_tokens": 591,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 97
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 458
+ }
+}

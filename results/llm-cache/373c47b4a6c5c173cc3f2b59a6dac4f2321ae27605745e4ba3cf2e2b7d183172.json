@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_billing24\": \"def count_billing24(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"count_billing63\": \"def count_billing63(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"scale_billing04\": \"def scale_billing04(x):\\n    return x * 4 if x < 9 else x\\n\"}, \"task\": [{\"function\": \"count_billing63\", \"signature\": \"count_billing63(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"count_billing24\", \"signature\": \"count_billing24(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"scale_billing04\", \"signature\": \"scale_billing04(x)\", \"spec\": \"return x multiplied by 4\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 14, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"scale_billing04 does not always return x multiplied by 4; it returns x unchanged when x >= 9.\"}",
+ "usage": {
+  "prompt_tokens": 497,
+  "completion_tokens": 114,
+  "total_tokens": 611,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 77
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 497
+ }
+}

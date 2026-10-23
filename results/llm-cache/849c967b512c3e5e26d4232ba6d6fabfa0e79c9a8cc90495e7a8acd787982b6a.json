@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return x multiplied by 6\", \"function\": \"scale_billing13(x)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"scale_billing13(0) == 0\",\"scale_billing13(1) == 6\",\"scale_billing13(-1) == -6\",\"scale_billing13(2) == 12\",\"scale_billing13(-2) == -12\",\"scale_billing13(10) == 60\",\"scale_billing13(-10) == -60\",\"scale_billing13(0.5) == 3.0\",\"scale_billing13(-0.5) == -3.0\",\"scale_billing13(1000000) == 6000000\"]}",
+ "usage": {
+  "prompt_tokens": 163,
+  "completion_tokens": 322,
+  "total_tokens": 485,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 193
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 163
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"join_billing42\": \"def join_billing42(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\"}, \"task\": [{\"function\": \"join_billing42\", \"signature\": \"join_billing42(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 5, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The function strips whitespace from each part and joins them with '-', matching the specification.\"}",
+ "usage": {
+  "prompt_tokens": 269,
+  "completion_tokens": 47,
+  "total_tokens": 316,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 16
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 269
+ }
+}

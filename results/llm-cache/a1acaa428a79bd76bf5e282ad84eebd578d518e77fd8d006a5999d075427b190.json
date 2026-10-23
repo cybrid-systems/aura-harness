@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return x multiplied by 8\", \"function\": \"scale_geo60(x)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"scale_geo60(0) == 0\",\"scale_geo60(1) == 8\",\"scale_geo60(-1) == -8\",\"scale_geo60(2) == 16\",\"scale_geo60(-3) == -24\",\"scale_geo60(0.5) == 4.0\",\"scale_geo60(-0.25) == -2.0\",\"scale_geo60(1000000) == 8000000\",\"scale_geo60(-1000000) == -8000000\",\"scale_geo60(12345) == 98760\"]}",
+ "usage": {
+  "prompt_tokens": 163,
+  "completion_tokens": 544,
+  "total_tokens": 707,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 409
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 163
+ }
+}

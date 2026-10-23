@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"join_billing53\": \"def join_billing53(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\", \"scale_billing04\": \"def scale_billing04(x):\\n    return x * 4\\n\"}, \"task\": [{\"function\": \"scale_billing04\", \"signature\": \"scale_billing04(x)\", \"spec\": \"return x multiplied by 4\"}, {\"function\": \"join_billing53\", \"signature\": \"join_billing53(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 10, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"Both functions match their specs: scale_billing04 returns x*4 and join_billing53 strips each part and joins with '-'.\"}",
+ "usage": {
+  "prompt_tokens": 352,
+  "completion_tokens": 74,
+  "total_tokens": 426,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 34
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 352
+ }
+}

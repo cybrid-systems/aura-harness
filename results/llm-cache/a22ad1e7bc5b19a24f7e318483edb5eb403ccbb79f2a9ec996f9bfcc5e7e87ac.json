@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return x plus 8\", \"function\": \"add_billing61(x)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"add_billing61(0) == 8\",\"add_billing61(1) == 9\",\"add_billing61(-8) == 0\",\"add_billing61(-9) == -1\",\"add_billing61(10) == 18\",\"add_billing61(-1) == 7\",\"add_billing61(100) == 108\",\"add_billing61(-100) == -92\",\"add_billing61(1.5) == 9.5\",\"add_billing61(2**20) == 2**20 + 8\"]}",
+ "usage": {
+  "prompt_tokens": 162,
+  "completion_tokens": 299,
+  "total_tokens": 461,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 171
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 162
+ }
+}

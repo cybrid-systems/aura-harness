@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_geo33\": \"def count_geo33(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"mean_geo22\": \"def mean_geo22(xs):\\n    return sum(xs) / len(xs)\\n\", \"mean_geo54\": \"def mean_geo54(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"count_geo33\", \"signature\": \"count_geo33(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"mean_geo22\", \"signature\": \"mean_geo22(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}, {\"function\": \"mean_geo54\", \"signature\": \"mean_geo54(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 16, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions match their specs: count_geo33 counts elements >= t, and both mean functions return sum/len for non-empty lists.\"}",
+ "usage": {
+  "prompt_tokens": 482,
+  "completion_tokens": 84,
+  "total_tokens": 566,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 42
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 482
+ }
+}

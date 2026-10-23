@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return the arithmetic mean of the non-empty list xs\", \"function\": \"mean_geo54(xs)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"mean_geo54([1, 2, 3]) == 2\",\"mean_geo54([5]) == 5\",\"mean_geo54([0]) == 0\",\"mean_geo54([-1, 1]) == 0\",\"mean_geo54([1, 2, 3, 4]) == 2.5\",\"mean_geo54([2.5, 3.5]) == 3.0\",\"abs(mean_geo54([-3, -1, 2]) - (-2/3)) < 1e-12\",\"abs(mean_geo54([1e-9, 2e-9]) - 1.5e-9) < 1e-18\",\"mean_geo54([0, 10]) == 5\",\"abs(mean_geo54([-5, 5, 5]) - (5/3)) < 1e-12\"]}",
+ "usage": {
+  "prompt_tokens": 168,
+  "completion_tokens": 1025,
+  "total_tokens": 1193,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 816
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 168
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "claimed": 341,
+ "claimed_but_wrong": 157,
+ "claimed_and_right": 184,
+ "synth": {
+  "failure_recall": 0.834,
+  "caught": 131,
+  "false_alarm": 0.033,
+  "no_signal": 0
+ },
+ "judge": {
+  "failure_recall": 1.0,
+  "caught": 157,
+  "false_alarm": 0.0,
+  "no_signal": 0
+ },
+ "synth_stats": {
+  "functions": 108,
+  "asserts": 1080,
+  "malformed": 0,
+  "missing": 0
+ },
+ "judge_stats": {
+  "calls": 341,
+  "malformed": 0
+ },
+ "llm": {
+  "calls": 380,
+  "cache_hits": 69,
+  "offline_miss": 0,
+  "budget_skip": 0,
+  "errors": 0,
+  "retries": 0,
+  "prompt_tokens": 136711,
+  "cached_tokens": 384,
+  "completion_tokens": 66629,
+  "reasoning_tokens": 45166,
+  "truncated": 0,
+  "cost_usd": 0.06042760200000005,
+  "latency_s": 634.5923183049781
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return x limited to the closed interval [lo, hi]\", \"function\": \"clamp_billing62(x, lo, hi)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"clamp_billing62(5, 0, 10) == 5\",\"clamp_billing62(-3, 0, 10) == 0\",\"clamp_billing62(15, 0, 10) == 10\",\"clamp_billing62(0, 0, 10) == 0\",\"clamp_billing62(10, 0, 10) == 10\",\"clamp_billing62(7, 7, 7) == 7\",\"clamp_billing62(-5, -10, -2) == -5\",\"clamp_billing62(-20, -10, -2) == -10\",\"clamp_billing62(3, -10, -2) == -2\",\"clamp_billing62(2.5, 1.5, 3.5) == 2.5\"]}",
+ "usage": {
+  "prompt_tokens": 173,
+  "completion_tokens": 602,
+  "total_tokens": 775,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 407
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 173
+ }
+}

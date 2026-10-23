@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing30\": \"def add_billing30(x):\\n    return x + 9\\n\"}, \"task\": [{\"function\": \"add_billing30\", \"signature\": \"add_billing30(x)\", \"spec\": \"return x plus 9\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The final source implements add_billing30 as x + 9, matching the spec, and visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 257,
+  "completion_tokens": 36,
+  "total_tokens": 293,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 257
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You write unit tests from a task description only (you do not see any implementation). For the Python function described, write exactly 10 independent test assertions as Python boolean expressions that call the function and must evaluate to True for a correct implementation. Cover typical inputs, edge cases and boundaries; use only the function and builtins; no imports, no prints. Reply with ONLY a JSON object {\"asserts\": [\"<expr>\", ...]}."
+  },
+  {
+   "role": "user",
+   "content": "{\"description\": \"return the arithmetic mean of the non-empty list xs\", \"function\": \"mean_geo22(xs)\"}"
+  }
+ ],
+ "content": "{\"asserts\":[\"mean_geo22([1, 2, 3]) == 2\",\"mean_geo22([5]) == 5\",\"mean_geo22([0, 0, 0]) == 0\",\"mean_geo22([2, 4]) == 3\",\"mean_geo22([-1, 1]) == 0\",\"abs(mean_geo22([1, 2]) - 1.5) < 1e-12\",\"mean_geo22([10, 20, 30, 40]) == 25\",\"mean_geo22([-5]) == -5\",\"abs(mean_geo22([0.1, 0.2, 0.3]) - 0.2) < 1e-12\",\"mean_geo22([1, 1, 1, 1]) == 1\"]}",
+ "usage": {
+  "prompt_tokens": 168,
+  "completion_tokens": 521,
+  "total_tokens": 689,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 329
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 168
+ }
+}

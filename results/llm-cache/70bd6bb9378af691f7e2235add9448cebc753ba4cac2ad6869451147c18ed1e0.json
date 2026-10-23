@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"mean_geo54\": \"def mean_geo54(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"mean_geo54\", \"signature\": \"mean_geo54(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 5, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"The final implementation correctly returns the arithmetic mean by summing the list and dividing by its length, matching the specification.\"}",
+ "usage": {
+  "prompt_tokens": 263,
+  "completion_tokens": 77,
+  "total_tokens": 340,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 42
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 263
+ }
+}

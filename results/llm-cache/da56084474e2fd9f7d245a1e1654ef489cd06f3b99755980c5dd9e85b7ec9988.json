@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_geo41\": \"def count_geo41(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"window_geo14\": \"def window_geo14(xs, k):\\n    return [sum(xs[i:i + k]) for i in range(len(xs) - k + 1)]\\n\", \"window_geo30\": \"def window_geo30(xs, k):\\n    return [sum(xs[i:i + k]) for i in range(len(xs) - k + 1)]\\n\"}, \"task\": [{\"function\": \"count_geo41\", \"signature\": \"count_geo41(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"window_geo30\", \"signature\": \"window_geo30(xs, k)\", \"spec\": \"return the list of sums of every contiguous window of length k in xs\"}, {\"function\": \"window_geo14\", \"signature\": \"window_geo14(xs, k)\", \"spec\": \"return the list of sums of every contiguous window of length k in xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 13, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three functions correctly implement their specs and visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 522,
+  "completion_tokens": 47,
+  "total_tokens": 569,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 22
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 522
+ }
+}

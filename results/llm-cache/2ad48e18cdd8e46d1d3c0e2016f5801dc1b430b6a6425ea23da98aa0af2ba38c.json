@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_search32\": \"def count_search32(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x >= t:\\n            n += 1\\n    return n\\n\", \"join_search53\": \"def join_search53(parts):\\n    return \\\"-\\\".join(p.strip() for p in parts)\\n\", \"mean_search50\": \"def mean_search50(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"count_search32\", \"signature\": \"count_search32(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}, {\"function\": \"join_search53\", \"signature\": \"join_search53(parts)\", \"spec\": \"strip whitespace from each string in parts and join them with '-'\"}, {\"function\": \"mean_search50\", \"signature\": \"mean_search50(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 14, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"All three implementations match their specifications and the visible tests pass.\"}",
+ "usage": {
+  "prompt_tokens": 476,
+  "completion_tokens": 75,
+  "total_tokens": 551,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 50
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 476
+ }
+}

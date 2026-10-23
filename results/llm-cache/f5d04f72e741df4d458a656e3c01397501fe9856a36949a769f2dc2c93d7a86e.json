@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing50\": \"def add_billing50(x):\\n    return x + 3 if x > -3 else 0\\n\", \"window_billing01\": \"def window_billing01(xs, k):\\n    return [sum(xs[i:i + k]) for i in range(len(xs) - k + 1)]\\n\"}, \"task\": [{\"function\": \"add_billing50\", \"signature\": \"add_billing50(x)\", \"spec\": \"return x plus 3\"}, {\"function\": \"window_billing01\", \"signature\": \"window_billing01(xs, k)\", \"spec\": \"return the list of sums of every contiguous window of length k in xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 10, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"add_billing50 returns 0 for inputs x <= -3 instead of x + 3 as the spec requires, so the implementation is incorrect despite passing visible tests.\"}",
+ "usage": {
+  "prompt_tokens": 376,
+  "completion_tokens": 113,
+  "total_tokens": 489,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 66
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 376
+ }
+}

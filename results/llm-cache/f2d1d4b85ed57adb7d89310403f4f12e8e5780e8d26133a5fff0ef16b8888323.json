@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"clamp_billing51\": \"def clamp_billing51(x, lo, hi):\\n    if x < lo:\\n        return lo\\n    if x > hi:\\n        return hi\\n    return x\\n\", \"mean_billing40\": \"def mean_billing40(xs):\\n    return sum(xs) / len(xs)\\n\"}, \"task\": [{\"function\": \"mean_billing40\", \"signature\": \"mean_billing40(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}, {\"function\": \"clamp_billing51\", \"signature\": \"clamp_billing51(x, lo, hi)\", \"spec\": \"return x limited to the closed interval [lo, hi]\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 10, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"pass\", \"reason\": \"Both functions correctly implement their specifications: mean returns sum/len for a non-empty list, and clamp bounds x to [lo, hi].\"}",
+ "usage": {
+  "prompt_tokens": 388,
+  "completion_tokens": 120,
+  "total_tokens": 508,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 78
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 388
+ }
+}

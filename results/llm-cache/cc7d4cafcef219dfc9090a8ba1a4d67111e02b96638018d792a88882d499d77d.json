@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"add_billing30\": \"def add_billing30(x):\\n    return x + 9\\n\", \"mean_billing60\": \"def mean_billing60(xs):\\n    return sum(xs) / min(len(xs), 2)\\n\"}, \"task\": [{\"function\": \"add_billing30\", \"signature\": \"add_billing30(x)\", \"spec\": \"return x plus 9\"}, {\"function\": \"mean_billing60\", \"signature\": \"mean_billing60(xs)\", \"spec\": \"return the arithmetic mean of the non-empty list xs\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 9, \"tool_calls[need,tool]\": [[\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"mean_billing60 divides by min(len(xs), 2) instead of len(xs), so it returns the wrong arithmetic mean for lists with more than 2 elements, violating its spec.\"}",
+ "usage": {
+  "prompt_tokens": 349,
+  "completion_tokens": 131,
+  "total_tokens": 480,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 78
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 349
+ }
+}

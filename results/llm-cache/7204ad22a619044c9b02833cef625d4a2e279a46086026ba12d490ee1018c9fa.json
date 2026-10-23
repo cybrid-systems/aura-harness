@@ -1,0 +1,27 @@
+{
+ "model": "deepseek-flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You judge whether a coding agent solved its task. You see the task description, the agent's trajectory summary and the final source of the function it fixed. Reply with ONLY a JSON object {\"verdict\": \"pass\" | \"fail\", \"reason\": \"<one sentence>\"}."
+  },
+  {
+   "role": "user",
+   "content": "{\"final_source\": {\"count_geo83\": \"def count_geo83(xs, t):\\n    n = 0\\n    for x in xs:\\n        if x > t - 1 and x < 9:\\n            n += 1\\n    return n\\n\"}, \"task\": [{\"function\": \"count_geo83\", \"signature\": \"count_geo83(xs, t)\", \"spec\": \"return how many elements of xs are greater than or equal to t\"}], \"trajectory\": {\"agent_reports\": \"done\", \"final_visible_test_run\": \"all visible tests pass\", \"steps\": 6, \"tool_calls[need,tool]\": [[\"read\", \"cat\"], [\"test\", \"pytest\"], [\"search\", \"grep\"], [\"read\", \"cat\"], [\"edit\", \"apply-patch\"], [\"test\", \"pytest\"]]}}"
+  }
+ ],
+ "content": "{\"verdict\": \"fail\", \"reason\": \"The final implementation adds an unspecified `x < 9` condition, so it does not correctly count all elements >= t as the spec requires.\"}",
+ "usage": {
+  "prompt_tokens": 302,
+  "completion_tokens": 133,
+  "total_tokens": 435,
+  "prompt_tokens_details": {
+   "cached_tokens": 0
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 91
+  },
+  "prompt_cache_hit_tokens": 0,
+  "prompt_cache_miss_tokens": 302
+ }
+}
