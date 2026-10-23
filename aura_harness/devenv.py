@@ -178,8 +178,13 @@ KIND_OF = {"grep": "search-results", "rg-json": "search-results", "lsp-find": "s
 
 
 def sh(argv, cwd) -> tuple[int, str]:
-    p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=60)
-    return p.returncode, p.stdout + p.stderr
+    for limit in (60, 240):                 # a slow box (parallel benches) gets one longer retry
+        try:
+            p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=limit)
+            return p.returncode, p.stdout + p.stderr
+        except subprocess.TimeoutExpired:
+            pass
+    return 124, f"TIMEOUT after {limit}s: {' '.join(argv)}"   # a failed tool call, not a crashed bench
 
 
 def lsp_find(cwd, name) -> str:

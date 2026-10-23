@@ -1,0 +1,619 @@
+[
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 0,
+  "stream_success": 0.39166666666666666,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/2000"
+    },
+    {
+     "n": 16,
+     "b": 6,
+     "c": 0,
+     "p": 0.01562,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 5,
+     "tokens": [
+      12694,
+      12785
+     ],
+     "steps": [
+      6.0,
+      6.0
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 24,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 6,
+     "tokens": [
+      12795,
+      12886
+     ],
+     "steps": [
+      6.0,
+      6.0
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 16,
+     "b": 0,
+     "c": 0,
+     "p": 1.0,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 12,
+     "tokens": [
+      13940,
+      13190
+     ],
+     "steps": [
+      6.33,
+      5.25
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=50"
+    },
+    {
+     "n": 24,
+     "b": 0,
+     "c": 1,
+     "p": 1.0,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 12,
+     "tokens": [
+      13940,
+      13190
+     ],
+     "steps": [
+      6.33,
+      5.25
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=50"
+    },
+    {
+     "n": 32,
+     "b": 0,
+     "c": 1,
+     "p": 1.0,
+     "alpha_look": 0.0125,
+     "look": 2,
+     "both_ok": 13,
+     "tokens": [
+      14055,
+      13317
+     ],
+     "steps": [
+      6.38,
+      5.31
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=50"
+    },
+    {
+     "n": 40,
+     "b": 2,
+     "c": 1,
+     "p": 0.5,
+     "alpha_look": 0.0125,
+     "look": 3,
+     "both_ok": 15,
+     "tokens": [
+      13945,
+      13230
+     ],
+     "steps": [
+      6.33,
+      5.27
+     ],
+     "verdict": "reject",
+     "desc": "ttl test-cmd=50"
+    },
+    {
+     "n": 16,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 3,
+     "tokens": [
+      13167,
+      10630
+     ],
+     "steps": [
+      6.0,
+      6.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log head-tail/1000"
+    }
+   ],
+   "pending_at_end": true
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/2000",
+   "route edit->apply-patch",
+   "compress test-log head-tail/1000"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.625,
+  "heldout_tokens": 16586.75,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 14265.433333333332,
+  "wall_s": 127.36,
+  "llm": {
+   "responses": 13,
+   "malformed_responses": 0,
+   "mutations": 16,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 16,
+   "calls": 4,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 5040,
+   "cached_tokens": 3456,
+   "completion_tokens": 1214,
+   "reasoning_tokens": 1043,
+   "truncated": 0,
+   "cost_usd": 0.000976,
+   "latency_s": 11.093818,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 4,
+   "llm_kept": 3,
+   "rule_kept": 0
+  },
+  "proposals": 4
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 1,
+  "stream_success": 0.4875,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1500"
+    },
+    {
+     "n": 16,
+     "b": 4,
+     "c": 0,
+     "p": 0.0625,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 7,
+     "tokens": [
+      13249,
+      13338
+     ],
+     "steps": [
+      6.14,
+      6.14
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 24,
+     "b": 5,
+     "c": 0,
+     "p": 0.03125,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 10,
+     "tokens": [
+      13329,
+      13422
+     ],
+     "steps": [
+      6.2,
+      6.2
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 32,
+     "b": 6,
+     "c": 0,
+     "p": 0.01562,
+     "alpha_look": 0.0125,
+     "look": 2,
+     "both_ok": 13,
+     "tokens": [
+      13271,
+      13365
+     ],
+     "steps": [
+      6.15,
+      6.15
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 40,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 3,
+     "both_ok": 14,
+     "tokens": [
+      13403,
+      13497
+     ],
+     "steps": [
+      6.21,
+      6.21
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 16,
+     "b": 3,
+     "c": 0,
+     "p": 0.125,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 11,
+     "tokens": [
+      10365,
+      7430
+     ],
+     "steps": [
+      6.91,
+      6.64
+     ],
+     "verdict": "wait",
+     "desc": "route test->pytest-q"
+    },
+    {
+     "n": 24,
+     "b": 5,
+     "c": 0,
+     "p": 0.03125,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 17,
+     "tokens": [
+      11236,
+      8917
+     ],
+     "steps": [
+      7.35,
+      7.18
+     ],
+     "verdict": "wait",
+     "desc": "route test->pytest-q"
+    },
+    {
+     "n": 32,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 2,
+     "both_ok": 20,
+     "tokens": [
+      11660,
+      9233
+     ],
+     "steps": [
+      7.45,
+      7.3
+     ],
+     "verdict": "keep",
+     "desc": "route test->pytest-q"
+    }
+   ],
+   "pending_at_end": true
+  },
+  "rollback": 5,
+  "kept": [
+   "compress test-log grep-errors/1500",
+   "route edit->apply-patch",
+   "route test->pytest-q"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.85,
+  "heldout_tokens": 15196.0,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 14083.3,
+  "wall_s": 260.14,
+  "llm": {
+   "responses": 18,
+   "malformed_responses": 1,
+   "mutations": 27,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 27,
+   "calls": 9,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 11885,
+   "cached_tokens": 9216,
+   "completion_tokens": 6655,
+   "reasoning_tokens": 6309,
+   "truncated": 1,
+   "cost_usd": 0.004421,
+   "latency_s": 51.647828,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 8,
+   "llm_kept": 3,
+   "rule_kept": 0
+  },
+  "proposals": 8
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 2,
+  "stream_success": 0.5791666666666667,
+  "keep": 3,
+  "false_keeps": [
+   {
+    "desc": "route edit->apply-patch",
+    "ts": 218,
+    "heldout_before": 0.275,
+    "heldout_after": 0.225,
+    "reverted": false
+   }
+  ],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "b": 11,
+     "c": 0,
+     "p": 0.00049,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log tail/1500"
+    },
+    {
+     "n": 16,
+     "b": 5,
+     "c": 1,
+     "p": 0.10938,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 8,
+     "tokens": [
+      13375,
+      13470
+     ],
+     "steps": [
+      6.25,
+      6.25
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 24,
+     "b": 5,
+     "c": 1,
+     "p": 0.10938,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 15,
+     "tokens": [
+      13112,
+      13373
+     ],
+     "steps": [
+      6.2,
+      6.27
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 32,
+     "b": 9,
+     "c": 1,
+     "p": 0.01074,
+     "alpha_look": 0.0125,
+     "look": 2,
+     "both_ok": 18,
+     "tokens": [
+      13060,
+      13293
+     ],
+     "steps": [
+      6.17,
+      6.22
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    },
+    {
+     "n": 16,
+     "b": 13,
+     "c": 0,
+     "p": 0.00012,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 2,
+     "tokens": [
+      13120,
+      5390
+     ],
+     "steps": [
+      6.0,
+      6.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1000"
+    },
+    {
+     "n": 16,
+     "b": 1,
+     "c": 1,
+     "p": 0.75,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 13,
+     "tokens": [
+      13429,
+      13339
+     ],
+     "steps": [
+      9.08,
+      8.77
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=3"
+    },
+    {
+     "n": 24,
+     "b": 1,
+     "c": 1,
+     "p": 0.75,
+     "alpha_look": 0.0125,
+     "look": 1,
+     "both_ok": 20,
+     "tokens": [
+      12039,
+      11789
+     ],
+     "steps": [
+      8.6,
+      8.25
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=3"
+    },
+    {
+     "n": 32,
+     "b": 1,
+     "c": 1,
+     "p": 0.75,
+     "alpha_look": 0.0125,
+     "look": 2,
+     "both_ok": 27,
+     "tokens": [
+      12264,
+      12017
+     ],
+     "steps": [
+      8.56,
+      8.19
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=3"
+    }
+   ],
+   "pending_at_end": true
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log tail/1500",
+   "route edit->apply-patch",
+   "compress test-log grep-errors/1000"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 13644.35,
+  "ood_success": 0.7,
+  "ood_tokens": 10775.733333333334,
+  "wall_s": 151.96,
+  "llm": {
+   "responses": 13,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 4,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 5096,
+   "cached_tokens": 3968,
+   "completion_tokens": 1264,
+   "reasoning_tokens": 1095,
+   "truncated": 0,
+   "cost_usd": 0.00094,
+   "latency_s": 11.628419,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 4,
+   "llm_kept": 3,
+   "rule_kept": 0
+  },
+  "proposals": 4
+ }
+]

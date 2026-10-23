@@ -17,8 +17,8 @@ class ProposalSource(Protocol):
 class RuleSource:
     """the existing rule proposer behind the ProposalSource interface; tags each candidate with its target"""
 
-    def __init__(self, **kw):
-        self.p = get_proposer(**kw)
+    def __init__(self, proposer=None, **kw):
+        self.p = proposer if proposer is not None else get_proposer(**kw)
 
     @property
     def n_proposals(self):

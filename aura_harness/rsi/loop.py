@@ -14,12 +14,13 @@ from .m2 import (Critic, M2Config, agg, budget_k, fresh_of, pareto_insert, per_t
                  recomb_candidates)
 from .plugins import Library
 from .proposal import RuleSource
+from .stat import StatAdmission, hard_veto, per_task3
 
 
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
-            cfg: M2Config | None = None, world: str = "sim", ledger=None) -> dict:
+            cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None) -> dict:
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
     t_start = time.perf_counter()
@@ -31,10 +32,17 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
         stream = dev_stream(seed, n, shift)
     else:
         stream = make_stream(seed, n, shift)
-    src = RuleSource(min_evidence=min_evidence, noise=noise, seed=seed)
+    # proposer: None = scripted; or a factory(min_evidence=, noise=, seed=) -> Proposer (e.g. the M5 LLM proposer)
+    src = RuleSource(proposer(min_evidence=min_evidence, noise=noise, seed=seed) if proposer else None,
+                     min_evidence=min_evidence, noise=noise, seed=seed)
     lib = Library()
     cfg = cfg or M2Config()
     m2 = cfg.any()
+    stat = cfg.admission == "stat"
+    sa = StatAdmission(alpha=cfg.alpha)
+    if stat and retention is None:
+        retention = RetentionGate()          # the retention budget gate is always on in stat mode
+    keep_tables = []
     critic = Critic()
     archive: list = []
     spent_fresh: set = set()
@@ -53,13 +61,18 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             eps.append(ep.summary())
             if t.heldout:
                 continue
+            if stat and sa.pending and sa.due(stream, t.id):
+                tb = _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib,
+                                  verdicts, keep_tables)
             if cfg.pruner and t.id and t.id % cfg.prune_every == 0 and t.id >= window:
                 tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger)
             d = src.p.diagnose(ep) if cfg.critic else None
             if d:
                 critic.note(f"{d[0]}|{d[1]}", t.project)
+            if stat and hasattr(src.p, "paused"):
+                src.p.paused = bool(sa.pending)
             cands = src.observe(ep, tb)
-            if not cands:
+            if not cands or (stat and sa.pending):
                 continue
             if cfg.critic and critic.veto(cands[0].sig):
                 stats["critic_veto"] += 1
@@ -97,7 +110,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             jobs_args = [(tb, tasks, mem0, seed, shift)] + [(r["table"], tasks, mem0, seed, shift) for r in ok_trials]
             if m2:
                 pts = list(pmap(per_task, jobs_args))
-                gk = (lambda tid: not fresh_of(tid)) if cfg.fresh else (lambda tid: True)
+                gk = (lambda tid: not fresh_of(tid)) if (cfg.fresh or stat) else (lambda tid: True)
                 scores = [agg(x, gk) for x in pts]
             else:
                 scores = list(pmap(replay_score, jobs_args))
@@ -109,6 +122,16 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             for r, s in zip(ok_trials, cs):
                 if better(s, bs):
                     best, bs = r["i"], s
+            if stat and best >= 0 and not hard_veto(cands[best]):
+                # M5b: selection done on the selection split; admission waits for fresh tasks after t.id
+                h.verdict(t.id, -1, dict(sc, stat="selected; admission pending"), cands[0].why)
+                sa.pending = {"ts": t.id, "start": start, "cand": cands[best], "sig": sig, "blocked": blocked,
+                              "table": next(r["table"] for r in ok_trials if r["i"] == best), "look": 0,
+                              "descs": [c.desc for c in cands], "tasks": tasks, "mem0": mem0, "sel": sc,
+                              "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands)}
+                gate_s.append(time.perf_counter() - g0)
+                continue
+            best = -1 if stat else best
             # stage 3b: fresh one-use validation (held-out tasks the gate never scored, each used for one admission)
             if cfg.fresh and best >= 0:
                 fk = lambda tid: fresh_of(tid) and tid not in spent_fresh
@@ -148,6 +171,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                         "evidence": sig, "reason": c.why, "candidates": [x.desc for x in cands], "blocked": blocked,
                         "gate": {"window": [start, t.id], "base": list(base), "chosen": list(cs[bi])},
                         "retention": sc.get("retention"), "fresh": sc.get("fresh")})
+                keep_tables.append({"ts": t.id, "desc": c.desc, "before": tb, "after": vr["table"]})
                 tb = vr["table"]
                 lib.add(c.name, tb[COMPONENT[c.name]], c.desc, sig, t.id, t.phase)
                 if c.meta.get("target") == "composition":
@@ -164,11 +188,15 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             gate_s.append(time.perf_counter() - g0)
             verdicts.append({"ts": t.id, "verdict": vr["verdict"], "chosen": cands[best].desc if best >= 0 else None,
                              "candidates": [c.desc for c in cands], "blocked": blocked, "scores": sc,
-                             "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1)})
+                             "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1),
+                             "chosen_by": cands[best].meta.get("proposer", "rule") if best >= 0 else None,
+                             "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands)})
         if ledger is not None:
             for e in getattr(h, "events", []):
                 if e["op"] == "restart":
                     ledger.event("restart", e["ts"], why=e["why"], replayed=e["replayed"], ms=e["ms"])
+            if hasattr(src.p, "llm_usage"):          # M5: LLM usage / cost tally (no request data, no key)
+                ledger.event("llm-usage", n, **src.p.llm_usage())
         audit = h.log()
         source = h.source()
         lat = {k: v for k, v in h.lat.items()}
@@ -182,6 +210,14 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out["final_table"] = tb
     out["m2"] = dict(stats, archive=len(archive), archive_members=archive)
     out["restarts"] = getattr(h, "restarts", 0)
+    out["keep_tables"] = keep_tables
+    if stat:
+        out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending)}
+    if hasattr(src.p, "llm_usage"):
+        v = [x for x in verdicts if x.get("n_llm")]
+        out["llm"] = dict(src.p.llm_usage(), gated_with_llm=len(v),
+                          llm_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "llm" for x in verdicts),
+                          rule_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "rule" for x in verdicts))
     if retention is not None:
         out["retention"] = {"checks": retention.checks, "vetoes": retention.vetoes, "spent": round(retention.spent, 2)}
     return out
@@ -213,4 +249,43 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
             ledger.admit("prune", t.id, cands[best], tb, vr["table"], "pruner",
                          {"reason": "pruner: plugin no longer useful", "gate": {"base": list(base), "chosen": list(bs)}})
         return vr["table"]
+    return tb
+
+
+def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib, verdicts, keep_tables):
+    """M5b admission of the pending candidate on fresh, one-use held-out tasks that arrived after its selection"""
+    P = sa.pending
+    a0 = (P["ts"] + 1) // 10 * 10
+    ids = sa.fresh_ids(stream, t.id)
+    seg = stream[a0:t.id + 1]
+    rb, rc = list(pmap(per_task3, [(tb, seg, ckpts[a0], seed, shift), (P["table"], seg, ckpts[a0], seed, shift)]))
+    v, info = sa.decide(rb, rc, ids)
+    if v == "wait":
+        return tb
+    c, verdict, ret_info = P["cand"], "ROLLBACK", None
+    if v == "keep" and retention is not None:
+        ok, ret_info = retention.check(t.id, P["start"], tb, P["table"], seed, shift, pmap)
+        info["retention"] = ret_info
+        v = "keep" if ok else "reject"
+    if v == "keep":
+        res = h.apply(t.id, c, actor="stat-gate")
+        if res.get("ok"):
+            verdict = "KEEP"
+            if ledger is not None:
+                ledger.admit("keep", t.id, c, tb, res["table"], "stat-gate", {
+                    "evidence": P["sig"], "reason": c.why, "candidates": P["descs"], "blocked": P["blocked"],
+                    "selection": {"window": P["sel"]["window"], "base": list(P["sel"]["base"])},
+                    "admission": info})
+            keep_tables.append({"ts": t.id, "desc": c.desc, "before": tb, "after": res["table"]})
+            tb = res["table"]
+            lib.add(c.name, tb[COMPONENT[c.name]], c.desc, P["sig"], t.id, t.phase)
+            if retention is not None:
+                retention.admitted(t.id, P["start"], P["ts"], P["tasks"], P["mem0"], ret_info or {})
+        else:
+            info["apply"] = res.get("reason")
+    src.feedback(P["sig"], verdict, P["blocked"])
+    verdicts.append({"ts": t.id, "verdict": verdict, "chosen": c.desc if verdict == "KEEP" else None,
+                     "candidates": P["descs"], "blocked": P["blocked"], "scores": {"stat": info}, "why": c.why,
+                     "chosen_by": c.meta.get("proposer", "rule") if verdict == "KEEP" else None, "n_llm": P["n_llm"]})
+    sa.pending = None
     return tb

@@ -20,9 +20,11 @@ class M2Config:
     fresh: bool = False         # admission needs a non-loss on fresh, one-use held-out tasks
     recombine: bool = False     # add library variants of the same plugin as candidates
     archive: bool = True        # Pareto archive bookkeeping (always cheap)
+    admission: str = "better"   # "better" (window gate) | "stat" (M5b: selection/admission split + sign test)
+    alpha: float = 0.05
 
     def any(self):
-        return self.budget or self.critic or self.pruner or self.fresh or self.recombine
+        return self.admission == "stat" or self.budget or self.critic or self.pruner or self.fresh or self.recombine
 
 
 def fresh_of(tid: int) -> bool:

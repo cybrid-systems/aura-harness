@@ -659,3 +659,44 @@ $ python3 -m aura_harness audit rollback 2
 #4 ROLLBACK of #2 (route edit->apply-patch) admitted by the guard
   edit: "apply-patch" -> "sed"
 ```
+
+## RSI layer M5: real LLM proposer (DeepSeek) + automatic statistical admission (M5b)
+
+**LLM proposer** (`aura_harness/rsi/llm.py`, model `deepseek-flash` = DeepSeek-V4.1-Flash per `/models`, `reasoning_effort=low`, T=0, JSON mode).
+- Same split as before: the scripted diagnosis decides *when* to propose; the LLM decides *what*. It sees only evidence-task trajectories and its own past edits with KEEP/ROLLBACK verdicts — never held-out tasks or gate scores.
+- Output must be typed mutations (route / compress / retry / ttl / delegate), validated against tool docs and value ranges, and built into the same `Candidate` objects, so they go through the same target policy, guard and gate. Malformed responses and mutations are counted and dropped; free-form Lisp is impossible.
+- Key: read per request from `$DEEPSEEK_KEY_FILE` (mounted read-only by `run-llm.sh`). It is never stored, cached or logged; tests assert no key/`Authorization` ends up on disk. The cache (`results/llm-cache`, one file per prompt hash) holds prompt, response and usage only.
+- Call cap, token cap, timeout, 3 retries (none on 4xx). Cost tally (off-peak list price $0.15 / $0.003 cached / $0.60 per 1M tokens, overridable) goes into the run output and an `llm-usage` ledger event.
+- `AURA_LLM_MODE=offline` replays recorded responses with no network; the test suite runs offline and reproduces a recorded bench run exactly.
+
+**Stat admission** (`M2Config(admission="stat")`, `aura_harness/rsi/stat.py`), fully automatic:
+- Selection: candidates are ranked on the window's selection held-out split.
+- Admission: only on fresh held-out tasks that arrive *after* selection, each used once. It waits for 16/24/32/40 fresh tasks.
+- Test: paired per-task outcomes, one-sided exact sign test (McNemar) on discordant pairs, KEEP if p < alpha/4 (Bonferroni over the looks; alpha=0.05).
+- Pareto: no tokens/steps regression on tasks both versions solve.
+- Retention budget gate: always on in this mode.
+- Hard veto: free-form, protected and non-admissible-target edits.
+
+### Dev-bench (M3 world), 5 seeds x 160 tasks; and 3 seeds x 480 tasks
+
+A false KEEP is a keep that lowers success on the independent post-hoc fresh held-out set, or that a later KEEP reverts.
+
+| config | n | stream | held-out | OOD | KEEP / ROLLBACK | false KEEPs | LLM calls | cost USD |
+|---|---|---|---|---|---|---|---|---|
+| frozen seed harness | 160 | 0.0% | 0.0% | 0.0% | 0 / 0 | - | - | - |
+| scripted + better() (M1) | 160 | 76.5% | 95.5% | 74.7% | 4.2 / 3.8 | 6/21 (29%) | - | - |
+| LLM + better() | 160 | 68.4% | 94.0% | 78.0% | 4.8 / 4.2 | 0/24 (0%) | 79 | 0.0215 |
+| LLM+scripted hybrid + better() | 160 | 76.6% | 95.5% | 74.7% | 4.0 / 3.8 | 5/20 (25%) | 34 | 0.0093 |
+| scripted + stat | 160 | 26.5% | 63.0% | 53.3% | 1.4 / 0.6 | 0/7 (0%) | - | - |
+| LLM + stat | 160 | 17.6% | 30.5% | 22.0% | 1.0 / 0.4 | 0/5 (0%) | 6 | 0.0011 |
+| scripted + better() (M1) | 480 | 89.4% | 100.0% | 78.9% | 6.3 / 6.0 | 6/19 (32%) | - | - |
+| LLM + better() | 480 | 84.9% | 94.2% | 85.6% | 6.0 / 7.3 | 1/18 (6%) | 66 (cached) | n/a* |
+| scripted + stat | 480 | 69.6% | 93.3% | 78.9% | 2.0 / 4.3 | 0/6 (0%) | - | - |
+| LLM + stat | 480 | 48.6% | 80.0% | 73.3% | 3.0 / 2.3 | 1/9 (11%) | 17 | 0.0063 |
+
+Results: `results/m5`, `results/m5b`, `results/m5b-llmstat`, `results/m5b-long`, `results/m5b-long-llmstat`. Malformed output: 0–2 responses per bench and 0 mutations, thanks to JSON mode plus validation. *That run's calls were made by a run that crashed (unittest timeout under load, since fixed), so their cost was not tallied.
+
+Reading:
+- The LLM proposer is competitive on held-out and better on OOD, with far fewer false keeps (the scripted proposer's false keeps are mostly ttl flip-flops).
+- Stat admission cuts false keeps to roughly 0–11%, but it is slow: one decision needs at least 16 fresh tasks, about 64 stream tasks here. So it lags badly on short streams and catches up on long ones.
+- Caveats: scripted world with generated repos and injected faults; the LLM runs at T=0 but is not bit-deterministic across live runs (the cache makes reruns exact); costs are at off-peak prices.

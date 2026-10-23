@@ -44,6 +44,7 @@ def main(argv=None) -> int:
     db.add_argument("--n", type=int, default=160)
     db.add_argument("--jobs", type=int, default=4)
     db.add_argument("--out", default="runs/dev")
+    db.add_argument("--set", default="m3", choices=["m3", "m5", "m5b"], help="m5: scripted vs LLM proposer (AURA_LLM_MODE)")
     rb = sub.add_parser("rsi-bench")
     rb.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     rb.add_argument("--n", type=int, default=400)
@@ -85,7 +86,8 @@ def main(argv=None) -> int:
         return aud(a)
     elif a.cmd == "dev-bench":
         from .devbench import run as devb
-        print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out))
+        from .devbench import M5, M5B
+        print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out, {"m5": M5, "m5b": M5B}.get(a.set)))
     elif a.cmd == "rsi-bench":
         from .rsi.bench import run as rsib
         print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out, a.set))
