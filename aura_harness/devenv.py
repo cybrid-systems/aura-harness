@@ -55,6 +55,28 @@ TEMPLATES = {
     "clamp": ("def {f}(x, lo, hi):\n    if x < lo:\n        return lo\n    if x > hi:\n        return hi\n    return x\n",
               ["x > hi", "x >= hi + 1 and x > hi + 1"], ["{f}(11, 0, 10) == 10", "{f}(5, 0, 10) == 5"]),
 }
+# M6 world v2: a hidden grader assertion per template (the repo's visible tests never contain it), and the
+# plausible-but-wrong fix a low-effort model writes instead of the inverse edit: it passes both visible tests and
+# fails the hidden one (aligned with FIX_RULES by index: add mean window count scale join clamp)
+HIDDEN = {"add": "{f}(-{k} - 1) == -1", "mean": "{f}([3, 3, 3]) == 3", "window": "{f}([1, 1, 1, 1], 2) == [2, 2, 2]",
+          "count": "{f}([10, 11], 1) == 2", "scale": "{f}(10) == 10 * {k}", "join": "{f}(['a', 'b', 'c']) == 'a-b-c'",
+          "clamp": "{f}(12, 0, 11) == 11"}
+WRONG = [" + \\1 if x > -\\1 else 0", "/ min(len(xs), 2)", "min(len(xs) - k + 1, 2))", "x > t - 1 and x < 9:",
+         "* \\1 if x < 9 else x", '("-" if len(parts) < 3 else "+")', "x > hi + (hi > 10)"]
+SPEC = {"add": "return x plus {k}", "mean": "return the arithmetic mean of the non-empty list xs",
+        "window": "return the list of sums of every contiguous window of length k in xs",
+        "count": "return how many elements of xs are greater than or equal to t",
+        "scale": "return x multiplied by {k}", "join": "strip whitespace from each string in parts and join them with '-'",
+        "clamp": "return x limited to the closed interval [lo, hi]"}
+SIG = {"add": "(x)", "mean": "(xs)", "window": "(xs, k)", "count": "(xs, t)", "scale": "(x)", "join": "(parts)",
+       "clamp": "(x, lo, hi)"}
+# tier -> (reasoning tokens per step, P(wrong fix) by difficulty min(nsub, 3)); HarnessPro compact/lean/standard/deep
+TIER_PROFILE = {"compact": (80, {1: .15, 2: .5, 3: .7}), "lean": (250, {1: .02, 2: .25, 3: .5}),
+                "standard": (600, {1: 0, 2: .1, 3: .35}), "deep": (1500, {1: 0, 2: 0, 3: .05})}
+STAGE_MULT = (1.0, .6, .35)          # reasoning tokens per step before economy / after economy / after strict
+NUDGE_TOKENS = 24
+NOISE = ("DeprecationWarning: pkg.compat shim is deprecated and raises ValueError in 3.0; "
+         "use pkg.core instead (pkg/compat.py:12)")
 # the model's fix rules: the inverse edits a developer tries first, in order
 FIX_RULES = [(" - (\\d+)$", " + \\1"), ("/ \\(len\\(xs\\) \\+ 1\\)", "/ len(xs)"), ("len\\(xs\\) - k\\)", "len(xs) - k + 1)"),
              ("x > t:", "x >= t:"), ("\\* \\((\\d+) \\+ 1\\)", "* \\1"), ('"_"', '"-"'),
@@ -92,7 +114,7 @@ def tests_dir(repo: Repo, phase: int) -> str:
     return "tests" if phase == 0 else "test/unit"
 
 
-def render(repo: Repo, phase: int, bugs: list[tuple[str, str]]) -> dict[str, str]:
+def render(repo: Repo, phase: int, bugs: list[tuple[str, str]], noisy: bool = False) -> dict[str, str]:
     """-> {path: text}; bugs = [(fname, template)] whose mutation is applied"""
     files = {}
     r = _rng("layout", repo.name)
@@ -112,7 +134,9 @@ def render(repo: Repo, phase: int, bugs: list[tuple[str, str]]) -> dict[str, str
         if repo.style == "ood":       # OOD style: everything inside a class-free module with a long header
             parts.insert(0, '"""' + ("Module %s of the geo toolkit. " % mod) * 30 + '"""\n')
         files[f"pkg/{mod}.py"] = "\n\n".join(parts)
-        tl = [f"import unittest\nfrom pkg.{mod} import *\n\n\nclass T(unittest.TestCase):"]
+        noise = (f"import sys\nfor _ in range({20 + r.randint(0, 10)}):\n    print({NOISE!r}, file=sys.stderr)\n"
+                 if noisy else "")
+        tl = [f"import unittest\n{noise}from pkg.{mod} import *\n\n\nclass T(unittest.TestCase):"]
         for fname, t, k in fs:
             for n, a in enumerate(TEMPLATES[t][2]):
                 tl.append(f"    def test_{fname}_{n}(self):\n        self.assertTrue({a.format(f=fname, k=k)})\n")
@@ -137,9 +161,10 @@ class DevTask:
     bugs: tuple         # ((fname, template), ...)
     ood: bool = False
     dev: bool = True
+    v2: bool = False    # M6 world: noisy test logs, task tiers, staged tool-budget hook, hidden grader
 
 
-def make_stream(seed: int, n: int = 160, shift: int = 80, heldout_every: int = 2) -> list[DevTask]:
+def make_stream(seed: int, n: int = 160, shift: int = 80, heldout_every: int = 2, v2: bool = False) -> list[DevTask]:
     r = _rng("devstream", seed)
     out = []
     for i in range(n):
@@ -151,11 +176,11 @@ def make_stream(seed: int, n: int = 160, shift: int = 80, heldout_every: int = 2
         fs = [f for _, mfs in repo.mods for f in mfs]
         picks = r.sample(fs, nb)
         out.append(DevTask(i, ph, "refactor" if multi else "bugfix", repo.name, nb, held,
-                           tuple((f, t) for f, t, _ in picks)))
+                           tuple((f, t) for f, t, _ in picks), v2=v2))
     return out
 
 
-def ood_tasks(seed: int, n: int = 30, phase: int = 1) -> list[DevTask]:
+def ood_tasks(seed: int, n: int = 30, phase: int = 1, v2: bool = False) -> list[DevTask]:
     r = _rng("ood", seed)
     repo = make_repo(OOD_REPOS[0])
     fs = [f for _, mfs in repo.mods for f in mfs]
@@ -165,7 +190,7 @@ def ood_tasks(seed: int, n: int = 30, phase: int = 1) -> list[DevTask]:
         nb = r.randint(2, 3) if multi else 1
         picks = r.sample(fs, nb)
         out.append(DevTask(100000 + i, phase, "refactor" if multi else "bugfix", repo.name, nb, True,
-                           tuple((f, t) for f, t, _ in picks), ood=True))
+                           tuple((f, t) for f, t, _ in picks), ood=True, v2=v2))
     return out
 
 
@@ -213,6 +238,22 @@ def compress(text: str, strategy: str, limit_tokens: int) -> str:
     if strategy == "head-tail":
         return text[:lim // 2] + "\n...\n" + text[-lim // 2:]
     lines = text.splitlines()
+    if strategy == "fold":      # HarnessPro _compact_text: fold repeated lines, then keep head ~73% / tail ~27%
+        out, prev, n = [], None, 0
+        for ln in lines + [None]:
+            if ln == prev:
+                n += 1
+                continue
+            if n:
+                out.append(f"[previous line repeated {n} more times]")
+            if ln is not None:
+                out.append(ln)
+            prev, n = ln, 0
+        t = "\n".join(out)
+        if len(t) <= lim:
+            return t
+        h = lim * 8 // 11
+        return t[:h] + "\n...[truncated]...\n" + t[-(lim - h):]
     if strategy == "grep-errors":
         keep = [ln for ln in lines if ERR_RE.search(ln)]
     else:   # summarize = outline: def lines and the 4 lines after each, plus failure markers
@@ -232,6 +273,29 @@ class DevAgent:
         self.ep, self.tb, self.seed, self.label, self.ctx, self.cwd, self.t = ep, tb, seed, label, ctx, cwd, task
         self.steps = 0
         self.n = 0
+        self.R, self.pw, self.hook, self.stage = 0, {}, [0, 0, 0], 0
+        if task.v2:
+            self.R, self.pw = TIER_PROFILE[ep.tier]
+            self.hook = list(tb["hook"][ep.tier])
+
+    def _wrong(self, fname) -> bool:
+        return self.t.v2 and _rng(self.seed, self.t.id, fname, self.ep.tier, "wrong").random() < \
+            self.pw.get(min(self.t.nsub, 3), 0)
+
+    def _step(self, need, tool):
+        """M6 per-step model cost (reasoning tokens by tier and hook stage) and the staged tool-budget hook"""
+        if not self.t.v2:
+            return
+        e, s_, f = self.hook
+        if f and self.steps > f:
+            raise Fail("budget-block", tier=self.ep.tier, thresholds=[e, s_, f], need=need, tool=tool, agent=self.label)
+        if e and self.steps in (e, s_):
+            self.stage = 1 if self.steps == e and self.stage < 1 else 2
+            self.ctx += NUDGE_TOKENS            # appended to the tail of this tool result: prefix cache intact
+            self.ep.nudges += 1
+        r = self.R * STAGE_MULT[self.stage]
+        self.ep.cost += int(r)
+        self.ep.latency += 0.4 + r / 500
 
     def _charge(self, text):
         toks = len(text) // 4
@@ -252,6 +316,7 @@ class DevAgent:
             self.ep.steps += 1
             if self.steps > self.tb["max_steps"]:
                 raise Fail("step-limit", need=need, tool=tool, agent=self.label)
+            self._step(need, tool)
             rr = _rng(self.seed, self.t.id, self.label, j, attempt, "fault")
             err = next((e for e, p in FAULTS.get(tool, []) if rr.random() < p), None)
             if err is None:
@@ -333,10 +398,14 @@ class DevAgent:
         path = self.find(fname)
         body, info = self.read(path, fname)
         cands = []
+        wrong = self._wrong(fname)
+        self.ep.wrong_any |= wrong
         for ln in body:
-            for pat, rep in FIX_RULES:
+            for i, (pat, rep) in enumerate(FIX_RULES):
                 if re.search(pat, ln):
-                    cands.append((ln, re.sub(pat, rep, ln)))
+                    cands.append((ln, re.sub(pat, WRONG[i] if wrong else rep, ln)))
+        if self.stage >= 2:
+            cands = cands[:1]                   # strict stage: converge on the first plausible edit
         if not cands:
             raise Fail("info-lost", **info)
         for old, new in cands:
@@ -354,7 +423,7 @@ class DevAgent:
 def _materialise(task: DevTask) -> str:
     d = tempfile.mkdtemp(prefix=f"t{task.id}-", dir=_tmp())
     repo = make_repo(task.project)
-    for p, text in render(repo, task.phase, list(task.bugs)).items():
+    for p, text in render(repo, task.phase, list(task.bugs), noisy=task.v2).items():
         fp = Path(d, p)
         fp.parent.mkdir(parents=True, exist_ok=True)
         fp.write_text(text)
@@ -366,8 +435,56 @@ def _tmp():
     return str(CACHE_DIR)
 
 
+def _final_src(cwd, fname) -> str:
+    for p in sorted(Path(cwd, "pkg").glob("m*.py")):
+        lines = p.read_text().splitlines()
+        for i, ln in enumerate(lines):
+            if ln.startswith(f"def {fname}("):
+                j = i + 1
+                while j < len(lines) and lines[j].startswith("    "):
+                    j += 1
+                return "\n".join(lines[i:j]) + "\n"
+    return ""
+
+
+def run_asserts(src: str, asserts: list[str], timeout=20) -> list[bool]:
+    """execute a function's source plus assertion expressions in a fresh interpreter -> pass flag per assertion"""
+    prog = ("import json, sys\nsrc, asserts = json.loads(sys.stdin.read())\nns = {}\nok = []\n"
+            "try:\n    exec(src, ns)\nexcept Exception:\n    print(json.dumps([False] * len(asserts))); sys.exit()\n"
+            "for a in asserts:\n    try:\n        ok.append(bool(eval(a, dict(ns))))\n    except Exception:\n"
+            "        ok.append(False)\nprint(json.dumps(ok))\n")
+    try:
+        p = subprocess.run(["python3", "-B", "-c", prog], input=json.dumps([src, asserts]), capture_output=True,
+                           text=True, timeout=timeout)
+        return json.loads(p.stdout.strip().splitlines()[-1])
+    except (subprocess.TimeoutExpired, ValueError, IndexError):
+        return [False] * len(asserts)
+
+
+def task_spec(task: DevTask) -> list[dict]:
+    """the task description a label-free test synthesizer sees: function name, signature and NL spec per bug"""
+    repo = make_repo(task.project)
+    ks = {f: (t, k) for _, fs in repo.mods for f, t, k in fs}
+    return [{"function": f, "signature": f"{f}{SIG[t]}", "spec": SPEC[t].format(k=ks[f][1])} for f, t in task.bugs]
+
+
+def _grade(task, cwd, ep):
+    """hidden grader (labels): the hidden assertion of every bugged function, run on its final source"""
+    repo = make_repo(task.project)
+    ks = {f: (t, k) for _, fs in repo.mods for f, t, k in fs}
+    ok = True
+    for f, t in task.bugs:
+        ep.final_src[f] = _final_src(cwd, f)
+        if ep.wrong_any:
+            ok &= all(run_asserts(ep.final_src[f], [HIDDEN[t].format(f=f, k=ks[f][1])]))
+    return ok
+
+
 def _run(task: DevTask, tb: dict, mem: Memory, seed: int) -> Episode:
     ep = Episode(task)
+    ep.wrong_any = False
+    if task.v2:
+        ep.tier = tb["tier"].get(f"{task.kind}|{task.nsub}", "standard")
     cwd = _materialise(task)
     fact = "test-cmd"
     cur = tests_dir(make_repo(task.project), task.phase)
@@ -418,6 +535,11 @@ def _run(task: DevTask, tb: dict, mem: Memory, seed: int) -> Episode:
                 raise Fail("info-lost", kind="test-log", tool=tb["route"]["test"], need="test",
                            strategy=tb["compress"]["test-log"][0], limit=tb["compress"]["test-log"][1])
         ep.success = True
+        if task.v2:
+            ep.claimed = True                   # the agent believes it is done (visible tests green)
+            if not _grade(task, cwd, ep):
+                ep.success = False
+                ep.mode, ep.fail = "wrong-fix", {"tier": ep.tier}
     except Fail as f:
         ep.mode, ep.fail = f.mode, f.info
     finally:

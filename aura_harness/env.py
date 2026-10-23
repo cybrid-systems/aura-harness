@@ -150,10 +150,18 @@ class Episode:
     biggest_kind: str = ""
     biggest_len: int = 0
     retry_tools: dict = field(default_factory=dict)
+    # M6 (dev world v2 only): task tier, staged-hook nudges, simulated latency, a fix that passed the visible tests
+    # but not the hidden grader (claimed success), and the final source of every buggy function (for synth tests)
+    tier: str = ""
+    nudges: int = 0
+    latency: float = 0.0
+    claimed: bool = False
+    final_src: dict = field(default_factory=dict)
 
     def summary(self) -> dict:
         t = self.task
-        return {"id": t.id, "kind": t.kind, "phase": t.phase, "project": t.project, "nsub": t.nsub,
+        extra = {"tier": self.tier, "nudges": self.nudges, "claimed": self.claimed} if self.tier else {}
+        return {**extra, "id": t.id, "kind": t.kind, "phase": t.phase, "project": t.project, "nsub": t.nsub,
                 "heldout": t.heldout, "success": self.success, "mode": self.mode, "fail": self.fail,
                 "cost": self.cost, "steps": self.steps, "rediscovered": self.rediscovered,
                 "max_fill": round(self.max_fill, 3), "delegated": self.delegated, "biggest_kind": self.biggest_kind}
