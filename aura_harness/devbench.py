@@ -62,10 +62,10 @@ def evaluate(table, tasks, seed):
     return ok / len(tasks), cost / len(tasks)
 
 
-def fresh_heldout(seed, n=40):
+def fresh_heldout(seed, n=40, v2=False):
     from dataclasses import replace
     from .devenv import make_stream
-    xs = [t for t in make_stream(seed + 1000, 2 * n, shift=0) if t.heldout]
+    xs = [t for t in make_stream(seed + 1000, 2 * n, shift=0, v2=v2) if t.heldout]
     return [replace(t, id=200000 + i) for i, t in enumerate(xs)]
 
 

@@ -27,9 +27,9 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     h = backend or (SupervisedAura(worldlines) if supervise else AuraHarness(worldlines))
     pool = ProcessPoolExecutor(jobs) if jobs > 1 else None
     pmap = pool.map if pool else map
-    if world == "dev":
+    if world in ("dev", "dev2"):
         from ..devenv import make_stream as dev_stream
-        stream = dev_stream(seed, n, shift)
+        stream = dev_stream(seed, n, shift, v2=world == "dev2")
     else:
         stream = make_stream(seed, n, shift)
     # proposer: None = scripted; or a factory(min_evidence=, noise=, seed=) -> Proposer (e.g. the M5 LLM proposer)

@@ -45,6 +45,17 @@ def main(argv=None) -> int:
     db.add_argument("--jobs", type=int, default=4)
     db.add_argument("--out", default="runs/dev")
     db.add_argument("--set", default="m3", choices=["m3", "m5", "m5b"], help="m5: scripted vs LLM proposer (AURA_LLM_MODE)")
+    m6 = sub.add_parser("m6-bench", help="M6: HarnessPro tiers vs M5 on dev world v2 (AURA_LLM_MODE)")
+    m6.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
+    m6.add_argument("--n", type=int, default=160)
+    m6.add_argument("--jobs", type=int, default=5)
+    m6.add_argument("--out", default="results/m6")
+    m6.add_argument("--skip-m5", action="store_true", help="reuse the phase-1 M5 results in --out")
+    m6.add_argument("--no-recall", action="store_true")
+    ti = sub.add_parser("tiers", help="M6 runtime tier choice: show lite/medium/heavy of a run, optionally deploy one")
+    ti.add_argument("run_json", help="results/m6/m6-<config>-<seed>.json")
+    ti.add_argument("--tier", choices=["lite", "medium", "heavy"])
+    ti.add_argument("--apply", action="store_true", help="deploy --tier on a fresh Aura control plane (guarded APPLY)")
     rb = sub.add_parser("rsi-bench")
     rb.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     rb.add_argument("--n", type=int, default=400)
@@ -88,6 +99,18 @@ def main(argv=None) -> int:
         from .devbench import run as devb
         from .devbench import M5, M5B
         print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out, {"m5": M5, "m5b": M5B}.get(a.set)))
+    elif a.cmd == "m6-bench":
+        from .m6bench import run as m6b
+        print(m6b(a.seeds, a.n, a.jobs, a.out, skip_m5=a.skip_m5, do_recall=not a.no_recall))
+    elif a.cmd == "tiers":
+        from .rsi.m6 import deploy_tier
+        r = json.loads(open(a.run_json).read())
+        for t in ("lite", "medium", "heavy"):
+            m = r["tiers"][t]
+            print(f"{t:6s} {m['id']:6s} pr={m['pr']:.3f} tokens={m['cost']:,.0f} latency={m['latency']:.1f}s "
+                  f"admitted={r['admission'][t]['admitted']}  {m.get('desc') or ''}")
+        if a.tier and a.apply:
+            print(json.dumps(deploy_tier(r["tiers"][a.tier]["table"], a.tier), indent=1))
     elif a.cmd == "rsi-bench":
         from .rsi.bench import run as rsib
         print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out, a.set))
