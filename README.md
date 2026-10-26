@@ -413,6 +413,10 @@ It also reports a regression in which the evolved harness exposed a run-configur
 | evolution notes carried between rounds | structured audit log (not free text) | `LOG` |
 | agent lowered its own step limit through a tool | `max-steps` / `context-budget` are protected defines; every attempt to change them is rejected and logged | `guard.py`, `test_proposer_cannot_raise_its_own_budget` |
 
+## Swarm: Agensh-style self-organizing fibers (`aura/swarm.aura`)
+
+N identical worker fibers, no orchestrator, each running Gather → Claim → Act → Verify → Merge over a typed append-only board, per-worker channel mailboxes and a versioned workspace; deterministic mock proposer with acceptance checks. `python3 -m aura_harness.swarm epoch N K F cap`, full sweep `scripts/swarm_bench.py` → `results/swarm-bench.md`. Design, findings and numbers: [docs/swarm-design.md](docs/swarm-design.md). Coordination scales (rounds 1991 → 16 for N 1 → 1024) but wall time doesn't: fibers are serialized, `fiber:yield` doesn't interleave and fibers get silently dropped (aura #4697–#4702).
+
 ## Caveats
 
 * **The environment and the model are simulated.** The numbers say the loop, gate and guard behave as designed on a seeded stream built to stress a generic seed harness. They say nothing about a real model on a real benchmark. The seed is plausible but weak (24% success), and the learner finds a handful of rule changes.
