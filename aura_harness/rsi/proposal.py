@@ -42,7 +42,7 @@ class RuleSource:
 class CandidateQueue:
     """M5b: candidates proposed while another one is pending stat admission. Bounded, one entry per evidence
     signature (later proposals for a queued signature only add new candidate descs), deduplicated by desc against
-    the queue and the pending candidate. Entries are re-checked against the live table when they are dequeued (a
+    the queue and the pending candidates. Entries are re-checked against the live table when they are dequeued (a
     KEEP in between can make them no-ops). Holds proposer output only: no held-out ids or scores ever enter it."""
 
     def __init__(self, cap: int = 4):
@@ -53,11 +53,11 @@ class CandidateQueue:
     def __len__(self):
         return len(self.q)
 
-    def push(self, cands, pending_descs=(), pending_sig=None) -> None:
+    def push(self, cands, pending_descs=(), pending_sigs=()) -> None:
         if not cands:
             return
         sig = cands[0].sig
-        if sig == pending_sig:
+        if sig in set(pending_sigs):
             self.n["dropped_dup"] += len(cands)
             return
         taken = set(pending_descs) | {c.desc for _, cs in self.q for c in cs}
@@ -90,3 +90,9 @@ class CandidateQueue:
                 self.n["dequeued"] += 1
                 return live
         return None
+
+    def requeue(self, cands) -> None:
+        """a pending candidate displaced by a conflicting KEEP goes back to the front (it is re-selected later)"""
+        if cands and len(self.q) < self.cap:
+            self.q.insert(0, (cands[0].sig, list(cands)))
+            self.n["requeued"] = self.n.get("requeued", 0) + 1

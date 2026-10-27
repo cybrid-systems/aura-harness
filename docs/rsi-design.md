@@ -98,3 +98,16 @@ dequeue). Admission stays serial — one pending candidate at a time, fresh ids 
 decision — so fresh sets are one-shot and disjoint and alpha/#looks Bonferroni is per candidate with no concurrent family.
 Measured (dev, 5 seeds): ~10 dequeued per seed but they fail the selection gate; KEEPs, latency, AULC unchanged — the bottleneck is
 the ~58-task fresh window, not proposal supply. Results: results/servelearn-3a/.
+
+**3a-parallel (K concurrent stat admissions).** `StatAdmission` holds K=3 pending slots. K=3 because on the dev stream
+(160 tasks, ~0.28 fresh held-out tasks per task, ~45 fresh in total) K=3 round-robin slots can each still reach the 16-task first
+look in-run, while K=4 cannot. Each arriving fresh task goes round-robin to exactly one slot opened before it arrived (with no slot
+open, it is spent unused), so fresh sets are disjoint and one-shot.
+- **Alpha:** alpha/(K·#looks), a Bonferroni split over the concurrent family and the looks, so FWER ≤ alpha. LORD++ (Ramdas et al.
+  2017) and alpha-investing (Foster & Stine 2008) were not used: they bound FDR rather than FWER, and with 1–3 discoveries per run
+  they add no power.
+- **Conflicts:** a KEEP on component X re-queues the other pending candidates on X; their fresh tasks stay spent. Candidates on
+  other components are re-based onto the new table. Retention gate unchanged.
+- **Measured (results/servelearn-3b), no gain.** Total fresh evidence is fixed, so splitting it slows every candidate. With the
+  stricter alpha, first-KEEP latency 62→69 (LLM) and acceptance 0.73–0.80→0.60–0.65. AULC is flat or lower, learning replay
+  cost is higher, and there were 0 conflicts.
