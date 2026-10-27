@@ -90,3 +90,23 @@ Findings (full tables: `results/swarm-bench.md`; old serialized run:
   serve-async SIGSEGV in `maybe_reclaim_tw_unreachable` with yield + allocation;
   hash tables returned by fibers emptied/aliased before join; a stats-hash key string
   corrupted under rebind with N≥2 (tests therefore assert only accepted/done-valid).
+
+## Supervisor (orchestrated) mode
+
+`aura/supervisor.aura` (loaded after `swarm.aura`) solves the same toy task with central planning. One supervisor
+fiber splits every family's `[0,P)` scan into `W`-wide windows, dispatches each window once to a live worker (at most
+`SV-Q`=2 outstanding per worker) over the worker's inbox channel, gathers results on one result channel, and when all
+windows of a family are back it verifies and merges every subtask of that family itself. Workers keep no shared state.
+A worker whose heartbeat lease expires while holding jobs is marked dead and its jobs are re-dispatched.
+
+Runners: `run-supervisor`, `run-sv-fail` (worker 0 raises after `at` jobs), `run-sv-cancel` (cooperative stop flag),
+`run-sv-ping` (channel ask/reply RTT), `orch-ask-probe` (orch:agent-ask to an in-process responder), and
+`orch-probes N` (orch:supervise-batch failure recovery with default vs `:watch-scope #f`, orch:scope-cancel-all over
+N yielding bodies). Bench: `scripts/sv_bench.py`, which writes `results/sv-bench.md`. Tests: `tests/test_supervisor.py`.
+
+Read the bench as a comparison of protocols, not a speedup claim (aura#4707). The supervisor does no gather/claim
+work and gets full fact reuse by construction (1024 jobs against 1984 swarm turns). The swarm pays for decentralized
+coordination, and the bench measures that cost. With N=1, killing the only worker cannot be recovered in either mode.
+The orch:* rows show aura#4723 (default `:watch-scope` runs nothing and reports ok 0/0), aura#4724 (`scope-join-all
+:timeout-ms 1000` returns after about 3000 ms; the bodies only exit when a cooperative flag is set), and aura#4722
+(`agent-ask :timeout-ms 500` returns timeout after about 5000 ms, and the reply gets unknown-corr).
