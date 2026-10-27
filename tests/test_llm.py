@@ -154,12 +154,18 @@ class Proposer(unittest.TestCase):
         self.assertIsNone(cs[0].raw_aura)                         # a typed table edit, never free-form Lisp
         self.assertEqual((p.n["malformed_responses"], p.n["malformed_mutations"], p.n["mutations"]), (1, 2, 3))
 
-    def test_paused_makes_no_call(self):
-        cl = Scripted()
+    def test_pending_tracked_per_signature(self):
+        # 3a: the proposer keeps running while a candidate is pending; verdict history must stay per signature
+        cl = Scripted('{"mutations":[{"kind":"route","need":"edit","tool":"apply-patch"}]}')
         p = LLMProposer(client=cl, min_evidence=1)
-        p.paused = True
-        self.assertIsNone(p.observe(Ep, seed_table()))
-        self.assertEqual(cl.prompts, [])
+        p.observe(Ep, seed_table())
+        self.assertEqual(len(cl.prompts), 1)                     # no pause: a call is made
+        sig = next(iter(p.pending))
+        p.feedback("other|sig", "ROLLBACK", [])
+        self.assertEqual(p.history, [])                          # another signature's verdict does not consume it
+        p.feedback(sig, "KEEP", [])
+        self.assertEqual(p.history, ["route edit->apply-patch: KEEP"])
+        self.assertEqual(p.pending, {})
 
     def test_sees_only_verdicts(self):
         cl = Scripted('{"mutations":[{"kind":"retry","tool":"sed","err":"bad-args","n":0}]}',

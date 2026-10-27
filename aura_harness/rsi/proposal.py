@@ -37,3 +37,56 @@ class RuleSource:
 
     def __getattr__(self, k):          # source attribute for the LLM hook, etc.
         return getattr(self.p, k)
+
+
+class CandidateQueue:
+    """M5b: candidates proposed while another one is pending stat admission. Bounded, one entry per evidence
+    signature (later proposals for a queued signature only add new candidate descs), deduplicated by desc against
+    the queue and the pending candidate. Entries are re-checked against the live table when they are dequeued (a
+    KEEP in between can make them no-ops). Holds proposer output only: no held-out ids or scores ever enter it."""
+
+    def __init__(self, cap: int = 4):
+        self.cap = cap
+        self.q: list[tuple[str, list]] = []
+        self.n = {"queued": 0, "merged": 0, "dropped_full": 0, "dropped_dup": 0, "dropped_noop": 0, "dequeued": 0}
+
+    def __len__(self):
+        return len(self.q)
+
+    def push(self, cands, pending_descs=(), pending_sig=None) -> None:
+        if not cands:
+            return
+        sig = cands[0].sig
+        if sig == pending_sig:
+            self.n["dropped_dup"] += len(cands)
+            return
+        taken = set(pending_descs) | {c.desc for _, cs in self.q for c in cs}
+        new = []
+        for c in cands:
+            if c.desc in taken:
+                self.n["dropped_dup"] += 1
+            else:
+                taken.add(c.desc)
+                new.append(c)
+        if not new:
+            return
+        for s_, cs in self.q:
+            if s_ == sig:
+                cs.extend(new)
+                self.n["merged"] += len(new)
+                return
+        if len(self.q) >= self.cap:
+            self.n["dropped_full"] += len(new)
+            return
+        self.q.append((sig, new))
+        self.n["queued"] += len(new)
+
+    def pop(self, tb, noop) -> list | None:
+        while self.q:
+            _, cs = self.q.pop(0)
+            live = [c for c in cs if not noop(c, tb)]
+            self.n["dropped_noop"] += len(cs) - len(live)
+            if live:
+                self.n["dequeued"] += 1
+                return live
+        return None

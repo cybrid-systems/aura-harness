@@ -1,0 +1,26 @@
+{
+ "model": "MiniMax-M3.1-Flash",
+ "messages": [
+  {
+   "role": "system",
+   "content": "You improve a coding agent's harness. You are shown one recurring failure from the agent's own (training) trajectories and the relevant harness settings. Propose 1-3 small edits that would fix it. Reply with ONLY a JSON object {\"mutations\": [...]} where each mutation is one of:\n  {\"kind\":\"route\",\"need\":NEED,\"tool\":TOOL}            pick the tool used for a need\n  {\"kind\":\"compress\",\"output\":KIND,\"strategy\":STRAT,\"limit\":INT 100-2000}  how a tool output is shortened\n  {\"kind\":\"retry\",\"tool\":TOOL,\"err\":ERR,\"n\":INT 0-5}  retries for a tool error (0 = fail fast)\n  {\"kind\":\"ttl\",\"fact\":FACT,\"n\":INT 0-1000}            tasks a remembered fact stays valid (0 = never cache)\n  {\"kind\":\"delegate\",\"task\":TASKKIND,\"threshold\":INT 2-7 or null}  delegate tasks with >= threshold subtasks\nNEED->TOOLs: {\"search\": [\"grep\", \"rg-json\", \"lsp-find\"], \"read\": [\"cat\"], \"edit\": [\"sed\", \"apply-patch\"], \"test\": [\"pytest\", \"pytest-q\"], \"query-db\": [\"sql\"], \"logs\": [\"journal\"]}\nKIND: ['search-results', 'code-file', 'test-log', 'service-log', 'sql-rows', 'patch-result', 'config']\nSTRAT: ['head', 'tail', 'head-tail', 'grep-errors', 'summarize']\nFACT: ['test-cmd', 'repo-layout', 'db-schema']\nTASKKIND: ['bugfix', 'feature', 'data', 'triage', 'refactor']\nContext budget and step limits are fixed and cannot be changed. Prefer the edit most likely to fix the failure without hurting other tasks; edits are tested on hidden tasks and rolled back if they do not help."
+  },
+  {
+   "role": "user",
+   "content": "{\"current_harness\": {\"compress\": {\"code-file\": [\"head\", 800], \"config\": [\"head\", 800], \"patch-result\": [\"head\", 800], \"search-results\": [\"head\", 800], \"service-log\": [\"head\", 800], \"sql-rows\": [\"head\", 800], \"test-log\": [\"head\", 800]}, \"delegate_thresholds\": {}, \"retry\": {\"apply-patch|bad-args\": 1, \"apply-patch|not-found\": 1, \"apply-patch|rate-limit\": 1, \"apply-patch|timeout\": 1, \"cat|bad-args\": 1, \"cat|not-found\": 1, \"cat|rate-limit\": 1, \"cat|timeout\": 1, \"grep|bad-args\": 1, \"grep|not-found\": 1, \"grep|rate-limit\": 1, \"grep|timeout\": 1, \"journal|bad-args\": 1, \"journal|not-found\": 1, \"journal|rate-limit\": 1, \"journal|timeout\": 1, \"lsp-find|bad-args\": 1, \"lsp-find|not-found\": 1, \"lsp-find|rate-limit\": 1, \"lsp-find|timeout\": 1, \"pytest-q|bad-args\": 1, \"pytest-q|not-found\": 1, \"pytest-q|rate-limit\": 1, \"pytest-q|timeout\": 1, \"pytest|bad-args\": 1, \"pytest|not-found\": 1, \"pytest|rate-limit\": 1, \"pytest|timeout\": 1, \"rg-json|bad-args\": 1, \"rg-json|not-found\": 1, \"rg-json|rate-limit\": 1, \"rg-json|timeout\": 1, \"sed|bad-args\": 1, \"sed|not-found\": 1, \"sed|rate-limit\": 1, \"sed|timeout\": 1, \"sql|bad-args\": 1, \"sql|not-found\": 1, \"sql|rate-limit\": 1, \"sql|timeout\": 1}, \"route\": {\"edit\": \"sed\", \"logs\": \"journal\", \"query-db\": \"sql\", \"read\": \"cat\", \"search\": \"grep\", \"test\": \"pytest\"}, \"ttl\": {\"db-schema\": 0, \"repo-layout\": 0, \"test-cmd\": 0}}, \"failure\": {\"info\": {\"kind\": \"test-log\", \"length\": 5364, \"limit\": 800, \"need\": \"test\", \"strategy\": \"head\", \"tool\": \"pytest\"}, \"key\": \"test-log\", \"mode\": \"info-lost\"}, \"recent_tool_calls[need,tool,attempt]\": [[\"read\", \"cat\", 0], [\"test\", \"pytest\", 0]], \"task\": {\"kind\": \"bugfix\", \"project\": \"api\"}, \"your_earlier_edits_and_verdicts\": []}"
+  }
+ ],
+ "content": "{\"mutations\":[{\"kind\":\"compress\",\"output\":\"test-log\",\"strategy\":\"grep-errors\",\"limit\":800}]}",
+ "usage": {
+  "total_tokens": 1608,
+  "total_characters": 0,
+  "prompt_tokens": 1264,
+  "completion_tokens": 344,
+  "completion_tokens_details": {
+   "reasoning_tokens": 317
+  },
+  "prompt_tokens_details": {
+   "cached_tokens": 128
+  }
+ }
+}

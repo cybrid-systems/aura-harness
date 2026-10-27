@@ -13,7 +13,7 @@ from .admission import RetentionGate, target_veto
 from .m2 import (Critic, M2Config, agg, budget_k, fresh_of, pareto_insert, per_task, prune_candidates,
                  recomb_candidates)
 from .plugins import Library
-from .proposal import RuleSource
+from .proposal import CandidateQueue, RuleSource
 from .stat import StatAdmission, hard_veto, per_task3
 
 
@@ -40,6 +40,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     m2 = cfg.any()
     stat = cfg.admission == "stat"
     sa = StatAdmission(alpha=cfg.alpha)
+    queue = CandidateQueue()             # stat mode: proposals made while a candidate is pending admission
     if stat and retention is None:
         retention = RetentionGate()          # the retention budget gate is always on in stat mode
     keep_tables = []
@@ -70,10 +71,16 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             d = src.p.diagnose(ep) if cfg.critic else None
             if d:
                 critic.note(f"{d[0]}|{d[1]}", t.project)
-            if stat and hasattr(src.p, "paused"):
-                src.p.paused = bool(sa.pending)
             cands = src.observe(ep, tb)
-            if not cands or (stat and sa.pending):
+            if stat:
+                # the proposer keeps running while a candidate waits for fresh evidence; its output is queued and
+                # selected one at a time, so each admission still has its own one-use fresh tasks and alpha budget
+                P = sa.pending
+                queue.push(cands, P["descs"] if P else (), P["sig"] if P else None)
+                if P or not len(queue):
+                    continue
+                cands = queue.pop(tb, src.p._noop)
+            if not cands:
                 continue
             if cfg.critic and critic.veto(cands[0].sig):
                 stats["critic_veto"] += 1
@@ -214,7 +221,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out["restarts"] = getattr(h, "restarts", 0)
     out["keep_tables"] = keep_tables
     if stat:
-        out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending)}
+        out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending), "queue": dict(queue.n, left=len(queue))}
     if hasattr(src.p, "llm_usage"):
         v = [x for x in verdicts if x.get("n_llm")]
         out["llm"] = dict(src.p.llm_usage(), gated_with_llm=len(v),

@@ -74,7 +74,7 @@ class StatAdmission:
         mean = lambda r, k: sum(r[i][k] for i in both) / max(1, len(both))
         p = sign_p(b, c)
         a = self.alpha / len(self.looks)
-        info = {"n": n, "b": b, "c": c, "p": round(p, 5), "alpha_look": round(a, 4), "look": self.pending["look"], "both_ok": len(both),
+        info = {"n": n, "fresh": [min(ids), max(ids)] if ids else None, "sel_ts": self.pending.get("ts"), "b": b, "c": c, "p": round(p, 5), "alpha_look": round(a, 4), "look": self.pending["look"], "both_ok": len(both),
                 "tokens": [round(mean(base, 1)), round(mean(cand, 1))],
                 "steps": [round(mean(base, 2), 2), round(mean(cand, 2), 2)]}
         if p < a:

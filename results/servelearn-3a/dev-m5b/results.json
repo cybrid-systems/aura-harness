@@ -1,0 +1,3059 @@
+[
+ {
+  "config": "frozen seed harness",
+  "seed": 0,
+  "stream_success": 0.0,
+  "keep": 0,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1661.1,
+  "ood_success": 0.0,
+  "ood_tokens": 1717.8666666666666,
+  "wall_s": null,
+  "llm": null,
+  "proposals": null,
+  "metrics": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 1,
+  "stream_success": 0.0,
+  "keep": 0,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1687.3,
+  "ood_success": 0.0,
+  "ood_tokens": 1735.3333333333333,
+  "wall_s": null,
+  "llm": null,
+  "proposals": null,
+  "metrics": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 2,
+  "stream_success": 0.0,
+  "keep": 0,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1661.1,
+  "ood_success": 0.0,
+  "ood_tokens": 1691.3666666666666,
+  "wall_s": null,
+  "llm": null,
+  "proposals": null,
+  "metrics": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 3,
+  "stream_success": 0.0,
+  "keep": 0,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1746.025,
+  "ood_success": 0.0,
+  "ood_tokens": 1673.9,
+  "wall_s": null,
+  "llm": null,
+  "proposals": null,
+  "metrics": null
+ },
+ {
+  "config": "frozen seed harness",
+  "seed": 4,
+  "stream_success": 0.0,
+  "keep": 0,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 0,
+  "kept": [],
+  "restarts": 0,
+  "heldout_success": 0.0,
+  "heldout_tokens": 1713.5,
+  "ood_success": 0.0,
+  "ood_tokens": 1682.9333333333334,
+  "wall_s": null,
+  "llm": null,
+  "proposals": null,
+  "metrics": null
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 0,
+  "stream_success": 0.775,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 6,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 79.5,
+  "llm": null,
+  "proposals": 9,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.575,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 46
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.975,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 78
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.98,
+     "onsets": 5,
+     "curve": [
+      1,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.8,
+    "signatures": 5,
+    "events": 9,
+    "repeat_rate": 0.444,
+    "distinct_per_sig": 2.8
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 9,
+    "keep": 3,
+    "accept_rate": 0.333,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1599885,
+    "serving_tasks": 160,
+    "replay_task_execs": 1183,
+    "replay_execs_per_served": 7.39,
+    "replay_tokens_est": 11829150,
+    "learning_share_est": 0.881
+   }
+  }
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 1,
+  "stream_success": 0.78125,
+  "keep": 4,
+  "false_keeps": [
+   {
+    "desc": "ttl test-cmd=40",
+    "ts": 40,
+    "heldout_before": 0.925,
+    "heldout_after": 1.0,
+    "reverted": true
+   },
+   {
+    "desc": "ttl test-cmd=0",
+    "ts": 90,
+    "heldout_before": 1.0,
+    "heldout_after": 0.925,
+    "reverted": false
+   }
+  ],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 14817.875,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13974.866666666667,
+  "wall_s": 58.47,
+  "llm": null,
+  "proposals": 8,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 51
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.925,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 74
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.9,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.75,
+    "signatures": 4,
+    "events": 8,
+    "repeat_rate": 0.5,
+    "distinct_per_sig": 2.75
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 8,
+    "keep": 4,
+    "accept_rate": 0.5,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 2
+   },
+   "cost": {
+    "serving_tokens": 1355609,
+    "serving_tasks": 160,
+    "replay_task_execs": 963,
+    "replay_execs_per_served": 6.02,
+    "replay_tokens_est": 8159072,
+    "learning_share_est": 0.858
+   }
+  }
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 2,
+  "stream_success": 0.74375,
+  "keep": 4,
+  "false_keeps": [
+   {
+    "desc": "ttl test-cmd=40",
+    "ts": 28,
+    "heldout_before": 0.425,
+    "heldout_after": 0.425,
+    "reverted": true
+   }
+  ],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 13644.35,
+  "ood_success": 0.7,
+  "ood_tokens": 10775.733333333334,
+  "wall_s": 64.0,
+  "llm": null,
+  "proposals": 8,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 49
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 70
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.82,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.6,
+      0.6,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.969,
+    "signatures": 4,
+    "events": 8,
+    "repeat_rate": 0.375,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 8,
+    "keep": 4,
+    "accept_rate": 0.5,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1509333,
+    "serving_tasks": 160,
+    "replay_task_execs": 956,
+    "replay_execs_per_served": 5.97,
+    "replay_tokens_est": 9018265,
+    "learning_share_est": 0.857
+   }
+  }
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 3,
+  "stream_success": 0.76875,
+  "keep": 4,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=10"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12493.7,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 8739.966666666667,
+  "wall_s": 51.69,
+  "llm": null,
+  "proposals": 6,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 51
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.9,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 72
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.84,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.6,
+      0.6,
+      0.8,
+      1,
+      1,
+      1,
+      0.8,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.938,
+    "signatures": 4,
+    "events": 6,
+    "repeat_rate": 0.167,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 6,
+    "keep": 4,
+    "accept_rate": 0.667,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 1.5
+   },
+   "cost": {
+    "serving_tokens": 1426385,
+    "serving_tasks": 160,
+    "replay_task_execs": 680,
+    "replay_execs_per_served": 4.25,
+    "replay_tokens_est": 6062136,
+    "learning_share_est": 0.81
+   }
+  }
+ },
+ {
+  "config": "RSI loop (M1)",
+  "seed": 4,
+  "stream_success": 0.75625,
+  "keep": 6,
+  "false_keeps": [
+   {
+    "desc": "ttl test-cmd=40",
+    "ts": 30,
+    "heldout_before": 0.475,
+    "heldout_after": 0.475,
+    "reverted": true
+   },
+   {
+    "desc": "ttl test-cmd=0",
+    "ts": 84,
+    "heldout_before": 0.975,
+    "heldout_after": 1.0,
+    "reverted": true
+   },
+   {
+    "desc": "ttl test-cmd=40",
+    "ts": 132,
+    "heldout_before": 1.0,
+    "heldout_after": 0.975,
+    "reverted": false
+   }
+  ],
+  "stat": null,
+  "rollback": 3,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "ttl test-cmd=40",
+   "route edit->apply-patch",
+   "ttl test-cmd=0",
+   "ttl test-cmd=40",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 10252.025,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 11831.366666666667,
+  "wall_s": 78.01,
+  "llm": null,
+  "proposals": 9,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.625,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 50
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 71
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.88,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.8,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.975,
+    "signatures": 5,
+    "events": 9,
+    "repeat_rate": 0.333,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 9,
+    "keep": 6,
+    "accept_rate": 0.667,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1488385,
+    "serving_tasks": 160,
+    "replay_task_execs": 1124,
+    "replay_execs_per_served": 7.03,
+    "replay_tokens_est": 10455905,
+    "learning_share_est": 0.875
+   }
+  }
+ },
+ {
+  "config": "scripted + stat admission (M5b)",
+  "seed": 0,
+  "stream_success": 0.2875,
+  "keep": 2,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 10,
+     "c": 0,
+     "p": 0.00098,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 92,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 7,
+     "tokens": [
+      6818,
+      6944
+     ],
+     "steps": [
+      6.71,
+      6.71
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    }
+   ],
+   "pending_at_end": false,
+   "queue": {
+    "queued": 49,
+    "merged": 0,
+    "dropped_full": 0,
+    "dropped_dup": 201,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 0
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.95,
+  "heldout_tokens": 12832.375,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 23.37,
+  "llm": null,
+  "proposals": 3,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.575,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 46
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.55,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      0.4,
+      0.8,
+      0.6,
+      0.6,
+      0.8,
+      0.75,
+      0.25,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 2.0,
+    "signatures": 3,
+    "events": 3,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 3,
+    "keep": 2,
+    "accept_rate": 0.667,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 850045,
+    "serving_tasks": 160,
+    "replay_task_execs": 688,
+    "replay_execs_per_served": 4.3,
+    "replay_tokens_est": 3655194,
+    "learning_share_est": 0.811
+   }
+  }
+ },
+ {
+  "config": "scripted + stat admission (M5b)",
+  "seed": 1,
+  "stream_success": 0.2625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 51,
+    "merged": 0,
+    "dropped_full": 0,
+    "dropped_dup": 206,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/800"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.375,
+  "heldout_tokens": 7827.25,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8157.266666666666,
+  "wall_s": 29.35,
+  "llm": null,
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.525,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 42
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.5,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.6,
+      0.6,
+      0.4,
+      0.2,
+      0.4,
+      0.6,
+      0.4,
+      0.8,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 2.5,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 776884,
+    "serving_tasks": 160,
+    "replay_task_execs": 504,
+    "replay_execs_per_served": 3.15,
+    "replay_tokens_est": 2447185,
+    "learning_share_est": 0.759
+   }
+  }
+ },
+ {
+  "config": "scripted + stat admission (M5b)",
+  "seed": 2,
+  "stream_success": 0.26875,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 12,
+     "c": 0,
+     "p": 0.00024,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 94,
+     "b": 0,
+     "c": 1,
+     "p": 1.0,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 13,
+     "tokens": [
+      10026,
+      8770
+     ],
+     "steps": [
+      8.15,
+      7.0
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=40"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 49,
+    "merged": 0,
+    "dropped_full": 0,
+    "dropped_dup": 212,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 1
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/800"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.425,
+  "heldout_tokens": 8641.35,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8490.966666666667,
+  "wall_s": 36.02,
+  "llm": null,
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.5375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 43
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.56,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.4,
+      0.6,
+      0.6,
+      0.6,
+      0.6,
+      0.8,
+      0.8,
+      0.4
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 4.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 822908,
+    "serving_tasks": 160,
+    "replay_task_execs": 517,
+    "replay_execs_per_served": 3.23,
+    "replay_tokens_est": 2659021,
+    "learning_share_est": 0.764
+   }
+  }
+ },
+ {
+  "config": "scripted + stat admission (M5b)",
+  "seed": 3,
+  "stream_success": 0.24375,
+  "keep": 2,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 90,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 9,
+     "tokens": [
+      8392,
+      8560
+     ],
+     "steps": [
+      7.56,
+      7.56
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 49,
+    "merged": 0,
+    "dropped_full": 0,
+    "dropped_dup": 212,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 0
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 12836.775,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 9366.8,
+  "wall_s": 27.95,
+  "llm": null,
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.4875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 39
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.39,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.4,
+      0.4,
+      0.8,
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 2.5,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.2,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.2
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 2,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 63
+   },
+   "cost": {
+    "serving_tokens": 872022,
+    "serving_tasks": 160,
+    "replay_task_execs": 682,
+    "replay_execs_per_served": 4.26,
+    "replay_tokens_est": 3716994,
+    "learning_share_est": 0.81
+   }
+  }
+ },
+ {
+  "config": "scripted + stat admission (M5b)",
+  "seed": 4,
+  "stream_success": 0.2625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 10,
+     "c": 0,
+     "p": 0.00098,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 51,
+    "merged": 0,
+    "dropped_full": 0,
+    "dropped_dup": 199,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/800"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.475,
+  "heldout_tokens": 8546.475,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8096.133333333333,
+  "wall_s": 17.2,
+  "llm": null,
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.525,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 42
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.52,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      0.4,
+      0.6,
+      0.4,
+      0.6,
+      1,
+      0.4,
+      0.2,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 2.5,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 862732,
+    "serving_tasks": 160,
+    "replay_task_execs": 522,
+    "replay_execs_per_served": 3.26,
+    "replay_tokens_est": 2814663,
+    "learning_share_est": 0.765
+   }
+  }
+ },
+ {
+  "config": "RSI + LLM proposer (M5)",
+  "seed": 0,
+  "stream_success": 0.73125,
+  "keep": 4,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 6,
+  "kept": [
+   "compress test-log grep-errors/2000",
+   "route edit->apply-patch",
+   "compress test-log grep-errors/1000",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 57.82,
+  "llm": {
+   "responses": 18,
+   "malformed_responses": 0,
+   "mutations": 24,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 24,
+   "calls": 0,
+   "cache_hits": 18,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 10,
+   "llm_kept": 4,
+   "rule_kept": 0
+  },
+  "proposals": 10,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.4875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 39
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.975,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 78
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.98,
+     "onsets": 5,
+     "curve": [
+      1,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.188,
+    "signatures": 6,
+    "events": 10,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 10,
+    "keep": 4,
+    "accept_rate": 0.4,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1705132,
+    "serving_tasks": 160,
+    "replay_task_execs": 1047,
+    "replay_execs_per_served": 6.54,
+    "replay_tokens_est": 11157958,
+    "learning_share_est": 0.867,
+    "llm_calls": 0,
+    "llm_cache_hits": 18,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "RSI + LLM proposer (M5)",
+  "seed": 1,
+  "stream_success": 0.6625,
+  "keep": 6,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/1500",
+   "route edit->apply-patch",
+   "ttl test-cmd=100",
+   "route test->pytest-q",
+   "ttl test-cmd=50",
+   "ttl test-cmd=200"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.85,
+  "heldout_tokens": 14923.2,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13672.8,
+  "wall_s": 50.08,
+  "llm": {
+   "responses": 15,
+   "malformed_responses": 0,
+   "mutations": 22,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 22,
+   "calls": 0,
+   "cache_hits": 15,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 7,
+   "llm_kept": 6,
+   "rule_kept": 0
+  },
+  "proposals": 7,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.575,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 46
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.75,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 60
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.68,
+     "onsets": 5,
+     "curve": [
+      0,
+      0.4,
+      0.4,
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.95,
+    "signatures": 5,
+    "events": 7,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.4,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.4
+    }
+   },
+   "acceptance": {
+    "proposals": 7,
+    "keep": 6,
+    "accept_rate": 0.857,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 1.2
+   },
+   "cost": {
+    "serving_tokens": 1435489,
+    "serving_tasks": 160,
+    "replay_task_execs": 666,
+    "replay_execs_per_served": 4.16,
+    "replay_tokens_est": 5975223,
+    "learning_share_est": 0.806,
+    "llm_calls": 0,
+    "llm_cache_hits": 15,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "RSI + LLM proposer (M5)",
+  "seed": 2,
+  "stream_success": 0.675,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 7,
+  "kept": [
+   "compress test-log tail/1500",
+   "compress test-log grep-errors/1200",
+   "route edit->apply-patch"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 13644.35,
+  "ood_success": 0.7,
+  "ood_tokens": 10775.733333333334,
+  "wall_s": 66.05,
+  "llm": {
+   "responses": 18,
+   "malformed_responses": 0,
+   "mutations": 28,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 28,
+   "calls": 0,
+   "cache_hits": 18,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 10,
+   "llm_kept": 3,
+   "rule_kept": 0
+  },
+  "proposals": 10,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.5125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 41
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 67
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.8,
+     "onsets": 5,
+     "curve": [
+      0.8,
+      0.8,
+      0.4,
+      1,
+      0.8,
+      0.6,
+      1,
+      1,
+      0.8,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 2.344,
+    "signatures": 4,
+    "events": 10,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 4
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 10,
+    "keep": 3,
+    "accept_rate": 0.3,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 4
+   },
+   "cost": {
+    "serving_tokens": 1794511,
+    "serving_tasks": 160,
+    "replay_task_execs": 1103,
+    "replay_execs_per_served": 6.89,
+    "replay_tokens_est": 12370910,
+    "learning_share_est": 0.873,
+    "llm_calls": 0,
+    "llm_cache_hits": 18,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "RSI + LLM proposer (M5)",
+  "seed": 3,
+  "stream_success": 0.68125,
+  "keep": 5,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/1500",
+   "route edit->apply-patch",
+   "ttl test-cmd=8",
+   "compress test-log grep-errors/1000",
+   "ttl test-cmd=4"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12636.5,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 9450.366666666667,
+  "wall_s": 63.7,
+  "llm": {
+   "responses": 17,
+   "malformed_responses": 0,
+   "mutations": 27,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 27,
+   "calls": 0,
+   "cache_hits": 17,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 9,
+   "llm_kept": 5,
+   "rule_kept": 0
+  },
+  "proposals": 9,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.4875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 39
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 70
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.82,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      1,
+      0.6,
+      1,
+      1,
+      1,
+      0.8,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.35,
+    "signatures": 5,
+    "events": 9,
+    "repeat_rate": 0.111,
+    "distinct_per_sig": 2.6
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 9,
+    "keep": 5,
+    "accept_rate": 0.556,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 9.6
+   },
+   "cost": {
+    "serving_tokens": 1690377,
+    "serving_tasks": 160,
+    "replay_task_execs": 952,
+    "replay_execs_per_served": 5.95,
+    "replay_tokens_est": 10057743,
+    "learning_share_est": 0.856,
+    "llm_calls": 0,
+    "llm_cache_hits": 17,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "RSI + LLM proposer (M5)",
+  "seed": 4,
+  "stream_success": 0.66875,
+  "keep": 6,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 3,
+  "kept": [
+   "compress test-log grep-errors/1600",
+   "ttl test-cmd=50",
+   "route edit->apply-patch",
+   "compress test-log summarize/800",
+   "ttl test-cmd=10",
+   "delegate refactor>=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 10439.2,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 11030.1,
+  "wall_s": 67.49,
+  "llm": {
+   "responses": 17,
+   "malformed_responses": 0,
+   "mutations": 23,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 23,
+   "calls": 0,
+   "cache_hits": 17,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 9,
+   "llm_kept": 6,
+   "rule_kept": 0
+  },
+  "proposals": 9,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.5125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 41
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.825,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 66
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.72,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.4,
+      0.4,
+      0.6,
+      0.8,
+      0.6,
+      1,
+      1,
+      0.8,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.325,
+    "signatures": 5,
+    "events": 9,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.6
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 9,
+    "keep": 6,
+    "accept_rate": 0.667,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1526167,
+    "serving_tasks": 160,
+    "replay_task_execs": 953,
+    "replay_execs_per_served": 5.96,
+    "replay_tokens_est": 9090232,
+    "learning_share_est": 0.856,
+    "llm_calls": 0,
+    "llm_cache_hits": 17,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 0,
+  "stream_success": 0.1625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/2000"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 16,
+    "merged": 7,
+    "dropped_full": 0,
+    "dropped_dup": 75,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 2
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/2000"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.275,
+  "heldout_tokens": 12923.925,
+  "ood_success": 0.0,
+  "ood_tokens": 14153.566666666668,
+  "wall_s": 28.43,
+  "llm": {
+   "responses": 68,
+   "malformed_responses": 0,
+   "mutations": 100,
+   "malformed_mutations": 0,
+   "noop": 2,
+   "llm_candidates": 98,
+   "calls": 0,
+   "cache_hits": 68,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 1,
+   "llm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.325,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 26
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.34,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.2,
+      0.2,
+      0.4,
+      0.4,
+      0.6,
+      0.5,
+      0.25,
+      0.25
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1179147,
+    "serving_tasks": 160,
+    "replay_task_execs": 356,
+    "replay_execs_per_served": 2.23,
+    "replay_tokens_est": 2623602,
+    "learning_share_est": 0.69,
+    "llm_calls": 0,
+    "llm_cache_hits": 68,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 1,
+  "stream_success": 0.21875,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1500"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 21,
+    "merged": 6,
+    "dropped_full": 0,
+    "dropped_dup": 76,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 2
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/1500"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.3,
+  "heldout_tokens": 10556.075,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8157.266666666666,
+  "wall_s": 26.21,
+  "llm": {
+   "responses": 69,
+   "malformed_responses": 0,
+   "mutations": 103,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 103,
+   "calls": 0,
+   "cache_hits": 69,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.4375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 35
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.4,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.6,
+      0.4,
+      0.2,
+      0.2,
+      0.4,
+      0.4,
+      0.6,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.4,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.4
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1080125,
+    "serving_tasks": 160,
+    "replay_task_execs": 453,
+    "replay_execs_per_served": 2.83,
+    "replay_tokens_est": 3058104,
+    "learning_share_est": 0.739,
+    "llm_calls": 0,
+    "llm_cache_hits": 69,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 2,
+  "stream_success": 0.16875,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 11,
+     "c": 0,
+     "p": 0.00049,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log tail/1500"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 19,
+    "merged": 13,
+    "dropped_full": 0,
+    "dropped_dup": 74,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 2
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log tail/1500"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.275,
+  "heldout_tokens": 11965.45,
+  "ood_success": 0.0,
+  "ood_tokens": 11983.933333333332,
+  "wall_s": 24.55,
+  "llm": {
+   "responses": 68,
+   "malformed_responses": 1,
+   "mutations": 106,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 106,
+   "calls": 0,
+   "cache_hits": 68,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.3375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 27
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.32,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.4,
+      0.6,
+      0.2,
+      0.4
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1141365,
+    "serving_tasks": 160,
+    "replay_task_execs": 454,
+    "replay_execs_per_served": 2.84,
+    "replay_tokens_est": 3238623,
+    "learning_share_est": 0.739,
+    "llm_calls": 0,
+    "llm_cache_hits": 68,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 3,
+  "stream_success": 0.175,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1500"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 90,
+     "b": 1,
+     "c": 0,
+     "p": 0.5,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 8,
+     "tokens": [
+      11280,
+      7343
+     ],
+     "steps": [
+      7.12,
+      7.12
+     ],
+     "verdict": "wait",
+     "desc": "compress test-log grep-errors/1000"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 19,
+    "merged": 3,
+    "dropped_full": 0,
+    "dropped_dup": 86,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 2
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/1500"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.45,
+  "heldout_tokens": 11899.875,
+  "ood_success": 0.4666666666666667,
+  "ood_tokens": 7299.633333333333,
+  "wall_s": 30.74,
+  "llm": {
+   "responses": 70,
+   "malformed_responses": 0,
+   "mutations": 108,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 108,
+   "calls": 0,
+   "cache_hits": 70,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 1,
+   "llm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.35,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 28
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.31,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.2,
+      0.4,
+      0.2,
+      0.4,
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.2,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.2
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1079611,
+    "serving_tasks": 160,
+    "replay_task_execs": 462,
+    "replay_execs_per_served": 2.89,
+    "replay_tokens_est": 3117377,
+    "learning_share_est": 0.743,
+    "llm_calls": 0,
+    "llm_cache_hits": 70,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 4,
+  "stream_success": 0.15625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1600"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 90,
+     "b": 2,
+     "c": 0,
+     "p": 0.25,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 5,
+     "tokens": [
+      13230,
+      12666
+     ],
+     "steps": [
+      6.0,
+      5.0
+     ],
+     "verdict": "wait",
+     "desc": "ttl test-cmd=50"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 15,
+    "merged": 7,
+    "dropped_full": 0,
+    "dropped_dup": 66,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 2
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/1600"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.225,
+  "heldout_tokens": 14085.95,
+  "ood_success": 0.3,
+  "ood_tokens": 8599.466666666667,
+  "wall_s": 19.15,
+  "llm": {
+   "responses": 69,
+   "malformed_responses": 1,
+   "mutations": 89,
+   "malformed_mutations": 0,
+   "noop": 1,
+   "llm_candidates": 88,
+   "calls": 0,
+   "cache_hits": 69,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 0,
+   "cached_tokens": 0,
+   "completion_tokens": 0,
+   "reasoning_tokens": 0,
+   "truncated": 0,
+   "cost_usd": 0.0,
+   "latency_s": 0.0,
+   "model": "deepseek-flash",
+   "mode": "live",
+   "gated_with_llm": 1,
+   "llm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.3125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 25
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.32,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.4,
+      0.4,
+      0.4,
+      0.2,
+      0.4,
+      0.2,
+      0,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.4,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.4
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1201521,
+    "serving_tasks": 160,
+    "replay_task_execs": 421,
+    "replay_execs_per_served": 2.63,
+    "replay_tokens_est": 3161502,
+    "learning_share_est": 0.725,
+    "llm_calls": 0,
+    "llm_cache_hits": 69,
+    "llm_tokens": 0,
+    "llm_usd": 0.0
+   }
+  }
+ }
+]

@@ -255,9 +255,8 @@ class LLMProposer(Proposer):
         super().__init__(**kw)
         self.client, self.blend = client or make_client(), blend
         self.history: list[str] = []                 # "<desc>: KEEP|ROLLBACK" - verdicts only
-        self.pending: list[str] = []
+        self.pending: dict[str, list[str]] = {}        # sig -> descs proposed for it, awaiting a verdict
         self._ep = None
-        self.paused = False                          # set by the loop while a stat-admission decision is pending
         self.n = {"responses": 0, "malformed_responses": 0, "mutations": 0, "malformed_mutations": 0,
                   "noop": 0, "llm_candidates": 0}
 
@@ -267,9 +266,8 @@ class LLMProposer(Proposer):
 
     def feedback(self, sig, verdict, blocked_descs):
         super().feedback(sig, verdict, blocked_descs)
-        self.history += [f"{d}: {verdict}" for d in self.pending][-3:]
+        self.history += [f"{d}: {verdict}" for d in self.pending.pop(sig, [])][-3:]
         self.history = self.history[-12:]
-        self.pending = []
 
     def _prompt(self, mode, key, info, tb):
         ep = self._ep
@@ -283,8 +281,6 @@ class LLMProposer(Proposer):
         return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps(u, sort_keys=True)}]
 
     def candidates(self, mode, key, info, tb, sig):
-        if self.paused:          # candidates would be discarded anyway; do not spend calls or clobber `pending`
-            return []
         why = f"llm: {mode} {key}"
         out = []
         text = self.client.complete(self._prompt(mode, key, info, tb))
@@ -308,7 +304,8 @@ class LLMProposer(Proposer):
         if self.blend == "hybrid" or (self.blend == "llm-fallback" and not out):
             seen = {c.desc for c in out}
             out += [c for c in super().candidates(mode, key, info, tb, sig) if c.desc not in seen]
-        self.pending = [c.desc for c in out]
+        if out:
+            self.pending[sig] = [c.desc for c in out]
         return out
 
     def llm_usage(self):

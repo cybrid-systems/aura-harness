@@ -91,3 +91,10 @@ Every restart is recorded in the host audit ledger, and the process-local audit 
 * **Simulated environment.** Gains in M1/M2 are on the seeded simulator. M3 is the first contact with real trajectories, and it is small.
 * **Retention vs distribution shift.** After the shift at task 200, an old skill may be *right* to forget. The decaying budget is the knob, and the M1 numbers show its cost.
 * **aura#4670.** Restarts replay the ledger, so cost grows with history. A compacted snapshot (`SOURCE` → `set-code`) is the fallback if ledgers get long.
+
+**3a (stat queue).** In stat admission the proposer no longer pauses while a candidate is pending: its output goes to a bounded
+`CandidateQueue` (rsi/proposal.py; cap 4, one entry per signature, desc-dedup against queue + pending, re-checked for no-op at
+dequeue). Admission stays serial — one pending candidate at a time, fresh ids strictly after its selection ts and after the previous
+decision — so fresh sets are one-shot and disjoint and alpha/#looks Bonferroni is per candidate with no concurrent family.
+Measured (dev, 5 seeds): ~10 dequeued per seed but they fail the selection gate; KEEPs, latency, AULC unchanged — the bottleneck is
+the ~58-task fresh window, not proposal supply. Results: results/servelearn-3a/.
