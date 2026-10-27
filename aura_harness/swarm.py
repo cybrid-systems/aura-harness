@@ -111,7 +111,8 @@ def _cli(expr: str, timeout: float = 600) -> tuple[str, int, float]:
     aura = os.environ.get("AURA_BIN") or "aura"
     env = dict(os.environ, AURA_SANDBOX="off", AURA_PIPELINE_STRICT="0")
     with tempfile.NamedTemporaryFile("w", suffix=".aura", delete=False) as fh:
-        fh.write(SWARM.read_text() + f'\n(display "@@") (display {expr}) (newline)\n')
+        # evaluate first: runtime warnings printed during the run must not split the @@ line
+        fh.write(SWARM.read_text() + f'\n(define swarm-result {expr})\n(newline) (display "@@") (display swarm-result) (newline)\n')
         path = fh.name
     t0 = time.perf_counter()
     p = subprocess.Popen([aura, "--load", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
@@ -160,6 +161,26 @@ def run(mode: str, n: int, k: int, f: int, cap: int, timeout: float = 600, backe
             a.close()
     res.update(mode=mode, N=n, K=k, F=f, backend=backend)
     return res
+
+
+def run_expr(expr: str, tag: dict, timeout: float = 900) -> dict:
+    """CLI run of any swarm.aura runner expression (rebind / fail / cancel)."""
+    v, peak, wall = _cli(expr, timeout)
+    res = kv(v)
+    res["peak-rss-kb"] = peak
+    res["process-wall-ms"] = round(wall, 1)
+    res.update(tag)
+    return res
+
+
+def validate(n: int, k: int, f: int, cap: int = 20000, rb_every: int = 4, kill_at: int = 3, cancel_ms: int = 300) -> dict:
+    """Multi-fiber validation set for one N: per-worker policy rebind under contention, a worker that dies holding a
+    claim (lease takeover), and cooperative cancel mid-run."""
+    return {
+        "rebind": run_expr(f"(run-rebind {n} {k} {f} {cap} {rb_every})", {"exp": "rebind", "N": n, "every": rb_every}),
+        "fail": run_expr(f"(run-fail {n} {k} {f} {cap} {kill_at})", {"exp": "fail", "N": n, "kill_at": kill_at}),
+        "cancel": run_expr(f"(run-cancel {n} {k} {f} {cap} {cancel_ms})", {"exp": "cancel", "N": n, "after_ms": cancel_ms}),
+    }
 
 
 def micro(n_fibers: list[int], board_n: int = 20000, chan_n: int = 20000, backend: str = "cli") -> dict:

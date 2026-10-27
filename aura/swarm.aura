@@ -72,12 +72,25 @@
     (let ((s (channel:try-recv (hash-ref inbox w 0))))
       (if (string=? s "") (reverse acc) (loop (cons (string-split s " ") acc))))))
 
+;; ---------------------------------------------------------------- liveness (claim leases)
+;; clock = total turns started by anyone; hb[w] = clock at w's last turn. A
+;; claim whose owner has not turned for LEASE ticks is stealable, so a
+;; crashed or cancelled worker cannot wedge its subtask forever.
+(define clock 0)
+(define hb (make-hash))
+(define (lease) (+ 16 (* 8 cfg-N)))
+(define (lease-expired? owner) (> (- clock (hash-ref hb owner 0)) (lease)))
+(define (beat! w) (set! clock (+ clock 1)) (hash-set! hb w clock))
+
 ;; ---------------------------------------------------------------- claims (live, atomic check-and-insert)
 (define claims (make-hash))   ; task -> worker
 (define done (make-hash))     ; task -> x | -1 (proven infeasible)
 (define (try-claim! w i rnd)
   (bump! "claim-attempts" 1)
   (cond ((hash-has-key? done i) (bump! "claim-conflict-done" 1) #f)
+        ((and (hash-has-key? claims i) (not (= (hash-ref claims i -1) w)) (lease-expired? (hash-ref claims i -1)))
+         ;; owner stopped heart-beating (crashed / cancelled): steal its claim
+         (bump! "claims-stolen" 1) (hash-set! claims i w) (board-post! "CLAIM" w i (number->string i) rnd) #t)
         ((hash-has-key? claims i)
          (bump! "claim-conflicts" 1)
          (let ((owner (hash-ref claims i -1)))
@@ -113,7 +126,23 @@
 (define wstate (make-hash))
 (define (ws-get w k d) (hash-ref (hash-ref wstate w 0) k d))  ; no (make-hash) default: flaky inside fibers (docs/swarm-design.md)
 (define (ws-put! w k v) (hash-set! (hash-ref wstate w 0) k v))
-(define (init-worker! w) (let ((h (make-hash))) (hash-set! wstate w h) (hash-set! h "cursor" 0) (hash-set! h "know" (make-hash)) (hash-set! h "scan" (make-hash)) (hash-set! h "mine" -1) (hash-set! h "turns" 0) (hash-set! h "partial" (make-hash)) (hash-set! h "view" (make-hash)) w))
+(define (init-worker! w) (let ((h (make-hash))) (hash-set! wstate w h) (hash-set! h "cursor" 0) (hash-set! h "know" (make-hash)) (hash-set! h "scan" (make-hash)) (hash-set! h "mine" -1) (hash-set! h "turns" 0) (hash-set! h "partial" (make-hash)) (hash-set! h "win" (make-hash)) (hash-set! h "view" (make-hash)) w))
+
+;; Scan progress is shared as OBSERVED "from:to:r1,r2" windows. A family is
+;; proven (FACT/FAIL) only when every window [0,P) is covered by windows I
+;; scanned or gathered, with their roots (sound under real interleaving; the
+;; old "jump to max observed to" lost peers' roots -> false FAIL).
+(define (roots->str rs) (if (null? rs) "" (let j ((r (cdr rs)) (s (number->string (car rs)))) (if (null? r) s (j (cdr r) (string-append s "," (number->string (car r))))))))
+(define (str->roots s) (if (string=? s "") (list) (map string->number (string-split s ","))))
+(define (fam-win w g) (let ((wh (ws-get w "win" 0))) (if (not (hash-has-key? wh g)) (hash-set! wh g (make-hash))) (hash-ref wh g 0)))
+(define (note-window! w g payload)
+  (let* ((parts (string-split payload ":")) (from (string->number (car parts))) (h (fam-win w g)))
+    (if (not (hash-has-key? h from))
+        (begin (hash-set! h from (if (null? (cdr (cdr parts))) (list) (str->roots (car (cdr (cdr parts))))))
+               (hash-set! (ws-get w "scan" 0) g (+ 1 (hash-ref (ws-get w "scan" 0) g 0)))))))
+(define (next-window w g) (let ((h (fam-win w g))) (let loop ((x 0)) (if (or (>= x P) (not (hash-has-key? h x))) x (loop (+ x W))))))
+(define (window-complete? w g) (>= (next-window w g) P))
+(define (window-roots w g) (let ((h (fam-win w g))) (let loop ((x 0) (acc (list))) (if (>= x P) acc (loop (+ x W) (append acc (hash-ref h x (list))))))))
 
 ;; ---------------------------------------------------------------- the one worker loop
 ;; Gather: read board entries newer than my cursor up to the round snapshot
@@ -130,7 +159,7 @@
                   ((string=? (e-type e) "CLAIM") (hash-set! view (e-task e) 1))
                   ((string=? (e-type e) "RELEASE") (hash-remove! view (e-task e)))
                   ((string=? (e-type e) "PATCH_SUMMARY") (hash-set! view (e-task e) 2))
-                  ((string=? (e-type e) "OBSERVED") (let ((g (fam (e-task e))) (v (string->number (e-payload e)))) (if (> v (hash-ref scan g 0)) (hash-set! scan g v))))
+                  ((string=? (e-type e) "OBSERVED") (note-window! w (fam (e-task e)) (e-payload e)))
                   (else #f))
             (loop (cdr es) (+ n 1)))))
     (ws-put! w "cursor" upto)
@@ -144,15 +173,16 @@
             (loop (cdr ms)))))
     (tick-ms! "t-gather" t0)))
 
+(define (stale-claim? view i) (and (= (hash-ref view i 0) 1) (hash-has-key? claims i) (lease-expired? (hash-ref claims i -1))))
 (define (pick w)
   ;; Uses only MY gathered view of the board (stale by design: peers act in the
   ;; same round), so live claims can conflict. Deterministic spread: start at a
   ;; worker-specific offset; prefer tasks whose family I already know (FACT/FAIL).
-  (let ((know (ws-get w "know" 0)) (view (ws-get w "view" 0)) (start (modulo (* w 37) cfg-K)))
+  (let ((know (ws-get w "know" 0)) (view (ws-get w "view" 0)) (start (modulo (+ (* w 37) (pol-offset w)) cfg-K)))
     (let loop ((k 0) (fallback -1))
       (if (= k cfg-K) fallback
           (let ((i (modulo (+ start k) cfg-K)))
-            (if (hash-has-key? view i) (loop (+ k 1) fallback)
+            (if (and (hash-has-key? view i) (not (stale-claim? view i))) (loop (+ k 1) fallback)
                 (if (hash-has-key? know (fam i)) i (loop (+ k 1) (if (< fallback 0) i fallback)))))))))
 
 (define (claim! w rnd)
@@ -160,7 +190,7 @@
     (if (< (ws-get w "mine" -1) 0)
         (let ((i (pick w)))
           (if (>= i 0)
-              (if (try-claim! w i rnd) (begin (ws-put! w "mine" i) (ws-put! w "base" (hash-ref ws-ver (fam i) 0)))))))
+              (if (try-claim! w i rnd) (begin (ws-put! w "mine" i) (ws-put! w "t-claimed" (monotonic-ms)) (ws-put! w "base" (hash-ref ws-ver (fam i) 0)))))))
     ;; my claim may have been completed by someone else meanwhile
     (if (and (>= (ws-get w "mine" -1) 0) (hash-has-key? done (ws-get w "mine" -1))) (ws-put! w "mine" -1))
     (tick-ms! "t-claim" t0)))
@@ -177,18 +207,17 @@
               (let ((roots (hash-ref know g (list))))
                 (bump! "fact-reuse" 1)
                 (set! res (let f ((r roots)) (cond ((null? r) -1) ((accept? i (car r)) (car r)) (else (f (cdr r)))))))
-              (let* ((scan (ws-get w "scan" 0)) (from (hash-ref scan g 0)) (roots (scan-window g from)) (to (min P (+ from W))))
+              (let* ((from (next-window w g)) (roots (scan-window g from)) (to (min P (+ from W))))
                 (bump! "evals" (- to from))
-                (hash-set! scan g to)
-                (let ((acc (append (hash-ref (ws-get w "partial" 0) g (list)) roots)))
-                  (hash-set! (ws-get w "partial" 0) g acc)
-                  (board-post! "OBSERVED" w i (number->string to) rnd)
-                  (if (>= to P)
-                      (begin
-                        (hash-set! know g acc)
-                        (if (null? acc) (board-post! "FAIL" w i "no-root" rnd)
-                            (board-post! "FACT" w i (let j ((r (cdr acc)) (s (number->string (car acc)))) (if (null? r) s (j (cdr r) (string-append s "," (number->string (car r)))))) rnd))
-                        (set! res (let f ((r acc)) (cond ((null? r) -1) ((accept? i (car r)) (car r)) (else (f (cdr r)))))))))))))
+                (let ((payload (string-append (number->string from) ":" (number->string to) ":" (roots->str roots))))
+                  (note-window! w g payload)
+                  (board-post! "OBSERVED" w i payload rnd))
+                (if (window-complete? w g)
+                    (let ((acc (window-roots w g)))
+                      (hash-set! know g acc)
+                      (if (null? acc) (board-post! "FAIL" w i "no-root" rnd)
+                          (board-post! "FACT" w i (roots->str acc) rnd))
+                      (set! res (let f ((r acc)) (cond ((null? r) -1) ((accept? i (car r)) (car r)) (else (f (cdr r))))))))))))
     (tick-ms! "t-act" t0)
     res))
 
@@ -204,11 +233,49 @@
 (define (merge! w x rnd)
   (let* ((t0 (monotonic-ms)) (i (ws-get w "mine" -1)) (r (ws-merge! w i x (ws-get w "base" 0) rnd)))
     (bump! (if (eq? r 'merged) "merged" "rolled-back") 1)
+    (if (eq? r 'merged)
+        (let ((lat (- (monotonic-ms) (ws-get w "t-claimed" t0))))
+          (bump! "lat-ms" lat) (if (> lat (hash-ref m "lat-max-ms" 0)) (hash-set! m "lat-max-ms" lat))))
     (ws-put! w "mine" -1)
     (tick-ms! "t-merge" t0)
     r))
 
+;; ---------------------------------------------------------------- per-worker policies (live rebind)
+;; Workspace holds (define pol-<w> (lambda () v)) per worker plus a dispatcher
+;; polv. With rb-every > 0 each worker mutate:rebind's ITS OWN pol-<w> every
+;; rb-every turns (eval-current to apply) while peers keep calling polv in pick:
+;; concurrent per-worker rebind under contention. A read of my policy right
+;; after my rebind that returns the old value counts as rebind-stale.
+(require "std/mutate" all:)
+(define stop #f)
+(define rb-every 0)
+(define (pol-name w) (string-append "pol-" (number->string w)))
+(define (pol-src v) (string-append "(lambda () " (number->string v) ")"))
+(define (pol-conds n) (let loop ((w 0) (s "")) (if (= w n) s (loop (+ w 1) (string-append s "((= w " (number->string w) ") (" (pol-name w) ")) ")))))
+(define (pol-workspace n)
+  (let loop ((w 0) (s "")) (if (= w n) (string-append s "(define (polv w) (cond " (pol-conds n) "(else 0)))")
+                               (loop (+ w 1) (string-append s "(define " (pol-name w) " " (pol-src 0) ") ")))))
+(define (pol-offset w) (if (> rb-every 0) (try (polv w) (catch (e) (bump! "policy-call-error" 1) 0)) 0))
+(define (rebind-tick! w)
+  (let ((t (ws-get w "turns" 0)))
+    (if (and (> rb-every 0) (> t 0) (= 0 (modulo t rb-every)))
+        (let* ((v (+ (* 1000 w) t)) (t0 (monotonic-ms))
+               (ok (try (and (eq? (mutate:rebind (pol-name w) (pol-src v) (string-append "rb" (number->string v))) #t)
+                             (begin (eval-current) #t))
+                        (catch (e) #f)))
+               (dt (- (monotonic-ms) t0)))
+          (bump! "rebinds" 1) (bump! "rebind-ms" dt)
+          (if (> dt (hash-ref m "rebind-max-ms" 0)) (hash-set! m "rebind-max-ms" dt))
+          (if (not ok) (bump! "rebind-fail" 1)
+              (if (not (= (pol-offset w) v)) (bump! "rebind-stale" 1)))))))
+
+(define kill-w -1)   ; failure injection: worker kill-w raises at its turn kill-at while holding a claim
+(define kill-at 0)
 (define (worker-turn w upto rnd)
+  (beat! w)
+  (if (and (= w kill-w) (>= (ws-get w "turns" 0) kill-at) (>= (ws-get w "mine" -1) 0))
+      (begin (bump! "killed" 1) (set! kill-w -1) (error "swarm: injected worker failure")))
+  (rebind-tick! w)
   (gather! w upto rnd)
   (claim! w rnd)
   (let ((x (act! w rnd)))
@@ -223,6 +290,7 @@
   (set! board (list)) (set! nb 0) (set! claims (make-hash)) (set! done (make-hash))
   (set! ws-ver (make-hash)) (set! ws-log (list)) (set! ws-head 0) (set! wstate (make-hash))
   (set! m (make-hash)) (set! inbox (make-hash)) (mk-inboxes! n)
+  (set! clock 0) (set! hb (make-hash)) (set! stop #f) (set! rb-every 0)
   (let loop ((w 0)) (if (< w n) (begin (init-worker! w) (loop (+ w 1))) n)))
 
 ;; epoch mode: every round, spawn N identical worker fibers (one turn each) and
@@ -232,7 +300,8 @@
 (define (spawn-round n upto rnd)
   (let loop ((w 0) (fs (list)))
     (if (= w n) fs (loop (+ w 1) (cons (fiber:spawn (lambda () (worker-turn w upto rnd))) fs)))))
-(define (join-all fs) (let loop ((f fs) (bad 0)) (if (null? f) bad (loop (cdr f) (if (number? (fiber:join (car f))) bad (+ bad 1))))))
+(define (join-one f) (try (fiber:join f) (catch (e) (begin (bump! "join-error" 1) 'failed))))
+(define (join-all fs) (let loop ((f fs) (bad 0)) (if (null? f) bad (loop (cdr f) (let ((r (join-one (car f)))) (if (or (number? r) (eq? r 'failed)) bad (+ bad 1)))))))
 (define (run-epochs n k f max-rounds)
   (reset! n k f)
   (let ((t0 (monotonic-ms)))
@@ -251,9 +320,9 @@
 ;; between turns (the Agensh shape). Exposes whether fibers interleave.
 (define (worker-free w max-turns)
   (let loop ((t 0))
-    (if (and (< (hash-length done) cfg-K) (< t max-turns))
+    (if (and (< (hash-length done) cfg-K) (< t max-turns) (not stop))
         (begin (worker-turn w nb t) (fiber:yield) (loop (+ t 1)))
-        t)))
+        (begin (if stop (let ((x (monotonic-ms))) (if (> x (hash-ref m "t-last-exit" 0)) (hash-set! m "t-last-exit" x)))) t))))
 (define (run-free n k f max-turns)
   (reset! n k f)
   (let* ((t0 (monotonic-ms))
@@ -274,6 +343,45 @@
   (hash-set! m "accepted" (if (all-accepted?) 1 0))
   (let loop ((ks (hash-keys m)) (s ""))
     (if (null? ks) s (loop (cdr ks) (string-append s (car ks) "=" (number->string (hash-ref m (car ks) 0)) ";")))))
+
+;; ---------------------------------------------------------------- validation runners
+(define (spawn-free n max-turns) (let loop ((w 0) (fs (list))) (if (= w n) fs (loop (+ w 1) (cons (fiber:spawn (lambda () (worker-free w max-turns))) fs)))))
+(define (finish-free! n t0)
+  (hash-set! m "wall-ms" (- (monotonic-ms) t0)) (hash-set! m "done" (hash-length done)) (hash-set! m "board" nb) (hash-set! m "commits" ws-head)
+  (hash-set! m "max-worker-share" (max-share n)) (hash-set! m "claims-held" (hash-length claims))
+  (hash-set! m "dup-merges" (- ws-head (hash-length done))) (hash-set! m "done-valid" (if (done-valid?) 1 0))
+  (summary))
+;; every merged answer is correct (also for partial runs: cancel)
+(define (done-valid?) (let loop ((ks (hash-keys done))) (cond ((null? ks) #t)
+  ((let* ((i (car ks)) (x (hash-ref done i -2))) (if (= x -1) (proven-none? i (scan-all (fam i))) (accept? i x))) (loop (cdr ks))) (else #f))))
+;; policy rebind under contention (free mode)
+(define (run-rebind n k f max-turns every)
+  (reset! n k f)
+  (set-code (pol-workspace n)) (eval-current)
+  (set! rb-every every)
+  (let* ((t0 (monotonic-ms)) (fs (spawn-free n max-turns)))
+    (bump! "join-void" (join-all fs))
+    (set! rb-every 0)
+    (finish-free! n t0)))
+;; failure: worker 0 raises while holding a claim at its turn `at`
+(define (run-fail n k f max-turns at)
+  (reset! n k f) (set! kill-w 0) (set! kill-at at)
+  (let* ((t0 (monotonic-ms)) (fs (spawn-free n max-turns)))
+    (bump! "join-void" (join-all fs))
+    (set! kill-w -1)
+    (finish-free! n t0)))
+;; cooperative cancel: a controller fiber sets stop after `after` ms; measure
+;; how long until the last worker exits, and that partial results are sound.
+(define (run-cancel n k f max-turns after)
+  (reset! n k f)
+  (let* ((t0 (monotonic-ms)) (fs (spawn-free n max-turns))
+         (ctl (fiber:spawn (lambda () (let loop () (if (< (- (monotonic-ms) t0) after) (begin (fiber:yield) (loop))
+                                                       (begin (hash-set! m "t-stop" (monotonic-ms)) (set! stop #t) 0)))))))
+    (bump! "join-void" (join-all (cons ctl fs)))
+    (hash-set! m "cancel-lat-ms" (if (> (hash-ref m "t-stop" 0) 0) (- (hash-ref m "t-last-exit" (hash-ref m "t-stop" 0)) (hash-ref m "t-stop" 0)) -1))
+    (hash-set! m "stopped-early" (if (< (hash-length done) cfg-K) 1 0))
+    (set! stop #f)
+    (finish-free! n t0)))
 
 ;; ---------------------------------------------------------------- micro benches
 (define (bench-board n)

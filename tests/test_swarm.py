@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from aura_harness.swarm import forms, kv, run
+from aura_harness.swarm import forms, kv, run, run_expr
 
 
 class SwarmTest(unittest.TestCase):
@@ -17,6 +17,32 @@ class SwarmTest(unittest.TestCase):
         r = run("epoch", 8, 64, 8, 400, timeout=300)
         self.assertEqual(r["accepted"], 1)
         self.assertEqual(r["done"], 64)
+
+    @unittest.skipUnless(os.environ.get("AURA_BIN"), "needs AURA_BIN")
+    def test_free_small_accepts(self):
+        r = run("free", 4, 64, 8, 2000, timeout=300)
+        self.assertEqual(r["accepted"], 1)
+
+    @unittest.skipUnless(os.environ.get("AURA_BIN"), "needs AURA_BIN")
+    def test_rebind_under_contention(self):
+        # assert only on correctness: a stats-key corruption Aura bug can mangle counter names
+        r = run_expr("(run-rebind 4 64 8 2000 4)", {})
+        self.assertEqual(r["accepted"], 1)
+        self.assertEqual(r["done-valid"], 1)
+        self.assertGreater(r.get("rebinds", 0), 0)
+
+    @unittest.skipUnless(os.environ.get("AURA_BIN"), "needs AURA_BIN")
+    def test_worker_failure_lease_takeover(self):
+        r = run_expr("(run-fail 4 64 8 2000 3)", {})
+        self.assertEqual(r["accepted"], 1)
+        self.assertEqual(r["join-error"], 1)
+        self.assertEqual(r["claims-held"], 0)
+
+    @unittest.skipUnless(os.environ.get("AURA_BIN"), "needs AURA_BIN")
+    def test_cancel_partial_sound(self):
+        r = run_expr("(run-cancel 4 1024 64 20000 200)", {})
+        self.assertEqual(r["done-valid"], 1)
+        self.assertEqual(r["claims-held"], 0)
 
 
 if __name__ == "__main__":

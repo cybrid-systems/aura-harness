@@ -59,3 +59,34 @@ Rounds drop with N as expected (1991 → 16), so the coordination works. Wall ti
 * Per-worker gather cursor with a type index (grep by type instead of a full scan), and randomized pick among known-family candidates to stop herding.
 * Re-run free mode once `fiber:yield` interleaves. Re-run serve-async once fibers stop being lost.
 * Put a DeepSeek proposer behind `act!` (key file only, never logged).
+
+## Multi-fiber validation (Aura main 572beb276, CLI thread backend, K=1024, F=64)
+
+Harness changes: sound scan protocol (OBSERVED payloads carry `from:to:roots`; FACT/FAIL
+only once every window of [0,P) is covered — the old skip-ahead gave false FAILs once
+fibers really interleaved), claim leases (`16+8N` ticks, stale claims are stealable),
+claim-to-merge latency, failure injection, a `stop` flag for cooperative cancel and a
+per-worker policy rebind (`mutate:rebind` + `eval-current` on `pol-<w>`).
+Runners: `run-rebind`, `run-fail`, `run-cancel`; `scripts/swarm_bench.py --validate`.
+
+Findings (full tables: `results/swarm-bench.md`; old serialized run:
+`results/swarm-bench-baseline-b211a5def.md`):
+
+- Correctness: accepted=1 for every N in 1..32, epoch and free; 0 void joins (baseline
+  lost 7-95 turns); 0 dup merges; free mode now self-organizes (max share 1024/N-ish
+  vs 1024 for one worker in the baseline).
+- No multi-core speedup: fiber bodies are serialized (body mutex), so free-mode wall
+  time grows 4.2 s → 8.5 s from N=1 to 32 and tasks/s falls 242 → 121; latency grows
+  with N (mean 1.1 → 155 ms).
+- Rebind under contention: ~480-495 rebinds per run, 0 failures, 0 stale reads,
+  mean 3.5-8.3 ms, max 25 ms; wall cost 1.5-3.2x vs no rebind.
+- Failure: the raising worker surfaces as exactly one join error; for N≥2 its claim is
+  taken over through the lease (claims-stolen=1) and the run is accepted. N=1 has no
+  peer, so it is (correctly) not accepted.
+- Cancel (no `fiber:cancel` primitive; cooperative `stop`): last worker exits 0-3 ms
+  after stop; partial results always valid. Workers stopped mid-turn leave their claim
+  held (lease-recoverable): claims left = N at N≥8.
+- Aura bugs found: tier JIT worker wiped all hash tables (fixed in Aura 572beb276);
+  serve-async SIGSEGV in `maybe_reclaim_tw_unreachable` with yield + allocation;
+  hash tables returned by fibers emptied/aliased before join; a stats-hash key string
+  corrupted under rebind with N≥2 (tests therefore assert only accepted/done-valid).
