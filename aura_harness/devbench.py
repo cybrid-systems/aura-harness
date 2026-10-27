@@ -44,10 +44,10 @@ M5 = ["frozen seed harness", "RSI loop (M1)", "RSI + LLM proposer (M5)", "RSI + 
 
 def _llm_factory(blend):
     from functools import partial
-    from .rsi.llm import LLMClient, LLMProposer
+    from .rsi.llm import LLMProposer, make_client
 
     def make(**kw):
-        return LLMProposer(client=LLMClient(), blend=blend, **kw)
+        return LLMProposer(client=make_client(), blend=blend, **kw)
     return make
 
 
@@ -91,7 +91,7 @@ def one(args):
             from .rsi.ledger import Ledger
             led = Ledger(Path(os.environ["AURA_M5_LEDGER_DIR"]) / f"{name.split()[2]}-{seed}.jsonl")
         r = run_rsi(seed, n=n, shift=shift, window=40, min_heldout=10, world="dev", retention=ret,
-                    cfg=M2Config(**cfg) if isinstance(cfg, dict) else None, label=name, proposer=prop, ledger=led)
+                    cfg=M2Config(**cfg) if isinstance(cfg, dict) else None, label=name, proposer=prop, ledger=led, measure=True)
     tb = r["final_table"]
     h_ok, h_cost = evaluate(tb, fresh_heldout(seed), seed)
     o_ok, o_cost = evaluate(tb, ood_tasks(seed), seed)
@@ -100,7 +100,7 @@ def one(args):
             "stat": r.get("stat"),
             "rollback": r["rollback"], "kept": r["kept"], "restarts": r["restarts"],
             "heldout_success": h_ok, "heldout_tokens": h_cost, "ood_success": o_ok, "ood_tokens": o_cost,
-            "wall_s": r.get("wall_s"), "llm": r.get("llm"), "proposals": r.get("proposals")}
+            "wall_s": r.get("wall_s"), "llm": r.get("llm"), "proposals": r.get("proposals"), "metrics": r.get("metrics")}
 
 
 M3 = ["frozen seed harness", "RSI loop (M1)", "RSI + recombination (M2 pick)", "RSI + retention (rho=0.05)"]
@@ -146,6 +146,38 @@ def run(seeds=(0, 1, 2), n=160, shift=80, jobs=4, out="runs/dev", configs=None):
     for r in res:
         if r.get("llm") and r["seed"] == seeds[0]:
             lines.append(f"Kept edits (seed {seeds[0]}, {r['config']}): " + "; ".join(r["kept"]))
+    lines += ["", metrics_table(res, configs)]
     md = "\n".join(lines) + "\n"
     (Path(out) / "results.md").write_text(md)
     return md
+
+
+def metrics_table(res, configs) -> str:
+    """ServeLearnBench-style measurements (rsi/metrics.py), mean over seeds; '-' where a config has none"""
+    def m(rs, f):
+        xs = [f(r["metrics"]) for r in rs if r.get("metrics")]
+        xs = [x for x in xs if x is not None]
+        return st.mean(xs) if xs else None
+    fmt = lambda x, p=1, s="": "-" if x is None else f"{x:.{p}f}{s}"
+    lines = ["| config | FS run / base (regr / recov) | HD run / base | AULC10 run / base | AUC_E (repeat) | AUC_KA | "
+             "accept rate | first-KEEP latency | replay execs / served | LLM tokens / USD |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    for c in configs:
+        rs = [r for r in res if r["config"] == c and r.get("metrics")]
+        if not rs:
+            continue
+        sp = lambda lab, k: m(rs, lambda x: x["split"][lab][k])
+        lines.append(
+            f"| {c} | {fmt(100 * sp('FS', 'run'))} / {fmt(100 * sp('FS', 'baseline'))}% ({fmt(sp('FS', 'regressions'))} / "
+            f"{fmt(sp('FS', 'recoveries'))}) | {fmt(100 * sp('HD', 'run'))} / {fmt(100 * sp('HD', 'baseline'))}% | "
+            f"{fmt(_p(m(rs, lambda x: x['aulc']['run']['aulc'])))} / {fmt(_p(m(rs, lambda x: x['aulc']['baseline']['aulc'])))}% | "
+            f"{fmt(m(rs, lambda x: x['auc_e']['auc_e']), 2)} ({fmt(m(rs, lambda x: x['auc_e']['repeat_rate']), 2)}) | "
+            f"{fmt(_p(m(rs, lambda x: x['auc_ka']['auc_ka'])))}% | {fmt(m(rs, lambda x: x['acceptance']['accept_rate']), 2)} | "
+            f"{fmt(m(rs, lambda x: x['acceptance']['first_keep_latency_tasks']))} | "
+            f"{fmt(m(rs, lambda x: x['cost']['replay_execs_per_served']), 2)} | "
+            f"{fmt(m(rs, lambda x: x['cost'].get('llm_tokens')), 0)} / {fmt(m(rs, lambda x: x['cost'].get('llm_usd')), 4)} |")
+    return "\n".join(lines)
+
+
+def _p(x):
+    return None if x is None else 100 * x

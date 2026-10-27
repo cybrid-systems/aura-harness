@@ -20,7 +20,7 @@ from .stat import StatAdmission, hard_veto, per_task3
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
-            cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None) -> dict:
+            cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None, measure: bool = False) -> dict:
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
     t_start = time.perf_counter()
@@ -53,6 +53,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     ckpts = {}
     eps, verdicts = [], []
     gate_s, change_s = [], []
+    learn = {"replay_tasks": 0}          # measurement only (rsi/metrics.py cost split)
     try:
         for t in stream:
             if t.id % 10 == 0:
@@ -63,9 +64,9 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 continue
             if stat and sa.pending and sa.due(stream, t.id):
                 tb = _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib,
-                                  verdicts, keep_tables)
+                                  verdicts, keep_tables, learn)
             if cfg.pruner and t.id and t.id % cfg.prune_every == 0 and t.id >= window:
-                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger)
+                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger, learn)
             d = src.p.diagnose(ep) if cfg.critic else None
             if d:
                 critic.note(f"{d[0]}|{d[1]}", t.project)
@@ -78,7 +79,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 stats["critic_veto"] += 1
                 src.feedback(cands[0].sig, "ROLLBACK", [])
                 verdicts.append({"ts": t.id, "verdict": "ROLLBACK", "chosen": None, "candidates": [c.desc for c in cands],
-                                 "blocked": [], "why": "critic: single-project evidence", "scores": {}})
+                                 "blocked": [], "why": "critic: single-project evidence", "scores": {}, "sig": cands[0].sig})
                 continue
             if cfg.recombine:
                 rc = recomb_candidates(lib, tb, cands[0].name, cands[0].sig, cands[0].why) \
@@ -108,6 +109,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             blocked += [cands[r["i"]].desc for r in trials if r["ok"] and pre[r["i"]]]
             # stage 3: window gate (held-out tasks of the recent window, paired replay)
             jobs_args = [(tb, tasks, mem0, seed, shift)] + [(r["table"], tasks, mem0, seed, shift) for r in ok_trials]
+            learn["replay_tasks"] += sum(len(j[1]) for j in jobs_args)
             if m2:
                 pts = list(pmap(per_task, jobs_args))
                 gk = (lambda tid: not fresh_of(tid)) if (cfg.fresh or stat) else (lambda tid: True)
@@ -190,7 +192,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                              "candidates": [c.desc for c in cands], "blocked": blocked, "scores": sc,
                              "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1),
                              "chosen_by": cands[best].meta.get("proposer", "rule") if best >= 0 else None,
-                             "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands)})
+                             "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands), "sig": sig})
         if ledger is not None:
             for e in getattr(h, "events", []):
                 if e["op"] == "restart":
@@ -219,11 +221,18 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                           llm_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "llm" for x in verdicts),
                           rule_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "rule" for x in verdicts))
     if retention is not None:
+        learn["replay_tasks"] += retention.replayed
+    if measure:
+        from .metrics import measure as _measure
+        out["metrics"] = _measure(stream, eps, verdicts, seed, shift, learn, out.get("llm"))
+        if ledger is not None:
+            ledger.event("metrics", n, **out["metrics"])
+    if retention is not None:
         out["retention"] = {"checks": retention.checks, "vetoes": retention.vetoes, "spent": round(retention.spent, 2)}
     return out
 
 
-def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger=None):
+def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger=None, learn=None):
     """RRSI pruner: ablate each kept plugin (revert to seed); adopt the ablation if the recent window is not worse in
     held-out successes and not more expensive. Goes through the guard (trial + verdict, actor pruner)."""
     cands = prune_candidates(tb)
@@ -235,6 +244,8 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
     ok = [r for r in trials if r["ok"]]
     if not ok:
         return tb
+    if learn is not None:
+        learn["replay_tasks"] += len(tasks) * (1 + len(ok))
     sc = list(pmap(replay_score, [(tb, tasks, ckpts[start], seed, shift)] +
                    [(r["table"], tasks, ckpts[start], seed, shift) for r in ok]))
     base = sc[0]
@@ -252,12 +263,15 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
     return tb
 
 
-def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib, verdicts, keep_tables):
+def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib, verdicts, keep_tables,
+                 learn=None):
+    learn = learn if learn is not None else {"replay_tasks": 0}
     """M5b admission of the pending candidate on fresh, one-use held-out tasks that arrived after its selection"""
     P = sa.pending
     a0 = (P["ts"] + 1) // 10 * 10
     ids = sa.fresh_ids(stream, t.id)
     seg = stream[a0:t.id + 1]
+    learn["replay_tasks"] += 2 * len(seg)
     rb, rc = list(pmap(per_task3, [(tb, seg, ckpts[a0], seed, shift), (P["table"], seg, ckpts[a0], seed, shift)]))
     v, info = sa.decide(rb, rc, ids)
     if v == "wait":
@@ -286,6 +300,7 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
     src.feedback(P["sig"], verdict, P["blocked"])
     verdicts.append({"ts": t.id, "verdict": verdict, "chosen": c.desc if verdict == "KEEP" else None,
                      "candidates": P["descs"], "blocked": P["blocked"], "scores": {"stat": info}, "why": c.why,
-                     "chosen_by": c.meta.get("proposer", "rule") if verdict == "KEEP" else None, "n_llm": P["n_llm"]})
+                     "chosen_by": c.meta.get("proposer", "rule") if verdict == "KEEP" else None, "n_llm": P["n_llm"],
+                     "sig": P["sig"], "proposed_ts": P["ts"]})
     sa.pending = None
     return tb

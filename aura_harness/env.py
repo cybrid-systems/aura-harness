@@ -312,3 +312,30 @@ def run_task(task: Task, table: dict, mem: Memory, seed: int, shift: int = 200) 
         ep.mode, ep.fail = f.mode, f.info
     return ep
 
+
+
+# ------------------------------------------------------------------ ServeLearnBench labels (arXiv 2610.07792 §3.1)
+def fact_key(task) -> tuple[str, str, int]:
+    """(project, fact, version) of the hidden environment fact a task depends on. Sim world: FACT_OF + fact_version;
+    dev world: the test layout (`test-cmd`), which moves at the phase shift."""
+    if getattr(task, "dev", False):
+        return task.project, "test-cmd", task.phase
+    return task.project, FACT_OF[task.kind], None
+
+
+def task_label(task, seed: int, shift: int = 200) -> str:
+    """'HD' (hidden-dependent) if correct behaviour depends on drifted / changed hidden state: the task is after the
+    distribution shift, or its fact has a newer version than at the start of the stream. 'FS' (fully specified)
+    otherwise: the seed harness has everything it needs, so these tasks measure whether adaptation breaks behaviour
+    that was already supported (ServeLearnBench's Fully Specified split)."""
+    if task.phase >= 1:
+        return "HD"
+    if getattr(task, "dev", False):
+        return "FS"
+    p, f, _ = fact_key(task)
+    return "HD" if fact_version(seed, p, f, task.id, shift) != fact_version(seed, p, f, 0, shift) else "FS"
+
+
+def fact_version_of(task, seed: int, shift: int = 200):
+    p, f, v = fact_key(task)
+    return v if v is not None else fact_version(seed, p, f, task.id, shift)

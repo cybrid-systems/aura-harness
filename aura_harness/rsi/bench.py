@@ -32,13 +32,13 @@ def one(args):
     from .loop import run_rsi
     from .m2 import M2Config
     if name in M2:
-        r = run_rsi(seed, n=n, noise=noise, label=name, cfg=M2Config(**M2[name]))
+        r = run_rsi(seed, n=n, noise=noise, label=name, cfg=M2Config(**M2[name]), measure=True)
     else:
         cfg = CONFIGS[name]
         ret = RetentionGate(rho=cfg[0], decay_every=cfg[1]) if cfg else None
-        r = run_rsi(seed, n=n, noise=noise, retention=ret, label=name)
+        r = run_rsi(seed, n=n, noise=noise, retention=ret, label=name, measure=True)
     keep = {k: r[k] for k in ("success", "heldout_success", "cost_per_task", "keep", "rollback", "windows",
-                              "restarts", "library", "wall_s")}
+                              "restarts", "library", "wall_s", "metrics")}
     keep.update(config=name, seed=seed, retention=r.get("retention"),
                 m2={k: v for k, v in r["m2"].items() if k != "archive_members"})
     return keep
@@ -66,6 +66,8 @@ def run(seeds, n=400, noise=0.0, jobs=3, out="runs/rsi", which="m1"):
                if rs[0]["retention"] else "–")
         lines.append(f"| {c} | {100 * m('success'):.1f}% | {100 * m('heldout_success'):.1f}% | {w} | "
                      f"{m('cost_per_task'):,.0f} | {m('keep'):.1f} / {m('rollback'):.1f} | {ret} | {sum(r['restarts'] for r in rs)} |")
+    from ..devbench import metrics_table
+    lines += ["", metrics_table(res, list(CONFIGS))]
     md = "\n".join(lines) + "\n"
     (Path(out) / "results.md").write_text(md)
     return md

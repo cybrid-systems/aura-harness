@@ -33,12 +33,38 @@ MODEL = "deepseek-flash"            # /models: id "deepseek-flash", name "DeepSe
 # USD per 1M tokens (DeepSeek list price, off-peak; peak is 2x). Override with AURA_LLM_PRICE="in,cached,out".
 PRICE = tuple(float(x) for x in os.environ.get("AURA_LLM_PRICE", "0.15,0.003,0.60").split(","))
 STRATS = ["head", *ALT_STRATS]
+
+# Proposer backends (AURA_LLM_PROVIDER = deepseek | minimax | mixed). Keys are only ever read from a key file at
+# request time; they are never logged, cached or put in the usage tally.
+MINIMAX_BASE_URL = "https://api.minimax.cn/v1"
+MINIMAX_MODEL = "MiniMax-M3.1-Flash"          # id as listed by GET /v1/models
+MINIMAX_ENV = "/home/box/.config/aura-build/minimax.env"
+# MiniMax list price is not pinned in this repo: cost_usd stays 0 unless AURA_MINIMAX_PRICE="in,cached,out" is set.
+MINIMAX_PRICE = tuple(float(x) for x in os.environ.get("AURA_MINIMAX_PRICE", "0,0,0").split(","))
+THINK_RE = re.compile(r"<think>.*?</think>", re.S)
+
+
+def _minimax_key_file() -> str:
+    f = os.environ.get("MINIMAX_API_KEY_FILE")
+    if f:
+        return f
+    for line in Path(os.environ.get("AURA_MINIMAX_ENV", MINIMAX_ENV)).read_text().splitlines():
+        if line.startswith("MINIMAX_API_KEY_FILE="):
+            return line.split("=", 1)[1].strip().strip('"')
+    raise KeyError("MINIMAX_API_KEY_FILE")
 ERR_RE = re.compile(r"^[a-z][a-z-]{1,20}$")
 
 
 class LLMClient:
     def __init__(self, mode=None, cache_dir=None, model=MODEL, base_url=BASE_URL, max_calls=200,
-                 max_tokens=400_000, timeout=90.0, retries=3, max_out=2000, effort=None):
+                 max_tokens=400_000, timeout=90.0, retries=3, max_out=2000, effort=None, provider="deepseek"):
+        self.provider = provider
+        if provider == "minimax":
+            model = model if model != MODEL else os.environ.get("AURA_MINIMAX_MODEL", MINIMAX_MODEL)
+            base_url = base_url if base_url != BASE_URL else os.environ.get("AURA_MINIMAX_BASE_URL", MINIMAX_BASE_URL)
+            # M3.1 Flash always reasons first; at 2000 output tokens about half the replies ran out inside <think>
+            max_out = max(max_out, int(os.environ.get("AURA_MINIMAX_MAX_OUT", "8000")))
+        self.price = MINIMAX_PRICE if provider == "minimax" else PRICE
         self.mode = mode or os.environ.get("AURA_LLM_MODE", "offline")
         self.cache = Path(cache_dir or os.environ.get("AURA_LLM_CACHE", "results/llm-cache"))
         self.model, self.base_url = model, base_url
@@ -65,14 +91,18 @@ class LLMClient:
         if self.u["calls"] >= self.max_calls or used >= self.max_tokens:
             self.u["budget_skip"] += 1
             return None
-        body = json.dumps({"model": self.model, "messages": messages, "temperature": 0,
-                           "max_tokens": self.max_out, "reasoning_effort": self.effort, "response_format": {"type": "json_object"}}).encode()
+        req_body = {"model": self.model, "messages": messages, "temperature": 0, "max_tokens": self.max_out,
+                    "response_format": {"type": "json_object"}}
+        if self.provider != "minimax":
+            req_body["reasoning_effort"] = self.effort
+        body = json.dumps(req_body).encode()
+        key_file = _minimax_key_file() if self.provider == "minimax" else os.environ["DEEPSEEK_KEY_FILE"]
         for i in range(self.retries):
             t0 = time.perf_counter()
             try:
                 req = urllib.request.Request(self.base_url + "/chat/completions", data=body, headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + Path(os.environ["DEEPSEEK_KEY_FILE"]).read_text().strip()})
+                    "Authorization": "Bearer " + Path(key_file).read_text().strip()})
                 with urllib.request.urlopen(req, timeout=self.timeout) as r:
                     resp = json.load(r)
                 del req                                   # the only object that ever held the header
@@ -89,14 +119,17 @@ class LLMClient:
             self.u["calls"] += 1
             us = resp.get("usage") or {}
             pt, ct = us.get("prompt_tokens", 0), us.get("completion_tokens", 0)
-            hit = us.get("prompt_cache_hit_tokens", 0)
+            hit = us.get("prompt_cache_hit_tokens", (us.get("prompt_tokens_details") or {}).get("cached_tokens", 0))
             self.u["prompt_tokens"] += pt
             self.u["cached_tokens"] += hit
             self.u["completion_tokens"] += ct
             self.u["reasoning_tokens"] += (us.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
             self.u["truncated"] += resp["choices"][0].get("finish_reason") == "length"
-            self.u["cost_usd"] += ((pt - hit) * PRICE[0] + hit * PRICE[1] + ct * PRICE[2]) / 1e6
-            content = resp["choices"][0]["message"].get("content") or ""
+            pr = self.price
+            self.u["cost_usd"] += ((pt - hit) * pr[0] + hit * pr[1] + ct * pr[2]) / 1e6
+            content = THINK_RE.sub("", resp["choices"][0]["message"].get("content") or "").strip()
+            if not content:                           # truncated inside reasoning: count it, never cache it
+                return None
             self.cache.mkdir(parents=True, exist_ok=True)
             tmp = f.with_suffix(f".{os.getpid()}.tmp")
             tmp.write_text(json.dumps({"model": resp.get("model", self.model), "messages": messages,
@@ -184,13 +217,43 @@ def _plain(x):
     return json.loads(json.dumps(x, default=str))
 
 
+class MixedClient:
+    """alternates proposer calls between two backends (DeepSeek, MiniMax); usage is the sum, per-backend kept too"""
+
+    def __init__(self, clients):
+        self.clients, self.i = list(clients), 0
+        self.model = "+".join(c.model for c in self.clients)
+        self.mode = self.clients[0].mode
+
+    def complete(self, messages):
+        c = self.clients[self.i % len(self.clients)]
+        self.i += 1
+        return c.complete(messages)
+
+    @property
+    def u(self):
+        out = {}
+        for c in self.clients:
+            for k, v in c.u.items():
+                out[k] = out.get(k, 0) + v
+        return out
+
+
+def make_client(provider=None, **kw):
+    """AURA_LLM_PROVIDER: deepseek (default) | minimax | mixed"""
+    provider = provider or os.environ.get("AURA_LLM_PROVIDER", "deepseek")
+    if provider == "mixed":
+        return MixedClient([LLMClient(provider="deepseek", **kw), LLMClient(provider="minimax", **kw)])
+    return LLMClient(provider=provider, **kw)
+
+
 class LLMProposer(Proposer):
     """Scripted diagnosis/evidence accounting (so both proposers fire on the same evidence), LLM candidate
     generation. mode="llm": LLM candidates only; "hybrid": LLM first, then the scripted ones (deduplicated)."""
 
     def __init__(self, client: LLMClient | None = None, blend="llm", **kw):
         super().__init__(**kw)
-        self.client, self.blend = client or LLMClient(), blend
+        self.client, self.blend = client or make_client(), blend
         self.history: list[str] = []                 # "<desc>: KEEP|ROLLBACK" - verdicts only
         self.pending: list[str] = []
         self._ep = None

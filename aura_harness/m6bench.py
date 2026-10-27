@@ -37,9 +37,9 @@ def one_m5(args):
     from .rsi.loop import run_rsi
     cfg = dict(M5_CONFIGS[name])
     prop = _llm_factory(cfg.pop("proposer")) if "proposer" in cfg else None
-    r = run_rsi(seed, n=n, shift=n // 2, window=40, min_heldout=10, world="dev2", label=name, proposer=prop)
+    r = run_rsi(seed, n=n, shift=n // 2, window=40, min_heldout=10, world="dev2", label=name, proposer=prop, measure=True)
     res = {"config": name, "seed": seed, "stream_success": r["success"], "keep": r["keep"], "kept": r["kept"],
-           "final_table": r["final_table"], "wall_s": r.get("wall_s"), "llm": r.get("llm"), **_eval_all(r["final_table"], seed)}
+           "final_table": r["final_table"], "wall_s": r.get("wall_s"), "llm": r.get("llm"), "metrics": r.get("metrics"), **_eval_all(r["final_table"], seed)}
     Path(out, f"m5-{name.split()[1]}-{seed}.json").write_text(json.dumps(res))
     return res
 

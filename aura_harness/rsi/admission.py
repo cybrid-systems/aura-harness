@@ -37,6 +37,7 @@ class RetentionGate:
     last_ts: int = 0
     vetoes: int = 0
     checks: int = 0
+    replayed: int = 0             # task executions replayed by this gate (measurement only)
     log: list = field(default_factory=list)
 
     def _decay(self, ts):
@@ -57,6 +58,7 @@ class RetentionGate:
         jobs = []
         for (_s, _e, tasks, mem) in suite:
             jobs += [(base_tb, tasks, mem, seed, shift), (cand_tb, tasks, mem, seed, shift)]
+        self.replayed += sum(len(j[1]) for j in jobs)
         res = list(pmap(outcomes, jobs))
         reg = rec = n = 0
         for b, c in zip(res[0::2], res[1::2]):
