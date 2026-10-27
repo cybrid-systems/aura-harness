@@ -39,7 +39,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     cfg = cfg or M2Config()
     m2 = cfg.any()
     stat = cfg.admission == "stat"
-    sa = StatAdmission(alpha=cfg.alpha)  # K concurrent pending slots
+    sa = StatAdmission(alpha=cfg.alpha)
     queue = CandidateQueue()             # stat mode: proposals made while a candidate is pending admission
     if stat and retention is None:
         retention = RetentionGate()          # the retention budget gate is always on in stat mode
@@ -63,12 +63,9 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             eps.append(ep.summary())
             if t.heldout:
                 continue
-            if stat:
-                sa.assign(stream, t.id)
-                for P in [P for P in sa.slots if sa.due(P)]:
-                    if P in sa.slots:                      # an earlier KEEP this step may have displaced it
-                        tb = _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger,
-                                          lib, verdicts, keep_tables, learn, P, queue)
+            if stat and sa.pending and sa.due(stream, t.id):
+                tb = _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib,
+                                  verdicts, keep_tables, learn)
             if cfg.pruner and t.id and t.id % cfg.prune_every == 0 and t.id >= window:
                 tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger, learn)
             d = src.p.diagnose(ep) if cfg.critic else None
@@ -76,10 +73,11 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 critic.note(f"{d[0]}|{d[1]}", t.project)
             cands = src.observe(ep, tb)
             if stat:
-                # the proposer keeps running while candidates wait for fresh evidence; its output is queued and
-                # selected into one of K concurrent slots, each with its own disjoint one-use fresh tasks
-                queue.push(cands, [d for P in sa.slots for d in P["descs"]], [P["sig"] for P in sa.slots])
-                if sa.full() or not len(queue):
+                # the proposer keeps running while a candidate waits for fresh evidence; its output is queued and
+                # selected one at a time, so each admission still has its own one-use fresh tasks and alpha budget
+                P = sa.pending
+                queue.push(cands, P["descs"] if P else (), P["sig"] if P else None)
+                if P or not len(queue):
                     continue
                 cands = queue.pop(tb, src.p._noop)
             if not cands:
@@ -136,10 +134,10 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             if stat and best >= 0 and not hard_veto(cands[best]):
                 # M5b: selection done on the selection split; admission waits for fresh tasks after t.id
                 h.verdict(t.id, -1, dict(sc, stat="selected; admission pending"), cands[0].why)
-                sa.open({"ts": t.id, "start": start, "cand": cands[best], "sig": sig, "blocked": blocked,
+                sa.pending = {"ts": t.id, "start": start, "cand": cands[best], "sig": sig, "blocked": blocked,
                               "table": next(r["table"] for r in ok_trials if r["i"] == best), "look": 0,
                               "descs": [c.desc for c in cands], "tasks": tasks, "mem0": mem0, "sel": sc,
-                              "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands), "cands": cands})
+                              "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands)}
                 gate_s.append(time.perf_counter() - g0)
                 continue
             best = -1 if stat else best
@@ -223,8 +221,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out["restarts"] = getattr(h, "restarts", 0)
     out["keep_tables"] = keep_tables
     if stat:
-        out["stat"] = {"log": sa.log, "pending_at_end": len(sa.slots), "k": sa.k, "alpha_look": sa.alpha_look,
-                       "unused_fresh": sa.unused_fresh, "owner": sa.owner, "conflicts": sa_conf(sa), "queue": dict(queue.n, left=len(queue))}
+        out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending), "queue": dict(queue.n, left=len(queue))}
     if hasattr(src.p, "llm_usage"):
         v = [x for x in verdicts if x.get("n_llm")]
         out["llm"] = dict(src.p.llm_usage(), gated_with_llm=len(v),
@@ -274,15 +271,16 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
 
 
 def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib, verdicts, keep_tables,
-                 learn=None, P=None, queue=None):
+                 learn=None):
     learn = learn if learn is not None else {"replay_tasks": 0}
     """M5b admission of the pending candidate on fresh, one-use held-out tasks that arrived after its selection"""
+    P = sa.pending
     a0 = (P["ts"] + 1) // 10 * 10
-    ids = list(P["fresh"])
+    ids = sa.fresh_ids(stream, t.id)
     seg = stream[a0:t.id + 1]
     learn["replay_tasks"] += 2 * len(seg)
     rb, rc = list(pmap(per_task3, [(tb, seg, ckpts[a0], seed, shift), (P["table"], seg, ckpts[a0], seed, shift)]))
-    v, info = sa.decide(rb, rc, ids, P)
+    v, info = sa.decide(rb, rc, ids)
     if v == "wait":
         return tb
     c, verdict, ret_info = P["cand"], "ROLLBACK", None
@@ -301,7 +299,6 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
                     "admission": info})
             keep_tables.append({"ts": t.id, "desc": c.desc, "before": tb, "after": res["table"]})
             tb = res["table"]
-            _resolve_conflicts(sa, P, c, tb, queue, t.id)
             lib.add(c.name, tb[COMPONENT[c.name]], c.desc, P["sig"], t.id, t.phase)
             if retention is not None:
                 retention.admitted(t.id, P["start"], P["ts"], P["tasks"], P["mem0"], ret_info or {})
@@ -312,25 +309,5 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
                      "candidates": P["descs"], "blocked": P["blocked"], "scores": {"stat": info}, "why": c.why,
                      "chosen_by": c.meta.get("proposer", "rule") if verdict == "KEEP" else None, "n_llm": P["n_llm"],
                      "sig": P["sig"], "proposed_ts": P["ts"]})
-    sa.close(P)
+    sa.pending = None
     return tb
-
-
-def sa_conf(sa):
-    return [x for x in sa.log if x.get("verdict") == "conflict"]
-
-
-def _resolve_conflicts(sa, P, c, tb, queue, ts):
-    """after P's KEEP on component X: other pending candidates on X are displaced (re-queued for re-selection on
-    the new table; their fresh tasks stay spent), the rest are re-based so their table carries the new KEEP"""
-    key = COMPONENT[c.name]
-    for Q in [Q for Q in sa.slots if Q is not P]:
-        qk = COMPONENT.get(Q["cand"].name)
-        if qk == key:
-            sa.close(Q)
-            sa.log.append({"verdict": "conflict", "ts": ts, "slot": Q["uid"], "desc": Q["cand"].desc,
-                           "with": c.desc, "component": key, "fresh_spent": len(Q["fresh"])})
-            if queue is not None:
-                queue.requeue(Q["cands"])
-        else:
-            Q["table"] = dict(tb, **{qk: Q["table"][qk]})
