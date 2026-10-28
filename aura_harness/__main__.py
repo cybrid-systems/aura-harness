@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -63,6 +64,15 @@ def main(argv=None) -> int:
     rb.add_argument("--jobs", type=int, default=3)
     rb.add_argument("--out", default="runs/rsi")
     rb.add_argument("--set", default="m1", choices=["m1", "m2"])
+    tr = sub.add_parser("trace", help="one traced run (RSI / swarm / supervisor) + validation, optional OTLP/JSON export")
+    tr.add_argument("what", choices=["rsi", "swarm", "supervisor"])
+    tr.add_argument("--seed", type=int, default=0)
+    tr.add_argument("--n", type=int, default=400, help="rsi: stream tasks")
+    tr.add_argument("--N", type=int, default=4, help="swarm/supervisor: workers")
+    tr.add_argument("--K", type=int, default=256)
+    tr.add_argument("--F", type=int, default=32)
+    tr.add_argument("--otlp", help="write OTLP/JSON (ExportTraceServiceRequest) here")
+    tr.add_argument("--jsonl", help="write one span per line here")
     a = ap.parse_args(argv)
 
     if a.cmd == "bench":
@@ -114,6 +124,27 @@ def main(argv=None) -> int:
     elif a.cmd == "rsi-bench":
         from .rsi.bench import run as rsib
         print(rsib(a.seeds, a.n, a.noise, a.jobs, a.out, a.set))
+    elif a.cmd == "trace":
+        from .obs import Tracer
+        t = Tracer("aura-harness", mode=a.what, aura_bin=os.environ.get("AURA_BIN", "aura"))
+        if a.what == "rsi":
+            from .rsi.loop import run_rsi
+            x = run_rsi(a.seed, n=a.n, tracer=t)
+            res = {"kept": x.get("kept"), **x["trace"]}
+        elif a.what == "swarm":
+            from .swarm import run as srun
+            r = srun("free", a.N, a.K, a.F, 200000, tracer=t)
+            res = {"summary": t.summary(), "validation": r["trace"], "tasks_per_s": r.get("tasks-per-s")}
+        else:
+            from .swarm import run_supervisor
+            r = run_supervisor(a.N, a.K, a.F, tracer=t)
+            res = {"summary": t.summary(), "validation": r["trace"]}
+        if a.otlp:
+            t.write_otlp(a.otlp)
+        if a.jsonl:
+            t.write_jsonl(a.jsonl)
+        print(json.dumps(res, indent=1, default=str))
+        return 0 if (res.get("validation") or {}).get("ok") else 1
     elif a.cmd == "source":
         from .control import AuraHarness
         h = AuraHarness()

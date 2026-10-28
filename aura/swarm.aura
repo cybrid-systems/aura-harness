@@ -30,6 +30,21 @@
 (define (bump! k n) (hash-set! m k (+ n (hash-ref m k 0))))
 (define (tick-ms! k t0) (bump! k (- (monotonic-ms) t0)))
 
+;; ---------------------------------------------------------------- per-task trace (docs/observability.md)
+;; Off unless trace-on is set (aura_harness/swarm.py trace=True). One row per merged or rolled-back task attempt:
+;; "task,worker,t-claim,t-end,evals,rebinds,outcome" (ms since the run started; evals/rebinds the worker spent on
+;; this task between claim and merge). Rows are keyed by "task:worker:t-end" in a hash.
+(define trace-on #f)
+(define trace-rows (make-hash))
+(define trace-t0 0)
+(define (trace-row! i w tc ev rb outcome)
+  (if trace-on
+      (let ((te (- (monotonic-ms) trace-t0)))
+        (hash-set! trace-rows (string-append (number->string i) ":" (number->string w) ":" (number->string te) ":" outcome)
+                   (string-append (number->string i) "," (number->string w) "," (number->string (- tc trace-t0)) ","
+                                  (number->string te) "," (number->string ev) "," (number->string rb) "," outcome)))))
+(define (trace-dump) (let loop ((ks (hash-keys trace-rows)) (s "")) (if (null? ks) s (loop (cdr ks) (string-append s (hash-ref trace-rows (car ks) "") "|")))))
+
 ;; ---------------------------------------------------------------- shared context (board)
 ;; Append-only, typed, newest first. Entry: (seq type worker task payload round)
 ;; Types: OBSERVED FACT FAIL CLAIM RELEASE PATCH_SUMMARY ANNOUNCE.
@@ -190,7 +205,8 @@
     (if (< (ws-get w "mine" -1) 0)
         (let ((i (pick w)))
           (if (>= i 0)
-              (if (try-claim! w i rnd) (begin (ws-put! w "mine" i) (ws-put! w "t-claimed" (monotonic-ms)) (ws-put! w "base" (hash-ref ws-ver (fam i) 0)))))))
+              (if (try-claim! w i rnd) (begin (ws-put! w "mine" i) (ws-put! w "t-claimed" (monotonic-ms)) (ws-put! w "base" (hash-ref ws-ver (fam i) 0))
+                                             (if trace-on (begin (ws-put! w "tev" 0) (ws-put! w "trb" 0))))))))
     ;; my claim may have been completed by someone else meanwhile
     (if (and (>= (ws-get w "mine" -1) 0) (hash-has-key? done (ws-get w "mine" -1))) (ws-put! w "mine" -1))
     (tick-ms! "t-claim" t0)))
@@ -209,6 +225,7 @@
                 (set! res (let f ((r roots)) (cond ((null? r) -1) ((accept? i (car r)) (car r)) (else (f (cdr r)))))))
               (let* ((from (next-window w g)) (roots (scan-window g from)) (to (min P (+ from W))))
                 (bump! "evals" (- to from))
+                (if trace-on (ws-put! w "tev" (+ (- to from) (ws-get w "tev" 0))))
                 (let ((payload (string-append (number->string from) ":" (number->string to) ":" (roots->str roots))))
                   (note-window! w g payload)
                   (board-post! "OBSERVED" w i payload rnd))
@@ -233,6 +250,7 @@
 (define (merge! w x rnd)
   (let* ((t0 (monotonic-ms)) (i (ws-get w "mine" -1)) (r (ws-merge! w i x (ws-get w "base" 0) rnd)))
     (bump! (if (eq? r 'merged) "merged" "rolled-back") 1)
+    (trace-row! i w (ws-get w "t-claimed" t0) (ws-get w "tev" 0) (ws-get w "trb" 0) (if (eq? r 'merged) "merged" "rollback"))
     (if (eq? r 'merged)
         (let ((lat (- (monotonic-ms) (ws-get w "t-claimed" t0))))
           (bump! "lat-ms" lat) (if (> lat (hash-ref m "lat-max-ms" 0)) (hash-set! m "lat-max-ms" lat))))
@@ -265,6 +283,7 @@
                         (catch (e) #f)))
                (dt (- (monotonic-ms) t0)))
           (bump! "rebinds" 1) (bump! "rebind-ms" dt)
+          (if trace-on (ws-put! w "trb" (+ 1 (ws-get w "trb" 0))))
           (if (> dt (hash-ref m "rebind-max-ms" 0)) (hash-set! m "rebind-max-ms" dt))
           (if (not ok) (bump! "rebind-fail" 1)
               (if (not (= (pol-offset w) v)) (bump! "rebind-stale" 1)))))))
@@ -291,6 +310,7 @@
   (set! ws-ver (make-hash)) (set! ws-log (list)) (set! ws-head 0) (set! wstate (make-hash))
   (set! m (make-hash)) (set! inbox (make-hash)) (mk-inboxes! n)
   (set! clock 0) (set! hb (make-hash)) (set! stop #f) (set! rb-every 0)
+  (set! trace-rows (make-hash)) (set! trace-t0 (monotonic-ms))
   (let loop ((w 0)) (if (< w n) (begin (init-worker! w) (loop (+ w 1))) n)))
 
 ;; epoch mode: every round, spawn N identical worker fibers (one turn each) and

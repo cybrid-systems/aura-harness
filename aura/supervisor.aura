@@ -17,11 +17,15 @@
 (define sv-dead (make-hash)); w -> 1
 (define sv-queue (list))    ; pending (g from)
 (define sv-ffirst (make-hash)) ; g -> first dispatch ms
+(define sv-fw (make-hash))     ; g -> hash of workers that returned a window (trace only)
+;; trace: a family's scan cost is shared by its siblings (K/F subtasks); a supervisor-mode row's worker field is
+;; the number of distinct workers that scanned the family, evals = the family's scan / siblings
+(define (sv-fam-evals g) (quotient P (max 1 (quotient (+ cfg-K (- cfg-F 1)) cfg-F))))
 (define (sv-key g from) (string-append (number->string g) ":" (number->string from)))
 (define (sv-reset! n k f)
   (reset! n k f)
   (set! sv-res (channel:create 65536)) (set! sv-fin #f) (set! sv-out (make-hash)) (set! sv-win (make-hash))
-  (set! sv-load (make-hash)) (set! sv-dead (make-hash)) (set! sv-ffirst (make-hash))
+  (set! sv-load (make-hash)) (set! sv-dead (make-hash)) (set! sv-ffirst (make-hash)) (set! sv-fw (make-hash))
   (set! sv-queue (let gl ((g (- f 1)) (acc (list)))
                    (if (< g 0) acc
                        (gl (- g 1) (let wl ((x (* W (quotient (- P 1) W))) (a acc)) (if (< x 0) a (wl (- x W) (cons (list g x) a))))))))
@@ -70,8 +74,9 @@
             (if (if (= x -1) (proven-none? i roots) (accept? i x))
                 (if (eq? (ws-merge! -1 i x (hash-ref ws-ver g 0) 0) 'merged)
                     (let ((lat (- (monotonic-ms) (hash-ref sv-ffirst g 0))))
+                      (trace-row! i (if (hash-has-key? sv-fw g) (hash-length (hash-ref sv-fw g 0)) 0) (hash-ref sv-ffirst g 0) (sv-fam-evals g) 0 "merged")
                       (bump! "merged" 1) (bump! "lat-ms" lat) (if (> lat (hash-ref m "lat-max-ms" 0)) (hash-set! m "lat-max-ms" lat)))
-                    (bump! "rolled-back" 1))
+                    (begin (trace-row! i -1 (hash-ref sv-ffirst g 0) 0 0 "rollback") (bump! "rolled-back" 1)))
                 (bump! "verify-fail" 1))
             (loop (+ i cfg-F)))))))
 (define (sv-collect!)
@@ -84,6 +89,7 @@
                        (rs (if (null? (cdr (cdr (cdr (cdr p))))) (list) (str->roots (car (cdr (cdr (cdr (cdr p))))))))
                        (k (sv-key g from)) (h (hash-ref sv-win g 0)))
                   (hash-set! sv-load w (max 0 (- (hash-ref sv-load w 0) 1)))
+                  (if trace-on (begin (if (not (hash-has-key? sv-fw g)) (hash-set! sv-fw g (make-hash))) (hash-set! (hash-ref sv-fw g 0) w 1)))
                   (if (hash-has-key? h from)
                       (bump! "dup-results" 1)
                       (begin

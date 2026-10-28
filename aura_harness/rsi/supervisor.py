@@ -133,5 +133,8 @@ class SupervisedAura:
     def log(self) -> list[dict]:
         return (self._call(self.h.log, None) or []) + self.events
 
+    def prov(self, n: int = 0) -> dict:
+        return dict(self._call(lambda: self.h.prov(n), None) or {}, restarts=self.restarts)
+
     def close(self):
         self.h.close()

@@ -417,6 +417,24 @@ It also reports a regression in which the evolved harness exposed a run-configur
 
 N identical worker fibers, no orchestrator, each running Gather → Claim → Act → Verify → Merge over a typed append-only board, per-worker channel mailboxes and a versioned workspace; deterministic mock proposer with acceptance checks. `python3 -m aura_harness.swarm epoch N K F cap`, full sweep `scripts/swarm_bench.py` → `results/swarm-bench.md`. Design, findings and numbers: [docs/swarm-design.md](docs/swarm-design.md). Coordination scales (rounds 1991 → 16 for N 1 → 1024) but wall time doesn't: fibers are serialized, `fiber:yield` doesn't interleave and fibers get silently dropped (aura #4697–#4702).
 
+## Observability
+
+Opt-in per-run tracing for the RSI loop and for the swarm/supervisor modes (`aura_harness/obs.py`, design and span schema in [docs/observability.md](docs/observability.md)). Off by default; with no tracer the code path is unchanged.
+
+```bash
+python3 -m aura_harness trace rsi --seed 1 --n 400 --otlp runs/rsi.otlp.json
+python3 -m aura_harness trace swarm --N 4 --K 256 --F 32
+python3 -m aura_harness trace supervisor --N 4 --K 256 --F 32
+```
+
+* **Per candidate:** proposal (proposer, `llm.model`/`llm.provider`, tokens, calls, USD), guard/worldline trial (ok, reason, Aura ms), gate scores, verdict KEEP / ROLLBACK / PENDING with its reason, and the **Aura mutation provenance id** `ws<id>/m<mutation_id>` (from `query:last-mutation-provenance`, also stored in the control plane's audit `LOG` and exposed by `PROV`).
+* **Per task (cost attribution):** wall ms, tokens, LLM tokens/USD and mutations landed (RSI); claim→merge wall ms, evals and rebinds per task (swarm, counted in fiber-private state by `aura/swarm.aura` when `trace-on` is set).
+* **Export:** OTLP/JSON `ExportTraceServiceRequest` (`--otlp`), JSONL spans (`--jsonl`), or `AURA_HARNESS_OBS=1` / `AURA_HARNESS_OTLP=<file>`.
+* **Validation against Aura:** the trace is joined with the audit log and Aura's provenance (trial / KEEP / ROLLBACK counts, every admitted trial and KEEP carries a mutation id, KEEP provenance ids equal the audit log's in order, control-plane version = KEEPs). On Aura `e6f4169e0`, 3 seeds × 400 tasks: **validation ok 3/3** (59/49/49 trials, 14/11/12 KEEPs, 8/8/5 ROLLBACKs, 0 missing provenance ids); 562–600 spans and ~0.5 MB OTLP per run.
+* **Overhead** (same seeds, interleaved off/on): RSI 400 tasks 2.22 s off vs 2.13 s on (mean of 3; within noise), verdicts identical with tracing on and off; swarm free N=4 K=256: 1539 ms off vs 1386 ms on (noise dominates; the trace adds one row per task).
+* **What it caught:** on parallel-body Aura (#4717) the per-task attribution of a swarm run exceeds the shared `evals` counter (lost increments 64 / 293 / 192 in 3 runs), one run's `merged` counter was 255 with 256 merge rows, and one run merged a task twice. Shared `hash-set!` read-modify-write is not atomic across parallel bodies and can corrupt environments (aura#4730). The swarm validation reports lost counter increments as `warnings` and duplicate merges / counter mismatches as `problems`.
+* Tests: `tests/test_obs.py` (pure tracer/OTLP/validation tests, plus Aura runs when `AURA_BIN` is set: RSI validation, tracing-off identity, swarm N=1 exact, swarm N=4 race reporting, supervisor).
+
 ## Caveats
 
 * **The environment and the model are simulated.** The numbers say the loop, gate and guard behave as designed on a seeded stream built to stress a generic seed harness. They say nothing about a real model on a real benchmark. The seed is plausible but weak (24% success), and the learner finds a handful of rule changes.
@@ -522,6 +540,29 @@ Splits (ModularRSI / 2609.38372 style): evolution on repos `api` / `web` / `etl`
   * Stream success (76.5%) is below held-out because it includes every task solved before the fixes landed.
 
 ## Known Aura issues
+
+### Re-check on `e6f4169e0` (2026-10-28): parallel fiber bodies
+
+Aura `e6f4169e0` runs fiber bodies in parallel (#4717, P4/P5 of #4707). CPU-bound fibers now scale (16 spinning fibers: 13.4 s vs 25.8 s on the serialized `235bcfa6b`; one fiber is ~35% slower, 2.2 vs 1.6 s). The orchestration probes from this repo are mostly fixed (#4721, #4723, #4724, #4725, #4727; #4708 cancel works but #4728 makes a main-thread yield cost ~200 ms). But **`swarm.aura` and `supervisor.aura` are no longer reliable**: they share hashes between worker bodies and Aura has no atomic update or lock yet (the COW overlay is #4715).
+
+| | `235bcfa6b` (serialized bodies) | `e6f4169e0` (parallel bodies) |
+|---|---|---|
+| swarm free, tasks/s at N=1/2/4/8/16/32 | 242/211/198/185/155/121 (all accepted) | 156/132/124/135/113/– (N=16: 1 of 3 runs, N=32: 0 of 3; the rest die with `unbound variable: n`) |
+| supervisor, tasks/s | 795–942 (N=1–8, all accepted) | 572–683 when accepted; accepted 0/3, 1/3, 2/3, 1/3, 0/3, 0/3 at N=1/2/4/8/16/32 (dead workers, 150 s livelocks, one SIGABRT) |
+| `scope-join-all` with yield-waiting tasks | overran its timeout 3× | 17–18/20 ok (#4726 reopened) |
+| `orch:agent-ask` 500 ms timeout | waited 5000 ms | positional timeout exact (301 ms for 300); `:timeout-ms` keyword ignored → 5000 ms (#4732); in-process ask can abort the heap under JIT (#4731) |
+| `fiber:cancel` | not available | returns in 0–1 ms; cooperative (takes effect at the next yield); `fiber:join` has no timeout |
+
+Full table: `results/sv-bench-e6f4169e0.md`. New and reopened issues from this re-check:
+
+| issue | effect here |
+|---|---|
+| cybrid-systems/aura#4730 (new) | `hash-set!` on a shared hash from parallel bodies loses updates and corrupts lexical environments (`unbound variable: k` / `loop` / `n`). A 6-line repro fails 5/5 at N≥4. Root cause of every swarm/supervisor failure above, and of #4709 / #4710 reproducing again |
+| cybrid-systems/aura#4709, #4710, #4726 (reopened) | swarm rebind run 0/5 clean; per-fiber hash results aliased in 6/100 runs; scope tasks after `run-workflow` never run in 2–3/20 |
+| cybrid-systems/aura#4728 (new) | main-thread `fiber:yield` takes ~200 ms while a sibling body is alive |
+| cybrid-systems/aura#4729 (new) | `workspace :merge` wipes the root mutation log and `last-mutation-provenance` and drops the child's mutations, so after a ws-mode KEEP the root log is empty (`aura.root_mlog` = 0 in the traces); the trace keeps the trial-time provenance ids instead |
+| cybrid-systems/aura#4731 (new) | in-process `agent-ask` aborts with `malloc(): unaligned tcache chunk` under `AURA_TIER_JIT=1` |
+| cybrid-systems/aura#4732 (new) | `orch:agent-ask` ignores `:timeout-ms` |
 
 ### Re-pin to `a6c63aa19` (2026-10-22)
 

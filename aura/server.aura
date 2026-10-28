@@ -508,13 +508,21 @@
 ;; ---------------------------------------------------------------- audit log + version
 (define *version* 0)
 (define *log* (list))           ;; newest first
+(define *cur-prov* "")          ;; Aura provenance id of the mutation the next log! entry is about
 (define *seq* 0)
 (define (log! ts op name why actor reason extra)
   (set! *seq* (+ *seq* 1))
   (set! *log* (cons (hash "seq" *seq* "ts" ts "op" op "name" name "why" why "actor" actor "reason" reason
-                          "version" *version* "extra" extra)
+                          "version" *version* "extra" extra "prov" *cur-prov*)
                     *log*)))
 (define *blocked* 0)
+;; Aura-side provenance of the last mutation in the ACTIVE workspace (query:last-mutation-provenance): its
+;; mutation_id, or 0 when the workspace has none. Trials, APPLY and VERDICT replies carry it as "prov"
+;; ("ws<id>/m<mutation_id>") so the host trace can be joined with Aura's own mutation log (docs/observability.md).
+(define (last-mid)
+  (try (let ((p (query:last-mutation-provenance))) (if (hash? p) (hash-ref p "mutation_id" 0) 0)) (catch (e) 0)))
+(define (prov-id w mid) (string-append "ws" (n->s w) "/m" (n->s mid)))
+(define (mutation-log-n) (try (let ((l (query :mutation-log 100000))) (if (list? l) (length l) 0)) (catch (e) 0)))
 
 ;; ---------------------------------------------------------------- compaction (cybrid-systems/aura#4583)
 ;; Every mutate:rebind on a workspace pays for all earlier ones (time and memory grow with the rebind history;
@@ -546,6 +554,7 @@
     (if sr (list #f sr #f (- (now-ms) t0))
         (let* ((snap (ast:snapshot (string-append "pre-" name)))
                (ar (raw-apply name body why))
+               (mid (begin (set! *cur-prov* (if ar "" (prov-id 0 (last-mid)))) 0))
                (tb (if ar #f (materialize)))
                (pr (if ar ar (post-check tb))))
           (if pr
@@ -561,6 +570,8 @@
 ;; keep? = #t keeps a passing child alive so VERDICT can promote it with `workspace :merge`; its id is the 5th
 ;; element of the result (#f when the child was deleted).
 (define *kept* (list))          ;; child workspaces kept by the last TRIAL (deleted at VERDICT / next TRIAL)
+(define *trial-provs* (list))   ;; per-trial provenance ids of the last TRIAL, in order
+(define *trial-prov* "")        ;; provenance id of the current trial's rebind ("" when the guard blocked it)
 (define (drop-kept!)
   (for-each (lambda (w) (try (workspace :delete w) (catch (e) #f))) *kept*)
   (set! *kept* (list)))
@@ -572,8 +583,10 @@
           (let* ((w (workspace :create (string-append "trial-" (n->s *wcount*)))))
             (workspace :switch w)
             (let* ((ar (raw-apply name body why))
+                   (mid (if ar 0 (last-mid)))
                    (tb (if ar #f (materialize)))
                    (pr (if ar ar (post-check tb))))
+              (set! *trial-prov* (prov-id w mid))
               (workspace :switch 0)
               (eval-current)
               (if (and keep? (not pr))
@@ -598,13 +611,14 @@
     (if sr (list #f sr #f 0)
         (let* ((snap (ast:snapshot "trial"))
                (ar (raw-apply name body why))
+               (mid (begin (set! *trial-prov* (prov-id 0 (if ar 0 (last-mid)))) 0))
                (tb (if ar #f (materialize)))
                (pr (if ar ar (post-check tb))))
           (ast:restore snap) (eval-current)
           (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))
 
 (define (trial-reply r i)
-  (hash "i" i "ok" (car r) "reason" (cadr r) "table" (caddr r) "ms" (list-ref r 3)))
+  (hash "i" i "ok" (car r) "reason" (cadr r) "table" (caddr r) "ms" (list-ref r 3) "prov" *trial-prov*))
 
 ;; ---------------------------------------------------------------- in-process latency (BENCH n)
 ;; Aura only has a millisecond clock, so each step is looped and averaged. Runs on the live process; every step that
@@ -642,10 +656,13 @@
 
 (define (do-trials mode ts cands actor)
   (let loop ((cs cands) (i 0) (acc (list)))
-    (if (null? cs) (begin (set! *trial-ws* (reverse *trial-ws*)) (reverse acc))
+    (if (null? cs) (begin (set! *trial-ws* (reverse *trial-ws*)) (set! *trial-provs* (reverse *trial-provs*)) (reverse acc))
         (let* ((c (car cs))
+               (_p (set! *trial-prov* ""))
                (r (if (equal? mode "snap") (trial-snap (car c) (cadr c) (caddr c)) (trial-ws (car c) (cadr c) (caddr c) #t))))
           (set! *trial-ws* (cons (if (> (length r) 4) (list-ref r 4) #f) *trial-ws*))
+          (set! *trial-provs* (cons *trial-prov* *trial-provs*))
+          (set! *cur-prov* *trial-prov*)
           (if (not (car r))
               (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" (car c) (caddr c) actor (cadr r) (cadr c)))
               (log! ts (string-append "trial-" mode) (car c) (caddr c) actor "" (cadr c)))
@@ -674,7 +691,7 @@
               (r (guarded-root-apply! name body why)))
          (if (car r)
              (begin (set! *version* (+ *version* 1)) (log! ts "keep-ungated" name why actor "" body)
-                    (reply (hash "ok" #t "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+                    (reply (hash "ok" #t "version" *version* "table" (caddr r) "ms" (list-ref r 3) "prov" *cur-prov*)))
              (begin (set! *blocked* (+ *blocked* 1)) (log! ts "blocked" name why actor (cadr r) body)
                     (reply (hash "ok" #f "blocked" #t "reason" (cadr r) "version" *version* "ms" (list-ref r 3)))))))
       ((equal? cmd "TRIAL")
@@ -683,6 +700,7 @@
          (drop-kept!)
          (set! *trials* cands)
          (set! *trial-ws* (list))
+         (set! *trial-provs* (list))
          (let ((rs (do-trials mode ts cands actor)))
            (reply (hash "trials" rs "ms" (- (now-ms) t0) "version" *version*)))))
       ((equal? cmd "VERDICT")
@@ -691,14 +709,17 @@
              ;; ws mode: merge the kept child (aura#4589 fixed); snap mode: re-apply through the guard
              (let* ((c (list-ref *trials* chosen))
                     (w (if (< chosen (length *trial-ws*)) (list-ref *trial-ws* chosen) #f))
+                    (tp (if (< chosen (length *trial-provs*)) (list-ref *trial-provs* chosen) ""))
                     (r (if w (merge-root! w) (guarded-root-apply! (car c) (cadr c) (caddr c)))))
                (drop-kept!)
+               (if w (set! *cur-prov* tp))
                (if (car r)
                    (begin (set! *version* (+ *version* 1)) (log! ts "keep" (car c) why actor scores (cadr c))
-                          (reply (hash "verdict" "KEEP" "version" *version* "table" (caddr r) "ms" (list-ref r 3))))
+                          (reply (hash "verdict" "KEEP" "version" *version* "table" (caddr r) "ms" (list-ref r 3)
+                                       "prov" *cur-prov* "trial_prov" tp "root_mid" (last-mid) "root_mlog" (mutation-log-n))))
                    (begin (log! ts "rollback" (car c) why actor (string-append "promote failed: " (cadr r)) scores)
                           (reply (hash "verdict" "ROLLBACK" "version" *version* "reason" (cadr r))))))
-             (begin (drop-kept!) (log! ts "rollback" "" why actor scores "")
+             (begin (drop-kept!) (set! *cur-prov* "") (log! ts "rollback" "" why actor scores "")
                     (reply (hash "verdict" "ROLLBACK" "version" *version*))))))
       ((equal? cmd "ADMIT")         ;; dry run of the guard's static stage: reason (or null) + the instrumented body
        (let ((ad (admit (field fs 1) (field fs 2)))) (reply (hash "reason" (car ad) "body" (cadr ad) "fuel" *fuel-max*))))
@@ -707,6 +728,12 @@
          (reply (hash "source" (if (equal? (field fs 1) "raw") src (clean-source src)) "version" *version*))))
       ((equal? cmd "FIND")
        (reply (hash "name" (field fs 1) "node" (let ((r (try (query :find (field fs 1)) (catch (e) #f)))) (if (number? r) r #f)))))
+      ((equal? cmd "PROV")          ;; Aura's own provenance for the root workspace (docs/observability.md)
+       (let ((n (fnum fs 1)))
+         (reply (hash "mutation_log" (try (let ((l (query :mutation-log (if n n 100000)))) (if (list? l) l (list))) (catch (e) (list)))
+                      "last" (try (let ((p (query:last-mutation-provenance))) (if (hash? p) p #f)) (catch (e) #f))
+                      "metrics" (try (let ((x (orch:metrics))) (if (string? x) x #f)) (catch (e) #f))
+                      "version" *version* "log_n" *seq* "blocked" *blocked* "compactions" *compactions*))))
       ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
       ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked* "compactions" *compactions*
                                             "root_muts" *root-muts* "compact_every" *compact-every*)))

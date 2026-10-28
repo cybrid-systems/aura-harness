@@ -133,6 +133,11 @@ class AuraHarness:
     def log(self) -> list[dict]:
         return self.pipe.call("LOG")["log"] or []
 
+    def prov(self, n: int = 0) -> dict:
+        """Aura's own provenance for the root workspace: its mutation log (query :mutation-log), the last mutation's
+        provenance record (query:last-mutation-provenance) and the control-plane version (docs/observability.md)"""
+        return self.pipe.call("PROV", n or "")
+
     def close(self):
         self.pipe.close()
 

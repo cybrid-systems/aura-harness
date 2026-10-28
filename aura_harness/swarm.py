@@ -106,15 +106,21 @@ def kv(s: str) -> dict:
     return out
 
 
-def _cli(expr: str, timeout: float = 600, supervisor: bool = False) -> tuple[str, int, float]:
-    """CLI backend: one process per run; returns (last display line, peak RSS kB, wall ms)."""
+_LAST_TRACE: list = [None]          # trace rows of the last _cli(trace=True) run
+
+
+def _cli(expr: str, timeout: float = 600, supervisor: bool = False, trace: bool = False) -> tuple[str, int, float]:
+    """CLI backend: one process per run; returns (last display line, peak RSS kB, wall ms). trace=True turns on the
+    per-task trace rows (aura/swarm.aura trace-on); they are left in _LAST_TRACE[0]."""
     import tempfile
     aura = os.environ.get("AURA_BIN") or "aura"
     env = dict(os.environ, AURA_SANDBOX="off", AURA_PIPELINE_STRICT="0")
     with tempfile.NamedTemporaryFile("w", suffix=".aura", delete=False) as fh:
         # evaluate first: runtime warnings printed during the run must not split the @@ line
         src = SWARM.read_text() + (("\n" + SUPERVISOR.read_text()) if supervisor else "")
-        fh.write(src + f'\n(define swarm-result {expr})\n(newline) (display "@@") (display swarm-result) (newline)\n')
+        pre = "\n(set! trace-on #t)" if trace else ""
+        post = '(display "@@T") (display (trace-dump)) (newline)\n' if trace else ""
+        fh.write(src + pre + f'\n(define swarm-result {expr})\n(newline) (display "@@") (display swarm-result) (newline)\n' + post)
         path = fh.name
     t0 = time.perf_counter()
     p = subprocess.Popen([aura, "--load", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
@@ -139,19 +145,30 @@ def _cli(expr: str, timeout: float = 600, supervisor: bool = False) -> tuple[str
     finally:
         os.unlink(path)
     wall = (time.perf_counter() - t0) * 1000
+    _LAST_TRACE[0] = None
+    res = None
     for line in out.splitlines():
-        if line.startswith("@@"):
-            return line[2:].strip().strip('"'), peak[0], wall
+        if line.startswith("@@T"):
+            _LAST_TRACE[0] = [r.split(",") for r in line[3:].strip().strip('"').split("|") if r]
+        elif line.startswith("@@") and res is None:
+            res = line[2:].strip().strip('"')
+    if res is not None:
+        return res, peak[0], wall
     raise RuntimeError(f"no result for {expr}: {out[-500:]} {err[-500:]}")
 
 
-def run(mode: str, n: int, k: int, f: int, cap: int, timeout: float = 600, backend: str = "cli") -> dict:
+def run(mode: str, n: int, k: int, f: int, cap: int, timeout: float = 600, backend: str = "cli", tracer=None) -> dict:
+    """tracer: an obs.Tracer; adds a swarm.run span with one swarm.task span per task (CLI backend only)"""
     call = f"(run-epochs {n} {k} {f} {cap})" if mode == "epoch" else f"(run-free {n} {k} {f} {cap})"
     if backend == "cli":
-        v, peak, wall = _cli(call, timeout)
+        t_ns = time.time_ns()
+        v, peak, wall = _cli(call, timeout, trace=tracer is not None)
         res = kv(v)
         res["peak-rss-kb"] = peak
         res["process-wall-ms"] = round(wall, 1)
+        if tracer is not None:
+            from .obs import swarm_trace
+            res["trace"] = swarm_trace(tracer, "swarm", dict(res, mode=mode, N=n, K=k, F=f), _LAST_TRACE[0] or [], t_ns)
     else:
         a = Aura(timeout)
         try:
@@ -165,13 +182,17 @@ def run(mode: str, n: int, k: int, f: int, cap: int, timeout: float = 600, backe
     return res
 
 
-def run_expr(expr: str, tag: dict, timeout: float = 900, supervisor: bool = False) -> dict:
+def run_expr(expr: str, tag: dict, timeout: float = 900, supervisor: bool = False, tracer=None) -> dict:
     """CLI run of any swarm.aura (or supervisor.aura) runner expression (rebind / fail / cancel / ...)."""
-    v, peak, wall = _cli(expr, timeout, supervisor)
+    t_ns = time.time_ns()
+    v, peak, wall = _cli(expr, timeout, supervisor, trace=tracer is not None)
     res = kv(v)
     res["peak-rss-kb"] = peak
     res["process-wall-ms"] = round(wall, 1)
     res.update(tag)
+    if tracer is not None:
+        from .obs import swarm_trace
+        res["trace"] = swarm_trace(tracer, "supervisor" if supervisor else "swarm", dict(res), _LAST_TRACE[0] or [], t_ns)
     return res
 
 
@@ -185,9 +206,10 @@ def validate(n: int, k: int, f: int, cap: int = 20000, rb_every: int = 4, kill_a
     }
 
 
-def run_supervisor(n: int, k: int, f: int, max_iters: int = 2000000, timeout: float = 900) -> dict:
+def run_supervisor(n: int, k: int, f: int, max_iters: int = 2000000, timeout: float = 900, tracer=None) -> dict:
     """Orchestrated mode: one supervisor fiber plans and dispatches window jobs to N stateless workers."""
-    return run_expr(f"(run-supervisor {n} {k} {f} {max_iters})", {"mode": "supervisor", "N": n, "K": k, "F": f}, timeout, True)
+    return run_expr(f"(run-supervisor {n} {k} {f} {max_iters})", {"mode": "supervisor", "N": n, "K": k, "F": f}, timeout, True,
+                    tracer)
 
 
 def validate_supervisor(n: int, k: int, f: int, max_iters: int = 2000000, kill_at: int = 3, cancel_ms: int = 300,

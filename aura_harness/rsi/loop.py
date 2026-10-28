@@ -20,7 +20,9 @@ from .stat import StatAdmission, hard_veto, per_task3
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
-            cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None, measure: bool = False) -> dict:
+            cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None, measure: bool = False,
+            tracer=None) -> dict:
+    """tracer: an obs.Tracer for a per-run trace (docs/observability.md); None = off, no overhead"""
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
     t_start = time.perf_counter()
@@ -55,22 +57,34 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     eps, verdicts = [], []
     gate_s, change_s = [], []
     learn = {"replay_tasks": 0}          # measurement only (rsi/metrics.py cost split)
+    tr = None
+    if tracer is not None:
+        from ..obs import RsiTrace
+        tr = RsiTrace(tracer, label, seed, n, worldlines, world)
     try:
         for t in stream:
             if t.id % 10 == 0:
                 ckpts[t.id] = mem.copy()
+            if tr:
+                tr.task_end(src)
+                tr.task_start(t, src)
+                s0 = time.perf_counter()
             ep = run_task(t, tb, mem, seed, shift)
             eps.append(ep.summary())
+            if tr:
+                tr.task_ep(eps[-1], 1000 * (time.perf_counter() - s0))
             if t.heldout:
                 continue
             if stat and sa.pending and sa.due(stream, t.id):
                 tb = _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib,
-                                  verdicts, keep_tables, learn)
+                                  verdicts, keep_tables, learn, tr)
             if cfg.pruner and t.id and t.id % cfg.prune_every == 0 and t.id >= window:
-                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger, learn)
+                tb = _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger, learn, tr)
             d = src.p.diagnose(ep) if cfg.critic else None
             if d:
                 critic.note(f"{d[0]}|{d[1]}", t.project)
+            if tr:
+                tr.propose_start(src)
             cands = src.observe(ep, tb)
             if stat:
                 # the proposer keeps running while a candidate waits for fresh evidence; its output is queued and
@@ -82,8 +96,12 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 cands = queue.pop(tb, src.p._noop)
             if not cands:
                 continue
+            if tr:
+                tr.propose_end(src, cands)
             if cfg.critic and critic.veto(cands[0].sig):
                 stats["critic_veto"] += 1
+                if tr:
+                    tr.round_veto("critic: single-project evidence")
                 src.feedback(cands[0].sig, "ROLLBACK", [])
                 verdicts.append({"ts": t.id, "verdict": "ROLLBACK", "chosen": None, "candidates": [c.desc for c in cands],
                                  "blocked": [], "why": "critic: single-project evidence", "scores": {}, "sig": cands[0].sig})
@@ -101,6 +119,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             start = max(0, (t.id + 1 - window) // 10 * 10)
             tasks = stream[start:t.id + 1]
             if sum(x.heldout for x in tasks) < min_heldout:
+                if tr:
+                    tr.round_end()
                 continue
             if hasattr(src.p, "source"):
                 src.p.source = h.source()
@@ -111,6 +131,9 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             pre = {i: target_veto(c) for i, c in enumerate(cands)}
             # stage 2: guard + worldline trial (server.aura)
             trials = h.trial(t.id, cands)
+            if tr:
+                tr.trials(cands, trials, pre, 1000 * (time.perf_counter() - g0))
+                gg0 = time.perf_counter()
             blocked = [cands[r["i"]].desc for r in trials if not r["ok"]]
             ok_trials = [r for r in trials if r["ok"] and not pre[r["i"]]]
             blocked += [cands[r["i"]].desc for r in trials if r["ok"] and pre[r["i"]]]
@@ -127,13 +150,17 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             ranked = sorted(((s, r) for r, s in zip(ok_trials, cs)), key=lambda x: (-x[0][0], x[0][2], x[1]["i"]))
             sc = {"base": base, "candidates": {cands[r["i"]].desc: s for r, s in zip(ok_trials, cs)},
                   "window": [start, t.id], "heldout": base[1]}
+            if tr:
+                tr.gate(sc, 1000 * (time.perf_counter() - gg0))
             best, bs = -1, base
             for r, s in zip(ok_trials, cs):
                 if better(s, bs):
                     best, bs = r["i"], s
             if stat and best >= 0 and not hard_veto(cands[best]):
                 # M5b: selection done on the selection split; admission waits for fresh tasks after t.id
-                h.verdict(t.id, -1, dict(sc, stat="selected; admission pending"), cands[0].why)
+                pv = h.verdict(t.id, -1, dict(sc, stat="selected; admission pending"), cands[0].why)
+                if tr:
+                    tr.verdict(pv, cands[best].desc, "stat: selected; admission pending", {"as": "PENDING"})
                 sa.pending = {"ts": t.id, "start": start, "cand": cands[best], "sig": sig, "blocked": blocked,
                               "table": next(r["table"] for r in ok_trials if r["i"] == best), "look": 0,
                               "descs": [c.desc for c in cands], "tasks": tasks, "mem0": mem0, "sel": sc,
@@ -169,6 +196,21 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             v0 = time.perf_counter()
             vr = h.verdict(t.id, best, sc, cands[0].why)
             change_s.append(time.perf_counter() - v0)
+            if tr:
+                if best >= 0:
+                    why_v = f"gate: {cands[best].desc} beats base {list(base)}" if vr["verdict"] == "KEEP" else \
+                        f"promote failed: {vr.get('reason', '')}"
+                elif not ok_trials:
+                    why_v = "all candidates blocked"
+                elif "retention" in sc:
+                    why_v = "retention veto"
+                elif sc.get("fresh") and sc["fresh"]["cand"][0] < sc["fresh"]["base"][0]:
+                    why_v = "fresh veto"
+                else:
+                    why_v = f"no candidate beats base {list(base)}"
+                tr.verdict(vr, cands[best].desc if best >= 0 else "", why_v,
+                           {"proposer": cands[best].meta.get("proposer", "rule") if best >= 0 else "",
+                            "blocked": len(blocked)}, ms=1000 * change_s[-1])
             if ledger is not None:
                 for d in blocked:
                     ledger.event("blocked", t.id, desc=d, why=cands[0].why)
@@ -208,6 +250,9 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 ledger.event("llm-usage", n, **src.p.llm_usage())
         audit = h.log()
         source = h.source()
+        if tr:
+            prov = h.prov() if hasattr(h, "prov") else None
+            tr.close(src, audit, prov)
         lat = {k: v for k, v in h.lat.items()}
     finally:
         h.close()
@@ -215,6 +260,10 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             pool.shutdown()
     out = summarize(label, seed, n, shift, eps, verdicts, audit, source, lat, gate_s, change_s,
                     time.perf_counter() - t_start, src)
+    if tr:
+        from ..obs import validate_rsi
+        out["trace"] = {"trace_id": tracer.trace_id, "spans": len(tracer.spans), "summary": tracer.summary(),
+                        "counts": tr.counts, "validation": validate_rsi(tracer, tr.audit, tr.prov)}
     out["library"] = lib.summary()
     out["final_table"] = tb
     out["m2"] = dict(stats, archive=len(archive), archive_members=archive)
@@ -239,7 +288,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     return out
 
 
-def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger=None, learn=None):
+def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledger=None, learn=None, tr=None):
     """RRSI pruner: ablate each kept plugin (revert to seed); adopt the ablation if the recent window is not worse in
     held-out successes and not more expensive. Goes through the guard (trial + verdict, actor pruner)."""
     cands = prune_candidates(tb)
@@ -247,9 +296,18 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
         return tb
     start = max(0, (t.id - window) // 10 * 10)
     tasks = stream[start:t.id]
+    if tr:
+        tr.propose_start(None)
+        tr.propose_end(None, cands)
+        tr.round.set(actor="pruner")
+    p0 = time.perf_counter()
     trials = h.trial(t.id, cands, actor="pruner")
+    if tr:
+        tr.trials(cands, trials, {}, 1000 * (time.perf_counter() - p0))
     ok = [r for r in trials if r["ok"]]
     if not ok:
+        if tr:
+            tr.round_end()
         return tb
     if learn is not None:
         learn["replay_tasks"] += len(tasks) * (1 + len(ok))
@@ -261,6 +319,9 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
         if s[0] >= base[0] and s[2] <= base[2] and (bs is None or (s[0], -s[2]) > (bs[0], -bs[2])):
             best, bs = r["i"], s
     vr = h.verdict(t.id, best, {"base": base, "prune": True}, "pruner: ablate kept plugins", actor="pruner")
+    if tr:
+        tr.verdict(vr, cands[best].desc if best >= 0 else "",
+                   "pruner: plugin no longer useful" if best >= 0 else "pruner: every ablation is worse", {"actor": "pruner"})
     if vr["verdict"] == "KEEP":
         stats["pruned"].append((t.id, cands[best].desc))
         if ledger is not None:
@@ -271,7 +332,7 @@ def _prune(h, t, tb, stream, ckpts, window, seed, shift, pmap, stats, lib, ledge
 
 
 def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention, ledger, lib, verdicts, keep_tables,
-                 learn=None):
+                 learn=None, tr=None):
     learn = learn if learn is not None else {"replay_tasks": 0}
     """M5b admission of the pending candidate on fresh, one-use held-out tasks that arrived after its selection"""
     P = sa.pending
@@ -290,6 +351,8 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
         v = "keep" if ok else "reject"
     if v == "keep":
         res = h.apply(t.id, c, actor="stat-gate")
+        if tr:
+            tr.apply(res, c, "stat-gate")
         if res.get("ok"):
             verdict = "KEEP"
             if ledger is not None:
