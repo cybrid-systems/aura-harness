@@ -233,13 +233,31 @@ class RsiTrace:
             s = self.t.start("rsi.proposal", self.round, start_ns=self.p0, **{
                 "cand.i": i, "cand.desc": x.desc, "cand.name": x.name, "cand.target": x.meta.get("target", ""),
                 "proposer": x.meta.get("proposer", "rule"),
-                "llm.model": getattr(c, "model", "") if x.meta.get("proposer") == "llm" else "",
-                "llm.provider": getattr(c, "provider", "") if x.meta.get("proposer") == "llm" else "",
+                "swarm.attempt_id": (x.meta.get("swarm") or {}).get("attempt_id") or (x.meta.get("swarm") or {}).get("parent_id") or "",
+                "llm.model": getattr(c, "model", "") if x.meta.get("proposer", "").startswith("llm") else "",
+                "llm.provider": getattr(c, "provider", "") if x.meta.get("proposer", "").startswith("llm") else "",
                 "llm.tokens_round": tok, "llm.calls_round": int(d.get("calls", 0)),
                 "llm.usd_round": d.get("cost_usd", 0.0)})
             s.end()
         self.round.set(**{"llm.tokens": tok, "llm.calls": int(d.get("calls", 0)),
                           "propose_ms": round((time.time_ns() - self.p0) / 1e6, 3)})
+
+    def swarm(self, info):
+        """LLM -> swarm local search of this round: one rsi.swarm span, one rsi.swarm_attempt per attempt id"""
+        if not self.round:
+            return
+        self.counts["swarm_attempts"] = self.counts.get("swarm_attempts", 0) + len(info["attempts"])
+        sp = self.t.start("rsi.swarm", self.round, **{"swarm.parents": len(info["parents"]),
+                                                       "swarm.attempts": len(info["attempts"]),
+                                                       "swarm.improved": sum(p["result_id"] != p["parent_id"]
+                                                                             for p in info["parents"])})
+        for a in info["attempts"]:
+            self.t.start("rsi.swarm_attempt", sp, **{"swarm.attempt_id": a["id"], "swarm.parent_id": a["parent"] or "",
+                                                     "cand.desc": a["desc"], "swarm.round": a["round"],
+                                                     "swarm.ok": a["ok"], "swarm.n": a["n"], "swarm.tokens": a["tokens"],
+                                                     "swarm.accepted": bool(a["accepted"])}).end()
+        sp.end()
+        self.round.set(**{"swarm.attempt_ids": ",".join(a["id"] for a in info["attempts"])})
 
     def round_veto(self, why):
         """host-side ROLLBACK before the control plane saw the candidates (critic veto): no Aura verdict"""

@@ -42,6 +42,10 @@ MINIMAX_ENV = "/home/box/.config/aura-build/minimax.env"
 # MiniMax list price is not pinned in this repo: cost_usd stays 0 unless AURA_MINIMAX_PRICE="in,cached,out" is set.
 MINIMAX_PRICE = tuple(float(x) for x in os.environ.get("AURA_MINIMAX_PRICE", "0,0,0").split(","))
 THINK_RE = re.compile(r"<think>.*?</think>", re.S)
+# GLM-5.3 Flash on the Zhipu coding-plan endpoint; key file $GLM_KEY_FILE (default ~/.glm-key)
+GLM_BASE_URL = "https://open.bigmodel.cn/api/coding/paas/v4"
+GLM_MODEL = "glm-5.3-flash"
+GLM_PRICE = tuple(float(x) for x in os.environ.get("AURA_GLM_PRICE", "0.15,0.03,0.50").split(","))
 
 
 def _minimax_key_file() -> str:
@@ -52,6 +56,17 @@ def _minimax_key_file() -> str:
         if line.startswith("MINIMAX_API_KEY_FILE="):
             return line.split("=", 1)[1].strip().strip('"')
     raise KeyError("MINIMAX_API_KEY_FILE")
+
+
+def _minimax_env_value(name: str, default: str) -> str:
+    """A non-secret setting (base URL, model) from the MiniMax env file, so the harness and aura-scm-agents agree."""
+    try:
+        for line in Path(os.environ.get("AURA_MINIMAX_ENV", MINIMAX_ENV)).read_text().splitlines():
+            if line.startswith(name + "="):
+                return line.split("=", 1)[1].strip().strip('"') or default
+    except OSError:
+        pass
+    return default
 ERR_RE = re.compile(r"^[a-z][a-z-]{1,20}$")
 
 
@@ -61,10 +76,14 @@ class LLMClient:
         self.provider = provider
         if provider == "minimax":
             model = model if model != MODEL else os.environ.get("AURA_MINIMAX_MODEL", MINIMAX_MODEL)
-            base_url = base_url if base_url != BASE_URL else os.environ.get("AURA_MINIMAX_BASE_URL", MINIMAX_BASE_URL)
+            base_url = base_url if base_url != BASE_URL else os.environ.get("AURA_MINIMAX_BASE_URL", _minimax_env_value("MINIMAX_BASE_URL", MINIMAX_BASE_URL))
             # M3.1 Flash always reasons first; at 2000 output tokens about half the replies ran out inside <think>
             max_out = max(max_out, int(os.environ.get("AURA_MINIMAX_MAX_OUT", "8000")))
-        self.price = MINIMAX_PRICE if provider == "minimax" else PRICE
+        elif provider == "glm":
+            model = model if model != MODEL else os.environ.get("AURA_GLM_MODEL", GLM_MODEL)
+            base_url = base_url if base_url != BASE_URL else os.environ.get("AURA_GLM_BASE_URL", GLM_BASE_URL)
+            max_out = max(max_out, int(os.environ.get("AURA_GLM_MAX_OUT", "8000")))     # reasons before answering
+        self.price = {"minimax": MINIMAX_PRICE, "glm": GLM_PRICE}.get(provider, PRICE)
         self.mode = mode or os.environ.get("AURA_LLM_MODE", "offline")
         self.cache = Path(cache_dir or os.environ.get("AURA_LLM_CACHE", "results/llm-cache"))
         self.model, self.base_url = model, base_url
@@ -73,7 +92,7 @@ class LLMClient:
             max_calls, max_tokens, timeout, retries, max_out
         self.u = {"calls": 0, "cache_hits": 0, "offline_miss": 0, "budget_skip": 0, "errors": 0, "retries": 0,
                   "prompt_tokens": 0, "cached_tokens": 0, "completion_tokens": 0, "reasoning_tokens": 0, "truncated": 0, "cost_usd": 0.0,
-                  "latency_s": 0.0}
+                  "latency_s": 0.0, "equiv_tokens": 0}   # equiv_tokens: prompt+completion incl. cache replays
 
     def _key(self, messages):
         return hashlib.sha256(json.dumps([self.model, messages, self.max_out, self.effort], sort_keys=True).encode()).hexdigest()
@@ -83,7 +102,10 @@ class LLMClient:
         f = self.cache / f"{k}.json"
         if f.exists():
             self.u["cache_hits"] += 1
-            return json.loads(f.read_text())["content"]
+            rec = json.loads(f.read_text())
+            us = rec.get("usage") or {}
+            self.u["equiv_tokens"] += us.get("prompt_tokens", 0) + us.get("completion_tokens", 0)
+            return rec["content"]
         if self.mode != "live":
             self.u["offline_miss"] += 1
             return None
@@ -93,10 +115,12 @@ class LLMClient:
             return None
         req_body = {"model": self.model, "messages": messages, "temperature": 0, "max_tokens": self.max_out,
                     "response_format": {"type": "json_object"}}
-        if self.provider != "minimax":
+        if self.provider == "deepseek":
             req_body["reasoning_effort"] = self.effort
         body = json.dumps(req_body).encode()
-        key_file = _minimax_key_file() if self.provider == "minimax" else os.environ["DEEPSEEK_KEY_FILE"]
+        key_file = _minimax_key_file() if self.provider == "minimax" else \
+            os.path.expanduser(os.environ.get("GLM_KEY_FILE", "~/.glm-key")) if self.provider == "glm" else \
+            os.environ["DEEPSEEK_KEY_FILE"]
         for i in range(self.retries):
             t0 = time.perf_counter()
             try:
@@ -123,6 +147,7 @@ class LLMClient:
             self.u["prompt_tokens"] += pt
             self.u["cached_tokens"] += hit
             self.u["completion_tokens"] += ct
+            self.u["equiv_tokens"] += pt + ct
             self.u["reasoning_tokens"] += (us.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
             self.u["truncated"] += resp["choices"][0].get("finish_reason") == "length"
             pr = self.price
@@ -239,12 +264,19 @@ class MixedClient:
         return out
 
 
+PROVIDERS = ("deepseek", "minimax", "glm")
+
+
 def make_client(provider=None, **kw):
-    """AURA_LLM_PROVIDER: deepseek (default) | minimax | mixed"""
+    """AURA_LLM_PROVIDER: deepseek (default) | minimax | glm | mixed (= deepseek,minimax) | a comma list"""
     provider = provider or os.environ.get("AURA_LLM_PROVIDER", "deepseek")
-    if provider == "mixed":
-        return MixedClient([LLMClient(provider="deepseek", **kw), LLMClient(provider="minimax", **kw)])
-    return LLMClient(provider=provider, **kw)
+    names = ["deepseek", "minimax"] if provider == "mixed" else provider.split(",")
+    bad = [p for p in names if p not in PROVIDERS]
+    if bad:
+        raise ValueError(f"unknown LLM provider(s) {bad}; choose from {PROVIDERS}")
+    if len(names) > 1:
+        return MixedClient([LLMClient(provider=p, **kw) for p in names])
+    return LLMClient(provider=names[0], **kw)
 
 
 class LLMProposer(Proposer):
@@ -299,6 +331,7 @@ class LLMProposer(Proposer):
                         self.n["noop"] += 1
                     else:
                         c.meta["proposer"] = "llm"
+                        c.meta["mutation"] = dict(m)       # the typed mutation, for the swarm's local search
                         out.append(c)
         self.n["llm_candidates"] += len(out)
         if self.blend == "hybrid" or (self.blend == "llm-fallback" and not out):

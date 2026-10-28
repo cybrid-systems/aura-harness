@@ -1,0 +1,3479 @@
+[
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 0,
+  "stream_success": 0.175,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log head-tail/1500"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 14,
+    "merged": 2,
+    "dropped_full": 0,
+    "dropped_dup": 69,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 2
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log head-tail/1500"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.275,
+  "heldout_tokens": 12172.425,
+  "ood_success": 0.0,
+  "ood_tokens": 13212.833333333334,
+  "wall_s": 1149.44,
+  "llm": {
+   "responses": 68,
+   "malformed_responses": 0,
+   "mutations": 85,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 85,
+   "calls": 46,
+   "cache_hits": 22,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 50142,
+   "cached_tokens": 40256,
+   "completion_tokens": 33364,
+   "reasoning_tokens": 31700,
+   "truncated": 0,
+   "cost_usd": 0.019373,
+   "latency_s": 1121.214786,
+   "equiv_tokens": 121599,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 1,
+   "llm_kept": 1,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.35,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 28
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.38,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.2,
+      0.4,
+      0.4,
+      0.6,
+      0.6,
+      0.5,
+      0.25,
+      0.25
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1150553,
+    "serving_tasks": 160,
+    "replay_task_execs": 309,
+    "replay_execs_per_served": 1.93,
+    "replay_tokens_est": 2222005,
+    "learning_share_est": 0.659,
+    "llm_calls": 46,
+    "llm_cache_hits": 22,
+    "llm_tokens": 83506,
+    "llm_usd": 0.0194
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 1,
+  "stream_success": 0.2125,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log tail/800"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 15,
+    "merged": 4,
+    "dropped_full": 0,
+    "dropped_dup": 55,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 2
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log tail/800"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.3,
+  "heldout_tokens": 11130.3,
+  "ood_success": 0.26666666666666666,
+  "ood_tokens": 10763.333333333334,
+  "wall_s": 1316.46,
+  "llm": {
+   "responses": 69,
+   "malformed_responses": 0,
+   "mutations": 74,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 74,
+   "calls": 41,
+   "cache_hits": 28,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 3,
+   "prompt_tokens": 44980,
+   "cached_tokens": 34496,
+   "completion_tokens": 30751,
+   "reasoning_tokens": 29429,
+   "truncated": 0,
+   "cost_usd": 0.017983,
+   "latency_s": 1285.371244,
+   "equiv_tokens": 132934,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.425,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 34
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.38,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.6,
+      0.4,
+      0,
+      0.4,
+      0.4,
+      0.2,
+      0.6,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.4,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.4
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1030893,
+    "serving_tasks": 160,
+    "replay_task_execs": 385,
+    "replay_execs_per_served": 2.41,
+    "replay_tokens_est": 2480586,
+    "learning_share_est": 0.706,
+    "llm_calls": 41,
+    "llm_cache_hits": 28,
+    "llm_tokens": 75731,
+    "llm_usd": 0.018
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 2,
+  "stream_success": 0.25,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 12,
+     "c": 0,
+     "p": 0.00024,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1200"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 19,
+    "merged": 8,
+    "dropped_full": 0,
+    "dropped_dup": 57,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 2
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/1200"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.425,
+  "heldout_tokens": 8641.35,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8490.966666666667,
+  "wall_s": 1241.52,
+  "llm": {
+   "responses": 68,
+   "malformed_responses": 0,
+   "mutations": 84,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 84,
+   "calls": 45,
+   "cache_hits": 23,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 49837,
+   "cached_tokens": 37056,
+   "completion_tokens": 37359,
+   "reasoning_tokens": 35707,
+   "truncated": 0,
+   "cost_usd": 0.021708,
+   "latency_s": 1208.51137,
+   "equiv_tokens": 126619,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.5,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 40
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.52,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.4,
+      0.6,
+      0.6,
+      0.4,
+      0.6,
+      0.8,
+      0.6,
+      0.4
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 846444,
+    "serving_tasks": 160,
+    "replay_task_execs": 418,
+    "replay_execs_per_served": 2.61,
+    "replay_tokens_est": 2211335,
+    "learning_share_est": 0.723,
+    "llm_calls": 45,
+    "llm_cache_hits": 23,
+    "llm_tokens": 87196,
+    "llm_usd": 0.0217
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 3,
+  "stream_success": 0.225,
+  "keep": 2,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/1200"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 90,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 9,
+     "tokens": [
+      8392,
+      8560
+     ],
+     "steps": [
+      7.56,
+      7.56
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 14,
+    "merged": 1,
+    "dropped_full": 0,
+    "dropped_dup": 60,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/1200",
+   "route edit->apply-patch"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 12836.775,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 9366.8,
+  "wall_s": 790.06,
+  "llm": {
+   "responses": 70,
+   "malformed_responses": 0,
+   "mutations": 75,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 75,
+   "calls": 42,
+   "cache_hits": 28,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 46171,
+   "cached_tokens": 35072,
+   "completion_tokens": 22630,
+   "reasoning_tokens": 21295,
+   "truncated": 0,
+   "cost_usd": 0.014032,
+   "latency_s": 742.995335,
+   "equiv_tokens": 113516,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 2,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.45,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 36
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.35,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.2,
+      0.4,
+      0.4,
+      0.6,
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.5,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.2,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.2
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 2,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 63
+   },
+   "cost": {
+    "serving_tokens": 894363,
+    "serving_tasks": 160,
+    "replay_task_execs": 598,
+    "replay_execs_per_served": 3.74,
+    "replay_tokens_est": 3342682,
+    "learning_share_est": 0.789,
+    "llm_calls": 42,
+    "llm_cache_hits": 28,
+    "llm_tokens": 68801,
+    "llm_usd": 0.014
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   82,
+   154
+  ]
+ },
+ {
+  "config": "LLM + stat admission (M5b)",
+  "seed": 4,
+  "stream_success": 0.2125,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log tail/1200"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 15,
+    "merged": 9,
+    "dropped_full": 0,
+    "dropped_dup": 63,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 2
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log tail/1200"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.35,
+  "heldout_tokens": 13487.4,
+  "ood_success": 0.3,
+  "ood_tokens": 11795.7,
+  "wall_s": 948.83,
+  "llm": {
+   "responses": 66,
+   "malformed_responses": 0,
+   "mutations": 87,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 87,
+   "calls": 30,
+   "cache_hits": 36,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 33138,
+   "cached_tokens": 21632,
+   "completion_tokens": 27408,
+   "reasoning_tokens": 26186,
+   "truncated": 0,
+   "cost_usd": 0.016079,
+   "latency_s": 920.470148,
+   "equiv_tokens": 128933,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.425,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 34
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.44,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      0.4,
+      0.4,
+      0.4,
+      0.4,
+      0.6,
+      0.4,
+      0.2,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 1203586,
+    "serving_tasks": 160,
+    "replay_task_execs": 379,
+    "replay_execs_per_served": 2.37,
+    "replay_tokens_est": 2850994,
+    "learning_share_est": 0.703,
+    "llm_calls": 30,
+    "llm_cache_hits": 36,
+    "llm_tokens": 60546,
+    "llm_usd": 0.0161
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + swarm + stat admission",
+  "seed": 0,
+  "stream_success": 0.2625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 10,
+     "c": 0,
+     "p": 0.00098,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log head-tail/400"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 92,
+     "b": 6,
+     "c": 0,
+     "p": 0.01562,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 7,
+     "tokens": [
+      8500,
+      8626
+     ],
+     "steps": [
+      6.71,
+      6.71
+     ],
+     "verdict": "wait",
+     "desc": "route edit->apply-patch"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 12,
+    "merged": 2,
+    "dropped_full": 0,
+    "dropped_dup": 64,
+    "dropped_noop": 0,
+    "dequeued": 10,
+    "left": 1
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log head-tail/400"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.375,
+  "heldout_tokens": 7974.375,
+  "ood_success": 0.5,
+  "ood_tokens": 8912.566666666668,
+  "wall_s": 326.98,
+  "llm": {
+   "responses": 71,
+   "malformed_responses": 0,
+   "mutations": 78,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 78,
+   "calls": 22,
+   "cache_hits": 49,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 24344,
+   "cached_tokens": 19520,
+   "completion_tokens": 8705,
+   "reasoning_tokens": 8055,
+   "truncated": 0,
+   "cost_usd": 0.005662,
+   "latency_s": 282.246871,
+   "equiv_tokens": 121517,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 1,
+   "llm_kept": 0,
+   "swarm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 1,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.525,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 42
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.55,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      0.4,
+      0.8,
+      0.6,
+      0.6,
+      0.8,
+      0.75,
+      0.25,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 1,
+    "events": 1,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 1,
+    "keep": 1,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 800190,
+    "serving_tasks": 160,
+    "replay_task_execs": 721,
+    "replay_execs_per_served": 4.51,
+    "replay_tokens_est": 3605856,
+    "learning_share_est": 0.818,
+    "llm_calls": 22,
+    "llm_cache_hits": 49,
+    "llm_tokens": 33049,
+    "llm_usd": 0.0057
+   }
+  },
+  "swarm": {
+   "refine_calls": 2,
+   "parents": 2,
+   "attempts": 14,
+   "improved": 1,
+   "evals_replayed": 316,
+   "attempt_ids": 14,
+   "kept": 1,
+   "kept_attempts": [
+    "sw20.8"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + swarm + stat admission",
+  "seed": 1,
+  "stream_success": 0.2625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 8,
+     "c": 0,
+     "p": 0.00391,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/800"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 14,
+    "merged": 5,
+    "dropped_full": 0,
+    "dropped_dup": 69,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/800"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.375,
+  "heldout_tokens": 7827.25,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8157.266666666666,
+  "wall_s": 665.36,
+  "llm": {
+   "responses": 70,
+   "malformed_responses": 0,
+   "mutations": 88,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 88,
+   "calls": 19,
+   "cache_hits": 51,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 1,
+   "prompt_tokens": 21306,
+   "cached_tokens": 15296,
+   "completion_tokens": 16363,
+   "reasoning_tokens": 15567,
+   "truncated": 0,
+   "cost_usd": 0.009542,
+   "latency_s": 602.029728,
+   "equiv_tokens": 136235,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 0,
+   "swarm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.525,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 42
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.5,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.6,
+      0.6,
+      0.4,
+      0.2,
+      0.4,
+      0.6,
+      0.4,
+      0.8,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 776884,
+    "serving_tasks": 160,
+    "replay_task_execs": 1160,
+    "replay_execs_per_served": 7.25,
+    "replay_tokens_est": 5632409,
+    "learning_share_est": 0.879,
+    "llm_calls": 19,
+    "llm_cache_hits": 51,
+    "llm_tokens": 37669,
+    "llm_usd": 0.0095
+   }
+  },
+  "swarm": {
+   "refine_calls": 3,
+   "parents": 4,
+   "attempts": 23,
+   "improved": 2,
+   "evals_replayed": 719,
+   "attempt_ids": 23,
+   "kept": 1,
+   "kept_attempts": [
+    "sw20.7"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + swarm + stat admission",
+  "seed": 2,
+  "stream_success": 0.26875,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 12,
+     "c": 0,
+     "p": 0.00024,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/300"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 16,
+    "merged": 10,
+    "dropped_full": 0,
+    "dropped_dup": 64,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/300"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.425,
+  "heldout_tokens": 8391.4,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8298.8,
+  "wall_s": 1200.92,
+  "llm": {
+   "responses": 70,
+   "malformed_responses": 0,
+   "mutations": 90,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 90,
+   "calls": 25,
+   "cache_hits": 45,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 2,
+   "prompt_tokens": 28077,
+   "cached_tokens": 18112,
+   "completion_tokens": 28074,
+   "reasoning_tokens": 27091,
+   "truncated": 0,
+   "cost_usd": 0.016075,
+   "latency_s": 1136.242169,
+   "equiv_tokens": 135086,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 0,
+   "swarm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.5375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 43
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.56,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.4,
+      0.6,
+      0.6,
+      0.6,
+      0.6,
+      0.8,
+      0.8,
+      0.4
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 805803,
+    "serving_tasks": 160,
+    "replay_task_execs": 1101,
+    "replay_execs_per_served": 6.88,
+    "replay_tokens_est": 5544932,
+    "learning_share_est": 0.873,
+    "llm_calls": 25,
+    "llm_cache_hits": 45,
+    "llm_tokens": 56151,
+    "llm_usd": 0.0161
+   }
+  },
+  "swarm": {
+   "refine_calls": 3,
+   "parents": 5,
+   "attempts": 22,
+   "improved": 1,
+   "evals_replayed": 660,
+   "attempt_ids": 22,
+   "kept": 1,
+   "kept_attempts": [
+    "sw20.8"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + swarm + stat admission",
+  "seed": 3,
+  "stream_success": 0.24375,
+  "keep": 2,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 9,
+     "c": 0,
+     "p": 0.00195,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/600"
+    },
+    {
+     "n": 16,
+     "fresh": [
+      95,
+      153
+     ],
+     "sel_ts": 90,
+     "b": 7,
+     "c": 0,
+     "p": 0.00781,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 9,
+     "tokens": [
+      8392,
+      8560
+     ],
+     "steps": [
+      7.56,
+      7.56
+     ],
+     "verdict": "keep",
+     "desc": "route edit->apply-patch"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 11,
+    "merged": 2,
+    "dropped_full": 0,
+    "dropped_dup": 67,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 0
+   }
+  },
+  "rollback": 0,
+  "kept": [
+   "compress test-log grep-errors/600",
+   "route edit->apply-patch"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 12836.775,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 9366.8,
+  "wall_s": 467.99,
+  "llm": {
+   "responses": 72,
+   "malformed_responses": 0,
+   "mutations": 80,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 80,
+   "calls": 21,
+   "cache_hits": 51,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 23599,
+   "cached_tokens": 16896,
+   "completion_tokens": 9991,
+   "reasoning_tokens": 9335,
+   "truncated": 0,
+   "cost_usd": 0.006508,
+   "latency_s": 334.180968,
+   "equiv_tokens": 117360,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 1,
+   "swarm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.4875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 39
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.39,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.4,
+      0.4,
+      0.4,
+      0.8,
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.5
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.5,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.2,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.2
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 2,
+    "accept_rate": 1.0,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 63
+   },
+   "cost": {
+    "serving_tokens": 872022,
+    "serving_tasks": 160,
+    "replay_task_execs": 1747,
+    "replay_execs_per_served": 10.92,
+    "replay_tokens_est": 9521390,
+    "learning_share_est": 0.916,
+    "llm_calls": 21,
+    "llm_cache_hits": 51,
+    "llm_tokens": 33590,
+    "llm_usd": 0.0065
+   }
+  },
+  "swarm": {
+   "refine_calls": 3,
+   "parents": 5,
+   "attempts": 30,
+   "improved": 3,
+   "evals_replayed": 1034,
+   "attempt_ids": 30,
+   "kept": 1,
+   "kept_attempts": [
+    "sw20.2"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   82,
+   154
+  ]
+ },
+ {
+  "config": "LLM + swarm + stat admission",
+  "seed": 4,
+  "stream_success": 0.2625,
+  "keep": 1,
+  "false_keeps": [],
+  "stat": {
+   "log": [
+    {
+     "n": 16,
+     "fresh": [
+      23,
+      81
+     ],
+     "sel_ts": 20,
+     "b": 10,
+     "c": 0,
+     "p": 0.00098,
+     "alpha_look": 0.0125,
+     "look": 0,
+     "both_ok": 0,
+     "tokens": [
+      0,
+      0
+     ],
+     "steps": [
+      0.0,
+      0.0
+     ],
+     "verdict": "keep",
+     "desc": "compress test-log grep-errors/600"
+    }
+   ],
+   "pending_at_end": true,
+   "queue": {
+    "queued": 13,
+    "merged": 7,
+    "dropped_full": 0,
+    "dropped_dup": 75,
+    "dropped_noop": 0,
+    "dequeued": 11,
+    "left": 1
+   }
+  },
+  "rollback": 1,
+  "kept": [
+   "compress test-log grep-errors/600"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.475,
+  "heldout_tokens": 8546.475,
+  "ood_success": 0.3333333333333333,
+  "ood_tokens": 8096.133333333333,
+  "wall_s": 987.09,
+  "llm": {
+   "responses": 68,
+   "malformed_responses": 0,
+   "mutations": 95,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 95,
+   "calls": 20,
+   "cache_hits": 48,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 3,
+   "prompt_tokens": 22536,
+   "cached_tokens": 16192,
+   "completion_tokens": 19546,
+   "reasoning_tokens": 18658,
+   "truncated": 0,
+   "cost_usd": 0.01121,
+   "latency_s": 921.935203,
+   "equiv_tokens": 129931,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 2,
+   "llm_kept": 0,
+   "swarm_kept": 1,
+   "rule_kept": 0
+  },
+  "proposals": 2,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.0,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 0
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.525,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 42
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.52,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.6,
+      0.4,
+      0.6,
+      0.4,
+      0.6,
+      1,
+      0.4,
+      0.2,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.0,
+    "signatures": 2,
+    "events": 2,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 2,
+    "keep": 1,
+    "accept_rate": 0.5,
+    "first_keep_ts": 82,
+    "first_keep_latency_tasks": 62
+   },
+   "cost": {
+    "serving_tokens": 862732,
+    "serving_tasks": 160,
+    "replay_task_execs": 1263,
+    "replay_execs_per_served": 7.89,
+    "replay_tokens_est": 6810191,
+    "learning_share_est": 0.888,
+    "llm_calls": 20,
+    "llm_cache_hits": 48,
+    "llm_tokens": 42082,
+    "llm_usd": 0.0112
+   }
+  },
+  "swarm": {
+   "refine_calls": 3,
+   "parents": 4,
+   "attempts": 24,
+   "improved": 2,
+   "evals_replayed": 804,
+   "attempt_ids": 24,
+   "kept": 1,
+   "kept_attempts": [
+    "sw20.8"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   82
+  ]
+ },
+ {
+  "config": "LLM + better()",
+  "seed": 0,
+  "stream_success": 0.73125,
+  "keep": 4,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 6,
+  "kept": [
+   "compress test-log head-tail/1500",
+   "route edit->apply-patch",
+   "compress test-log grep-errors/800",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12945.025,
+  "ood_success": 0.9,
+  "ood_tokens": 10284.766666666666,
+  "wall_s": 754.66,
+  "llm": {
+   "responses": 18,
+   "malformed_responses": 0,
+   "mutations": 23,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 23,
+   "calls": 9,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 1,
+   "retries": 3,
+   "prompt_tokens": 10498,
+   "cached_tokens": 4992,
+   "completion_tokens": 8787,
+   "reasoning_tokens": 8426,
+   "truncated": 0,
+   "cost_usd": 0.005369,
+   "latency_s": 684.857061,
+   "equiv_tokens": 35422,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 10,
+   "llm_kept": 4,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 10,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.4875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 39
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.975,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 78
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.98,
+     "onsets": 5,
+     "curve": [
+      1,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.958,
+    "signatures": 6,
+    "events": 10,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.33
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 10,
+    "keep": 4,
+    "accept_rate": 0.4,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1697254,
+    "serving_tasks": 160,
+    "replay_task_execs": 974,
+    "replay_execs_per_served": 6.09,
+    "replay_tokens_est": 10332034,
+    "learning_share_est": 0.859,
+    "llm_calls": 9,
+    "llm_cache_hits": 9,
+    "llm_tokens": 19285,
+    "llm_usd": 0.0054
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   34,
+   56,
+   72
+  ]
+ },
+ {
+  "config": "LLM + better()",
+  "seed": 1,
+  "stream_success": 0.76875,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log tail/800",
+   "route edit->apply-patch",
+   "route test->pytest-q"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.85,
+  "heldout_tokens": 15196.0,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 14083.3,
+  "wall_s": 810.37,
+  "llm": {
+   "responses": 15,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 6,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 1,
+   "retries": 4,
+   "prompt_tokens": 6886,
+   "cached_tokens": 2240,
+   "completion_tokens": 8855,
+   "reasoning_tokens": 8591,
+   "truncated": 0,
+   "cost_usd": 0.005192,
+   "latency_s": 756.916426,
+   "equiv_tokens": 32669,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 7,
+   "llm_kept": 3,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 7,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 49
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.925,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 74
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.94,
+     "onsets": 5,
+     "curve": [
+      1,
+      1,
+      0.6,
+      1,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.792,
+    "signatures": 3,
+    "events": 7,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3.67
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.4,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.4
+    }
+   },
+   "acceptance": {
+    "proposals": 7,
+    "keep": 3,
+    "accept_rate": 0.429,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 7.3
+   },
+   "cost": {
+    "serving_tokens": 1596845,
+    "serving_tasks": 160,
+    "replay_task_execs": 696,
+    "replay_execs_per_served": 4.35,
+    "replay_tokens_est": 6946276,
+    "learning_share_est": 0.813,
+    "llm_calls": 6,
+    "llm_cache_hits": 9,
+    "llm_tokens": 15741,
+    "llm_usd": 0.0052
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   54
+  ]
+ },
+ {
+  "config": "LLM + better()",
+  "seed": 2,
+  "stream_success": 0.60625,
+  "keep": 4,
+  "false_keeps": [
+   {
+    "desc": "route test->pytest-q",
+    "ts": 88,
+    "heldout_before": 0.9,
+    "heldout_after": 0.825,
+    "reverted": false
+   }
+  ],
+  "stat": null,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/1200",
+   "ttl test-cmd=50",
+   "route edit->apply-patch",
+   "route test->pytest-q"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.825,
+  "heldout_tokens": 13672.1,
+  "ood_success": 0.7,
+  "ood_tokens": 10466.666666666666,
+  "wall_s": 217.77,
+  "llm": {
+   "responses": 14,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 5,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 5844,
+   "cached_tokens": 2112,
+   "completion_tokens": 6156,
+   "reasoning_tokens": 5976,
+   "truncated": 0,
+   "cost_usd": 0.003701,
+   "latency_s": 172.038991,
+   "equiv_tokens": 28663,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 6,
+   "llm_kept": 4,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 6,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.55,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 44
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.6625,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 53
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.56,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.2,
+      0.6,
+      0.6,
+      0.6,
+      0.8,
+      0.6,
+      0.8,
+      0.6
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.75,
+    "signatures": 5,
+    "events": 6,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1.8
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 6,
+    "keep": 4,
+    "accept_rate": 0.667,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 7
+   },
+   "cost": {
+    "serving_tokens": 1431981,
+    "serving_tasks": 160,
+    "replay_task_execs": 551,
+    "replay_execs_per_served": 3.44,
+    "replay_tokens_est": 4931385,
+    "learning_share_est": 0.775,
+    "llm_calls": 5,
+    "llm_cache_hits": 9,
+    "llm_tokens": 12000,
+    "llm_usd": 0.0037
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   28,
+   34,
+   88
+  ]
+ },
+ {
+  "config": "LLM + better()",
+  "seed": 3,
+  "stream_success": 0.7125,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 5,
+  "kept": [
+   "compress test-log grep-errors/1200",
+   "route edit->apply-patch",
+   "ttl test-cmd=20"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12427.325,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 9100.3,
+  "wall_s": 448.94,
+  "llm": {
+   "responses": 16,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 5,
+   "cache_hits": 11,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 2,
+   "prompt_tokens": 6020,
+   "cached_tokens": 2496,
+   "completion_tokens": 7545,
+   "reasoning_tokens": 7341,
+   "truncated": 0,
+   "cost_usd": 0.004376,
+   "latency_s": 388.624469,
+   "equiv_tokens": 31198,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 8,
+   "llm_kept": 3,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 8,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.5875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 47
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 67
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.755,
+     "onsets": 5,
+     "curve": [
+      0.4,
+      0.4,
+      0.8,
+      0.6,
+      0.8,
+      1,
+      1,
+      0.8,
+      1,
+      0.75
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.05,
+    "signatures": 5,
+    "events": 8,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.2
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 8,
+    "keep": 3,
+    "accept_rate": 0.375,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 2.7
+   },
+   "cost": {
+    "serving_tokens": 1493919,
+    "serving_tasks": 160,
+    "replay_task_execs": 761,
+    "replay_execs_per_served": 4.76,
+    "replay_tokens_est": 7105452,
+    "learning_share_est": 0.826,
+    "llm_calls": 5,
+    "llm_cache_hits": 11,
+    "llm_tokens": 13565,
+    "llm_usd": 0.0044
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   40
+  ]
+ },
+ {
+  "config": "LLM + better()",
+  "seed": 4,
+  "stream_success": 0.675,
+  "keep": 6,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 1,
+  "kept": [
+   "compress test-log tail/1200",
+   "ttl test-cmd=100",
+   "route edit->apply-patch",
+   "compress test-log grep-errors/600",
+   "ttl test-cmd=60",
+   "retry grep|timeout=3"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 10252.025,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 11831.366666666667,
+  "wall_s": 232.63,
+  "llm": {
+   "responses": 15,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 6,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 6855,
+   "cached_tokens": 1792,
+   "completion_tokens": 6479,
+   "reasoning_tokens": 6226,
+   "truncated": 0,
+   "cost_usd": 0.004053,
+   "latency_s": 189.67867,
+   "equiv_tokens": 28201,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 7,
+   "llm_kept": 6,
+   "swarm_kept": 0,
+   "rule_kept": 0
+  },
+  "proposals": 7,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.5375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 43
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 65
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.76,
+     "onsets": 5,
+     "curve": [
+      0,
+      0.2,
+      0.6,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 0.812,
+    "signatures": 6,
+    "events": 7,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 1.83
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 7,
+    "keep": 6,
+    "accept_rate": 0.857,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 1
+   },
+   "cost": {
+    "serving_tokens": 1444612,
+    "serving_tasks": 160,
+    "replay_task_execs": 678,
+    "replay_execs_per_served": 4.24,
+    "replay_tokens_est": 6121543,
+    "learning_share_est": 0.809,
+    "llm_calls": 6,
+    "llm_cache_hits": 9,
+    "llm_tokens": 13334,
+    "llm_usd": 0.0041
+   }
+  },
+  "swarm": null,
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   32,
+   46,
+   90,
+   140
+  ]
+ },
+ {
+  "config": "LLM + swarm + better()",
+  "seed": 0,
+  "stream_success": 0.69375,
+  "keep": 5,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 3,
+  "kept": [
+   "compress test-log head-tail/400",
+   "route edit->apply-patch",
+   "compress test-log grep-errors/150",
+   "ttl test-cmd=12",
+   "route test->pytest-q"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.95,
+  "heldout_tokens": 10357.725,
+  "ood_success": 0.8,
+  "ood_tokens": 8713.5,
+  "wall_s": 443.02,
+  "llm": {
+   "responses": 16,
+   "malformed_responses": 0,
+   "mutations": 22,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 22,
+   "calls": 7,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 8154,
+   "cached_tokens": 2688,
+   "completion_tokens": 5693,
+   "reasoning_tokens": 5366,
+   "truncated": 0,
+   "cost_usd": 0.003747,
+   "latency_s": 166.644158,
+   "equiv_tokens": 29984,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 8,
+   "llm_kept": 2,
+   "swarm_kept": 3,
+   "rule_kept": 0
+  },
+  "proposals": 8,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.5,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 40
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 71
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.88,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.8,
+      0.6,
+      1,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.792,
+    "signatures": 6,
+    "events": 8,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 8,
+    "keep": 5,
+    "accept_rate": 0.625,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 5.2
+   },
+   "cost": {
+    "serving_tokens": 1449695,
+    "serving_tasks": 160,
+    "replay_task_execs": 4291,
+    "replay_execs_per_served": 26.82,
+    "replay_tokens_est": 38879008,
+    "learning_share_est": 0.964,
+    "llm_calls": 7,
+    "llm_cache_hits": 9,
+    "llm_tokens": 13847,
+    "llm_usd": 0.0037
+   }
+  },
+  "swarm": {
+   "refine_calls": 8,
+   "parents": 13,
+   "attempts": 81,
+   "improved": 5,
+   "evals_replayed": 3241,
+   "attempt_ids": 81,
+   "kept": 3,
+   "kept_attempts": [
+    "sw20.8",
+    "sw60.41",
+    "sw64.53"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   34,
+   60,
+   64,
+   96
+  ]
+ },
+ {
+  "config": "LLM + swarm + better()",
+  "seed": 1,
+  "stream_success": 0.7625,
+  "keep": 5,
+  "false_keeps": [
+   {
+    "desc": "ttl test-cmd=40",
+    "ts": 40,
+    "heldout_before": 0.925,
+    "heldout_after": 1.0,
+    "reverted": true
+   },
+   {
+    "desc": "ttl test-cmd=0",
+    "ts": 108,
+    "heldout_before": 1.0,
+    "heldout_after": 0.925,
+    "reverted": false
+   }
+  ],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/800",
+   "route edit->apply-patch",
+   "ttl test-cmd=40",
+   "ttl test-cmd=5",
+   "ttl test-cmd=0"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.925,
+  "heldout_tokens": 14817.875,
+  "ood_success": 0.7666666666666667,
+  "ood_tokens": 13974.866666666667,
+  "wall_s": 497.25,
+  "llm": {
+   "responses": 17,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 8,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 9142,
+   "cached_tokens": 4352,
+   "completion_tokens": 9613,
+   "reasoning_tokens": 9360,
+   "truncated": 0,
+   "cost_usd": 0.005656,
+   "latency_s": 284.536554,
+   "equiv_tokens": 35683,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 9,
+   "llm_kept": 1,
+   "swarm_kept": 4,
+   "rule_kept": 0
+  },
+  "proposals": 9,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6375,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 51
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 71
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.84,
+     "onsets": 5,
+     "curve": [
+      0.2,
+      0.8,
+      1,
+      0.8,
+      0.8,
+      0.8,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.75,
+    "signatures": 4,
+    "events": 9,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3.25
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 9,
+    "keep": 5,
+    "accept_rate": 0.556,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 2
+   },
+   "cost": {
+    "serving_tokens": 1316929,
+    "serving_tasks": 160,
+    "replay_task_execs": 3242,
+    "replay_execs_per_served": 20.26,
+    "replay_tokens_est": 26684274,
+    "learning_share_est": 0.953,
+    "llm_calls": 8,
+    "llm_cache_hits": 9,
+    "llm_tokens": 18755,
+    "llm_usd": 0.0057
+   }
+  },
+  "swarm": {
+   "refine_calls": 9,
+   "parents": 11,
+   "attempts": 59,
+   "improved": 5,
+   "evals_replayed": 2263,
+   "attempt_ids": 59,
+   "kept": 4,
+   "kept_attempts": [
+    "sw20.7",
+    "sw40.22",
+    "sw90.25",
+    "sw108.34"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   40,
+   90,
+   108
+  ]
+ },
+ {
+  "config": "LLM + swarm + better()",
+  "seed": 2,
+  "stream_success": 0.675,
+  "keep": 4,
+  "false_keeps": [
+   {
+    "desc": "ttl test-cmd=10",
+    "ts": 138,
+    "heldout_before": 0.9,
+    "heldout_after": 0.875,
+    "reverted": false
+   }
+  ],
+  "stat": null,
+  "rollback": 2,
+  "kept": [
+   "compress test-log grep-errors/300",
+   "ttl test-cmd=50",
+   "route edit->apply-patch",
+   "ttl test-cmd=10"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.875,
+  "heldout_tokens": 12530.275,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 9464.233333333334,
+  "wall_s": 271.7,
+  "llm": {
+   "responses": 14,
+   "malformed_responses": 0,
+   "mutations": 19,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 19,
+   "calls": 5,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 5670,
+   "cached_tokens": 1792,
+   "completion_tokens": 4963,
+   "reasoning_tokens": 4793,
+   "truncated": 0,
+   "cost_usd": 0.003117,
+   "latency_s": 153.666199,
+   "equiv_tokens": 27296,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 6,
+   "llm_kept": 2,
+   "swarm_kept": 2,
+   "rule_kept": 0
+  },
+  "proposals": 6,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 48
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.75,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 60
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.64,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.4,
+      0.6,
+      0.6,
+      0.4,
+      0.8,
+      0.8,
+      0.6,
+      0.8,
+      0.8
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.344,
+    "signatures": 4,
+    "events": 6,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.5
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 6,
+    "keep": 4,
+    "accept_rate": 0.667,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1303597,
+    "serving_tasks": 160,
+    "replay_task_execs": 1833,
+    "replay_execs_per_served": 11.46,
+    "replay_tokens_est": 14934333,
+    "learning_share_est": 0.92,
+    "llm_calls": 5,
+    "llm_cache_hits": 9,
+    "llm_tokens": 10633,
+    "llm_usd": 0.0031
+   }
+  },
+  "swarm": {
+   "refine_calls": 6,
+   "parents": 9,
+   "attempts": 35,
+   "improved": 3,
+   "evals_replayed": 1163,
+   "attempt_ids": 35,
+   "kept": 2,
+   "kept_attempts": [
+    "sw20.8",
+    "sw138.29"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   28,
+   34,
+   138
+  ]
+ },
+ {
+  "config": "LLM + swarm + better()",
+  "seed": 3,
+  "stream_success": 0.7875,
+  "keep": 3,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/600",
+   "route edit->apply-patch",
+   "ttl test-cmd=25"
+  ],
+  "restarts": 0,
+  "heldout_success": 0.975,
+  "heldout_tokens": 12450.4,
+  "ood_success": 0.7333333333333333,
+  "ood_tokens": 9156.533333333333,
+  "wall_s": 488.91,
+  "llm": {
+   "responses": 15,
+   "malformed_responses": 0,
+   "mutations": 16,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 16,
+   "calls": 5,
+   "cache_hits": 10,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 1,
+   "prompt_tokens": 5557,
+   "cached_tokens": 3648,
+   "completion_tokens": 6591,
+   "reasoning_tokens": 6437,
+   "truncated": 0,
+   "cost_usd": 0.003691,
+   "latency_s": 280.005059,
+   "equiv_tokens": 28059,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 7,
+   "llm_kept": 1,
+   "swarm_kept": 2,
+   "rule_kept": 0
+  },
+  "proposals": 7,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.6625,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 53
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.9125,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 73
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.86,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.6,
+      0.8,
+      0.8,
+      1,
+      1,
+      1,
+      0.8,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.781,
+    "signatures": 4,
+    "events": 7,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 3
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.8,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.8
+    }
+   },
+   "acceptance": {
+    "proposals": 7,
+    "keep": 3,
+    "accept_rate": 0.429,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1426947,
+    "serving_tasks": 160,
+    "replay_task_execs": 2872,
+    "replay_execs_per_served": 17.95,
+    "replay_tokens_est": 25613699,
+    "learning_share_est": 0.947,
+    "llm_calls": 5,
+    "llm_cache_hits": 10,
+    "llm_tokens": 12148,
+    "llm_usd": 0.0037
+   }
+  },
+  "swarm": {
+   "refine_calls": 7,
+   "parents": 8,
+   "attempts": 54,
+   "improved": 5,
+   "evals_replayed": 2080,
+   "attempt_ids": 54,
+   "kept": 2,
+   "kept_attempts": [
+    "sw20.2",
+    "sw32.16"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   32
+  ]
+ },
+ {
+  "config": "LLM + swarm + better()",
+  "seed": 4,
+  "stream_success": 0.75625,
+  "keep": 4,
+  "false_keeps": [],
+  "stat": null,
+  "rollback": 4,
+  "kept": [
+   "compress test-log grep-errors/600",
+   "ttl test-cmd=50",
+   "route edit->apply-patch",
+   "ttl test-cmd=2"
+  ],
+  "restarts": 0,
+  "heldout_success": 1.0,
+  "heldout_tokens": 11055.05,
+  "ood_success": 0.6333333333333333,
+  "ood_tokens": 12014.166666666666,
+  "wall_s": 407.21,
+  "llm": {
+   "responses": 16,
+   "malformed_responses": 0,
+   "mutations": 17,
+   "malformed_mutations": 0,
+   "noop": 0,
+   "llm_candidates": 17,
+   "calls": 7,
+   "cache_hits": 9,
+   "offline_miss": 0,
+   "budget_skip": 0,
+   "errors": 0,
+   "retries": 0,
+   "prompt_tokens": 7948,
+   "cached_tokens": 6336,
+   "completion_tokens": 7822,
+   "reasoning_tokens": 7609,
+   "truncated": 0,
+   "cost_usd": 0.004343,
+   "latency_s": 226.436096,
+   "equiv_tokens": 30637,
+   "model": "glm-5.3-flash",
+   "mode": "live",
+   "gated_with_llm": 8,
+   "llm_kept": 2,
+   "swarm_kept": 2,
+   "rule_kept": 0
+  },
+  "proposals": 8,
+  "metrics": {
+   "split": {
+    "FS": {
+     "n": 80,
+     "run": 0.625,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 50
+    },
+    "HD": {
+     "n": 80,
+     "run": 0.8875,
+     "baseline": 0.0,
+     "regressions": 0,
+     "recoveries": 71
+    }
+   },
+   "aulc": {
+    "run": {
+     "K": 10,
+     "aulc": 0.86,
+     "onsets": 5,
+     "curve": [
+      0.6,
+      0.6,
+      0.6,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ]
+    },
+    "baseline": {
+     "K": 10,
+     "aulc": 0,
+     "onsets": 5,
+     "curve": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "auc_e": {
+    "K": 8,
+    "auc_e": 1.3,
+    "signatures": 5,
+    "events": 8,
+    "repeat_rate": 0.0,
+    "distinct_per_sig": 2.6
+   },
+   "auc_ka": {
+    "K": 5,
+    "auc_ka": 0.6,
+    "keeps_scored": 1,
+    "per_sig": {
+     "info-lost|test-log": 0.6
+    }
+   },
+   "acceptance": {
+    "proposals": 8,
+    "keep": 4,
+    "accept_rate": 0.5,
+    "first_keep_ts": 20,
+    "first_keep_latency_tasks": 0
+   },
+   "cost": {
+    "serving_tokens": 1452273,
+    "serving_tasks": 160,
+    "replay_task_execs": 2801,
+    "replay_execs_per_served": 17.51,
+    "replay_tokens_est": 25423854,
+    "learning_share_est": 0.946,
+    "llm_calls": 7,
+    "llm_cache_hits": 9,
+    "llm_tokens": 15770,
+    "llm_usd": 0.0043
+   }
+  },
+  "swarm": {
+   "refine_calls": 8,
+   "parents": 9,
+   "attempts": 50,
+   "improved": 6,
+   "evals_replayed": 1906,
+   "attempt_ids": 50,
+   "kept": 2,
+   "kept_attempts": [
+    "sw20.8",
+    "sw96.22"
+   ]
+  },
+  "provider": "glm",
+  "keep_ts": [
+   20,
+   30,
+   32,
+   96
+  ]
+ }
+]

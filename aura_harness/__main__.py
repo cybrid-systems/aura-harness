@@ -45,7 +45,8 @@ def main(argv=None) -> int:
     db.add_argument("--n", type=int, default=160)
     db.add_argument("--jobs", type=int, default=4)
     db.add_argument("--out", default="runs/dev")
-    db.add_argument("--set", default="m3", choices=["m3", "m5", "m5b"], help="m5: scripted vs LLM proposer (AURA_LLM_MODE)")
+    db.add_argument("--set", default="m3", choices=["m3", "m5", "m5b", "swarm"],
+                    help="m5: scripted vs LLM proposer (AURA_LLM_MODE); swarm: LLM-only vs LLM+swarm (AURA_LLM_PROVIDER)")
     m6 = sub.add_parser("m6-bench", help="M6: HarnessPro tiers vs M5 on dev world v2 (AURA_LLM_MODE)")
     m6.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     m6.add_argument("--n", type=int, default=160)
@@ -107,8 +108,8 @@ def main(argv=None) -> int:
         return aud(a)
     elif a.cmd == "dev-bench":
         from .devbench import run as devb
-        from .devbench import M5, M5B
-        print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out, {"m5": M5, "m5b": M5B}.get(a.set)))
+        from .devbench import M5, M5B, SWARM
+        print(devb(a.seeds, a.n, a.n // 2, a.jobs, a.out, {"m5": M5, "m5b": M5B, "swarm": SWARM}.get(a.set)))
     elif a.cmd == "m6-bench":
         from .m6bench import run as m6b
         print(m6b(a.seeds, a.n, a.jobs, a.out, skip_m5=a.skip_m5, do_recall=not a.no_recall))

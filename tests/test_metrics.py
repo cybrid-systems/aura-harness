@@ -1,4 +1,8 @@
 """ServeLearnBench-style measurements (rsi/metrics.py) and the extra proposer backends: pure parts, no Aura, no key."""
+import os
+import tempfile
+from pathlib import Path
+from unittest import mock
 import unittest
 from types import SimpleNamespace as NS
 
@@ -56,9 +60,21 @@ class Metrics(unittest.TestCase):
 
 class Backends(unittest.TestCase):
     def test_minimax_client_defaults(self):
-        c = LLMClient(provider="minimax", mode="offline")
+        with mock.patch.dict(os.environ, {"AURA_MINIMAX_ENV": "/nonexistent-minimax.env"}):
+            os.environ.pop("AURA_MINIMAX_BASE_URL", None)
+            c = LLMClient(provider="minimax", mode="offline")
         self.assertEqual(c.model, "MiniMax-M3.1-Flash")
         self.assertTrue(c.base_url.startswith("https://api.minimax.cn"))
+
+    def test_minimax_base_url_from_env_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "minimax.env"
+            f.write_text('MINIMAX_BASE_URL="https://api.example.test/v1"\nMINIMAX_MODEL=MiniMax-M3\n')
+            with mock.patch.dict(os.environ, {"AURA_MINIMAX_ENV": str(f)}):
+                os.environ.pop("AURA_MINIMAX_BASE_URL", None)
+                c = LLMClient(provider="minimax", mode="offline")
+        self.assertEqual(c.base_url, "https://api.example.test/v1")
+        self.assertEqual(c.model, "MiniMax-M3.1-Flash")      # the model is not taken from the env file
 
     def test_mixed_alternates_and_sums(self):
         m = make_client("mixed", mode="offline", cache_dir="/nonexistent-cache")

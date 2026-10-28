@@ -15,6 +15,7 @@ from .m2 import (Critic, M2Config, agg, budget_k, fresh_of, pareto_insert, per_t
 from .plugins import Library
 from .proposal import CandidateQueue, RuleSource
 from .stat import StatAdmission, hard_veto, per_task3
+from .localsearch import SwarmRefiner
 
 
 def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evidence: int = 3, noise: float = 0.0,
@@ -43,6 +44,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     stat = cfg.admission == "stat"
     sa = StatAdmission(alpha=cfg.alpha)
     queue = CandidateQueue()             # stat mode: proposals made while a candidate is pending admission
+    refiner = SwarmRefiner(cfg.swarm_rounds, cfg.swarm_width, noop=src.p._noop) if cfg.swarm else None
     if stat and retention is None:
         retention = RetentionGate()          # the retention budget gate is always on in stat mode
     keep_tables = []
@@ -96,8 +98,17 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 cands = queue.pop(tb, src.p._noop)
             if not cands:
                 continue
+            sw_info = None
+            if refiner is not None:
+                # LLM proposes -> swarm fine-tunes on the window's evidence tasks (coordinator path, pure workers)
+                s_ = max(0, (t.id + 1 - window) // 10 * 10)
+                if sum(x.heldout for x in stream[s_:t.id + 1]) >= min_heldout:
+                    cands, sw_info = refiner.refine(t.id, cands, tb, stream[s_:t.id + 1], ckpts[s_], seed, shift, pmap)
+                    learn["replay_tasks"] += len(sw_info["attempts"]) * (t.id + 1 - s_) if sw_info else 0
             if tr:
                 tr.propose_end(src, cands)
+                if sw_info:
+                    tr.swarm(sw_info)
             if cfg.critic and critic.veto(cands[0].sig):
                 stats["critic_veto"] += 1
                 if tr:
@@ -164,7 +175,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 sa.pending = {"ts": t.id, "start": start, "cand": cands[best], "sig": sig, "blocked": blocked,
                               "table": next(r["table"] for r in ok_trials if r["i"] == best), "look": 0,
                               "descs": [c.desc for c in cands], "tasks": tasks, "mem0": mem0, "sel": sc,
-                              "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands)}
+                              "n_llm": sum(c.meta.get("proposer", "").startswith("llm") for c in cands)}
                 gate_s.append(time.perf_counter() - g0)
                 continue
             best = -1 if stat else best
@@ -220,6 +231,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                     bi = next(j for j, r in enumerate(ok_trials) if r["i"] == best)
                     ledger.admit("keep", t.id, c, tb, vr["table"], "gate", {
                         "evidence": sig, "reason": c.why, "candidates": [x.desc for x in cands], "blocked": blocked,
+                        "swarm": c.meta.get("swarm"),
                         "gate": {"window": [start, t.id], "base": list(base), "chosen": list(cs[bi])},
                         "retention": sc.get("retention"), "fresh": sc.get("fresh")})
                 keep_tables.append({"ts": t.id, "desc": c.desc, "before": tb, "after": vr["table"]})
@@ -241,7 +253,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                              "candidates": [c.desc for c in cands], "blocked": blocked, "scores": sc,
                              "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1),
                              "chosen_by": cands[best].meta.get("proposer", "rule") if best >= 0 else None,
-                             "n_llm": sum(c.meta.get("proposer") == "llm" for c in cands), "sig": sig})
+                             "n_llm": sum(c.meta.get("proposer", "").startswith("llm") for c in cands), "sig": sig,
+                             "swarm_attempt": (cands[best].meta.get("swarm") or {}).get("attempt_id") if best >= 0 else None})
         if ledger is not None:
             for e in getattr(h, "events", []):
                 if e["op"] == "restart":
@@ -271,10 +284,16 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out["keep_tables"] = keep_tables
     if stat:
         out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending), "queue": dict(queue.n, left=len(queue))}
+    if refiner is not None:
+        out["swarm"] = dict(refiner.summary(),
+                            kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "llm+swarm" for x in verdicts),
+                            kept_attempts=[x.get("swarm_attempt") for x in verdicts
+                                           if x["verdict"] == "KEEP" and x.get("chosen_by") == "llm+swarm"])
     if hasattr(src.p, "llm_usage"):
         v = [x for x in verdicts if x.get("n_llm")]
         out["llm"] = dict(src.p.llm_usage(), gated_with_llm=len(v),
                           llm_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "llm" for x in verdicts),
+                          swarm_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "llm+swarm" for x in verdicts),
                           rule_kept=sum(x["verdict"] == "KEEP" and x.get("chosen_by") == "rule" for x in verdicts))
     if retention is not None:
         learn["replay_tasks"] += retention.replayed
@@ -359,7 +378,7 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
                 ledger.admit("keep", t.id, c, tb, res["table"], "stat-gate", {
                     "evidence": P["sig"], "reason": c.why, "candidates": P["descs"], "blocked": P["blocked"],
                     "selection": {"window": P["sel"]["window"], "base": list(P["sel"]["base"])},
-                    "admission": info})
+                    "admission": info, "swarm": c.meta.get("swarm")})
             keep_tables.append({"ts": t.id, "desc": c.desc, "before": tb, "after": res["table"]})
             tb = res["table"]
             lib.add(c.name, tb[COMPONENT[c.name]], c.desc, P["sig"], t.id, t.phase)
@@ -371,6 +390,7 @@ def _stat_decide(h, t, tb, stream, ckpts, seed, shift, pmap, sa, src, retention,
     verdicts.append({"ts": t.id, "verdict": verdict, "chosen": c.desc if verdict == "KEEP" else None,
                      "candidates": P["descs"], "blocked": P["blocked"], "scores": {"stat": info}, "why": c.why,
                      "chosen_by": c.meta.get("proposer", "rule") if verdict == "KEEP" else None, "n_llm": P["n_llm"],
-                     "sig": P["sig"], "proposed_ts": P["ts"]})
+                     "sig": P["sig"], "proposed_ts": P["ts"],
+                     "swarm_attempt": (c.meta.get("swarm") or {}).get("attempt_id") if verdict == "KEEP" else None})
     sa.pending = None
     return tb

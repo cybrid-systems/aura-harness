@@ -787,3 +787,29 @@ Reference: HarnessPro (arXiv 2610.26770) and the owner-supplied article (mp.weix
 - The token cost of the tail nudge is a flat 24 tokens.
 - M5 is re-run on the v2 world. The M5 LLM proposer starting from the seed table admitted nothing there (0%).
 - Under the hook-only ablation the analyzer often finds that the hook alone isn't significant, so the tiers fall back to h0, and that ablation's 15.9k tokens are h0's.
+
+## RSI layer: LLM proposes, swarm fine-tunes (`aura_harness/rsi/localsearch.py`)
+
+The LLM picks the typed mutation and a `SwarmRefiner` hill-climbs its parameters. The refiner uses typed neighbours, is scored on
+evidence tasks only, and runs on the coordinator path: workers are pure and the coordinator is the single writer (aura#4730).
+Refined candidates (`proposer="llm+swarm"`, attempt ids `sw<task>.<k>` in traces, proposals and ledger) pass through the
+unchanged critic, guard, gate and admission. The stat-mode candidate queue is kept.
+
+Switch it on with `M2Config(swarm=True)` and pick the provider with `AURA_LLM_PROVIDER=deepseek|glm|minimax`. Run the bench with
+`python3 -m aura_harness dev-bench --set swarm --seeds 0 1 2 3 4 --n 160`. Design and full tables:
+[docs/swarm-rsi.md](docs/swarm-rsi.md).
+
+The table below is for 5 seeds x 160 tasks. Each cell reads LLM-only → LLM+swarm. p is the paired exact sign-flip p on
+held-out success; the minimum possible with 5 seeds is 0.0625.
+
+| provider | admission | held-out | OOD | KEEP / decisions | LLM tokens / KEEP | wall s / KEEP | false KEEPs | p (held-out) |
+|---|---|---|---|---|---|---|---|---|
+| DeepSeek | stat | 30.5% → 63.0% | 22.0% → 53.3% | 5/7 → 7/9 | 102.6k → 72.5k | 27 → 60 | 0/5 → 0/7 | 0.062 (5/0/0) |
+| GLM | stat | 45.5% → 51.5% | 33.3% → 45.3% | 6/9 → 6/9 | 103.9k → 106.7k | 908 → 608 | 0/6 → 0/6 | 0.25 |
+| MiniMax | stat | 56.0% → 62.5% | 45.3% → 53.3% | 7/10 → 7/11 | 100.5k → 111.2k | 33 → 371 | 0/7 → 0/7 | 0.50 |
+| DeepSeek | better() | 94.0% → 95.0% | 78.0% → 73.3% | 24/45 → 19/40 | 5.7k → 6.5k | 22 → 53 | 0/24 → 3/19 | 0.75 |
+| GLM | better() | 92.0% → 94.5% | 74.7% → 71.3% | 20/38 → 21/38 | 7.8k → 7.2k | 123 → 100 | 1/20 → 3/21 | 0.375 |
+| MiniMax | better() | 91.0% → 93.5% | 74.0% → 76.0% | 27/48 → 21/45 | 7.2k → 9.4k | 10 → 85 | 9/27 → 4/21 | 0.75 |
+
+Under stat admission the swarm helps every provider without adding a false KEEP; DeepSeek is the clear case. Under better() it
+gains little and adds false KEEPs for two of the three providers. FS regressions are 0 in all arms.
