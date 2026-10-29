@@ -26,15 +26,8 @@ class SwarmTest(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("AURA_BIN"), "needs AURA_BIN")
     def test_rebind_under_contention(self):
         # assert only on correctness: a stats-key corruption Aura bug can mangle counter names
-        # a clean run takes ~1 s; Aura d54b2117d deadlocks this workload in ~1/4 runs (aura#4765), so a
-        # stalled process is killed after 60 s and retried (a hang is not a wrong result)
-        for attempt in range(3):
-            try:
-                r = run_expr("(run-rebind 4 64 8 2000 4)", {}, timeout=60)
-                break
-            except TimeoutError:
-                if attempt == 2:
-                    raise
+        # a clean run takes ~1 s; the ~1/4-run deadlock (aura#4765) is fixed, so no retry
+        r = run_expr("(run-rebind 4 64 8 2000 4)", {}, timeout=120)
         self.assertEqual(r["accepted"], 1)
         self.assertEqual(r["done-valid"], 1)
         self.assertGreater(r.get("rebinds", 0), 0)
