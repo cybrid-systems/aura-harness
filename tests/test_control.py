@@ -258,6 +258,9 @@ class HofWrapTests(unittest.TestCase):
         finally:
             os.environ.pop("AURA_HARNESS_KNOBS", None); os.environ.pop("AURA_HARNESS_HOF_WRAP", None)
 
+    # AURA_HARNESS_HOF_WRAP is opt-in (aura#4626 is fixed). Its workspace %map/%filter call the callback inside a
+    # named let, which runs the loop closure instead on Aura d54b2117d (aura#4764).
+    @unittest.expectedFailure
     def test_two_callbacks_give_the_right_value(self):
         from aura_harness.harness import Candidate
         h = self.start("1")

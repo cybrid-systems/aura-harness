@@ -165,7 +165,13 @@ writer, attempt ids in traces and the ledger, honest admission, providers, and t
 `tests/test_metrics.py` gained a test for the MiniMax env file. On `e6f4169e0` these modules pass: audit, devenv, env, fuzz, llm,
 localsearch, m6, metrics, queue, stat, and rsi (`test_supervisor_survives_4670_trace` excluded).
 
-These fail in exactly the same way on the parent commit `8428257`, so they are not caused by this change:
+**Re-check on `d54b2117d` (2026-10-29):** `test_control` (25, one expected failure, aura#4764), `test_obs` (10), `test_supervisor` (5), `test_localsearch` (8)
+and `test_rsi` (15, including `test_supervisor_survives_4670_trace`) pass. `test_swarm` passes except for a rare deadlock (aura#4765, retried) and a
+rare `claims-held=1` after cancel (aura#4761). The supervisor's dead workers were a tick-lease artefact of parallel bodies. Leases are now
+wall-clock as well (README, "Re-check on d54b2117d"). The single-writer design stays: parallel `set!` read-modify-writes still lose
+updates (aura#4761), and `set!` after an overlay commit is dropped (aura#4757).
+
+On `e6f4169e0` these failed in exactly the same way on the parent commit `8428257`, so they were not caused by this change:
 * `test_control` (5 failures) and `test_obs`, `test_supervisor`, `test_swarm`. Their fiber/swarm Aura programs fail with
   `cannot resolve 'std/list'` or `<error>`; see aura#4730.
 * `test_rsi.test_supervisor_survives_4670_trace`, which hangs.

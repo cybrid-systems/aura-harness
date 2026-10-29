@@ -94,8 +94,15 @@
 (define clock 0)
 (define hb (make-hash))
 (define (lease) (+ 16 (* 8 cfg-N)))
-(define (lease-expired? owner) (> (- clock (hash-ref hb owner 0)) (lease)))
-(define (beat! w) (set! clock (+ clock 1)) (hash-set! hb w clock))
+;; With parallel fiber bodies (Aura #4717) idle workers spin through turns much faster than a busy
+;; worker scans a window, so a tick lease alone expired live workers (supervisor dead workers,
+;; swarm claims stolen and merged twice).  A lease now also needs LEASE-MS of wall time without a
+;; beat; the tick bound keeps the serial-body behaviour.  hb[w] = (clock . ms) of w's last turn.
+(define LEASE-MS 100)
+(define (lease-expired? owner)
+  (let ((b (hash-ref hb owner (cons 0 0))))
+    (and (> (- clock (car b)) (lease)) (> (- (monotonic-ms) (cdr b)) LEASE-MS))))
+(define (beat! w) (set! clock (+ clock 1)) (hash-set! hb w (cons clock (monotonic-ms))))
 
 ;; ---------------------------------------------------------------- claims (live, atomic check-and-insert)
 (define claims (make-hash))   ; task -> worker

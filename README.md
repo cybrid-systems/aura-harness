@@ -541,6 +541,25 @@ Splits (ModularRSI / 2609.38372 style): evolution on repos `api` / `web` / `etl`
 
 ## Known Aura issues
 
+### Re-check on `d54b2117d` (2026-10-29): everything filed from here is closed
+
+The Aura issues filed from here (#4728–#4732) and the #4707 sub-issues were re-verified on a host-mode Release build of `d54b2117d`. #4728 (yield 0 ms), #4729, #4730 (concurrent `hash-set!` is memory-safe: 40000/40000 disjoint keys, env intact 6/6), #4731 (20/20 at J0 and J1), #4732 (`:timeout-ms` 301 ms), #4713 and #4714 hold. **`swarm.aura` and `supervisor.aura` are reliable again: 20/20 bench runs accepted, N=1–16**:
+
+| tasks/s, K=1024 F=64 | N=1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| swarm free (`e6f4169e0`: 156/132/124/135/113, N=16 1/3 accepted) | 158 | 139 | 107 | 100 | 78 |
+| supervisor (`e6f4169e0`: accepted 0/3–2/3) | 785 | 933 | 678 | 470 | 289 |
+
+All runs accepted, 0 lost, 0 duplicate merges, 0 dead workers. Peak RSS is 150–360 MB for the swarm and ~160 MB for the supervisor. Full table: `results/sv-bench-d54b2117d.md`. Neither mode gets faster with more fibers. They spin on `channel:try-recv` + `fiber:yield` and share hashes, so this is a correctness check, not a speed-up.
+
+Changes in this repo:
+* **Wall-clock leases.** With truly parallel bodies, idle workers advance the shared tick clock far faster than a busy worker scans its window, so the tick-only lease expired live workers (supervisor `workers-dead` 1–4 per run, `accepted 0`). A lease now needs both the tick bound and 100 ms without a heartbeat (`aura/swarm.aura`): supervisor 10/10 at N=1–16 in tests, 20/20 in the bench.
+* `tests.test_control`, `test_obs`, `test_supervisor`, `test_localsearch` and `test_rsi` pass (`test_rsi.test_supervisor_survives_4670_trace` no longer hangs). The opt-in `AURA_HARNESS_HOF_WRAP=1` test is marked expected-failure: the wrap's own `%map`/`%filter` hit **aura#4764** (a workspace lambda passed in and called inside the callee's named `let` runs the loop closure; also on `e6f4169e0`). The wrap is off by default (#4626 is fixed).
+* `test_swarm.test_rebind_under_contention` deadlocks in ~1 of 4 runs (0% CPU, all threads in `futex_wait`) → **aura#4765**. The test now kills a stalled run after 60 s and retries. `test_cancel_partial_sound` once ended with `claims-held=1` (1 of 17 runs). The claim check-and-insert is a read-modify-write from parallel bodies, and there is no atomic primitive yet (**aura#4761**).
+* The RSI `SwarmRefiner` keeps the coordinator as the single writer: `set!` increments from parallel bodies still lose ~55% (#4761), and after an overlay commit later `set!`s of that binding are dropped (**aura#4757**).
+
+Other issues filed from this pass, from the COW and fiber validation: #4758 (SIGABRT `FlatAST::is_valid`, defmacro + parallel `eval`), #4759, #4760, #4762, #4763. Reopened: #4715 (no structured conflict, no stale-read check, no commit provenance), #4736, #4740 and #4747.
+
 ### Re-check on `e6f4169e0` (2026-10-28): parallel fiber bodies
 
 Aura `e6f4169e0` runs fiber bodies in parallel (#4717, P4/P5 of #4707). CPU-bound fibers now scale (16 spinning fibers: 13.4 s vs 25.8 s on the serialized `235bcfa6b`; one fiber is ~35% slower, 2.2 vs 1.6 s). The orchestration probes from this repo are mostly fixed (#4721, #4723, #4724, #4725, #4727; #4708 cancel works but #4728 makes a main-thread yield cost ~200 ms). But **`swarm.aura` and `supervisor.aura` are no longer reliable**: they share hashes between worker bodies and Aura has no atomic update or lock yet (the COW overlay is #4715).
