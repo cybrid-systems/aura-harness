@@ -40,8 +40,16 @@ class Ledger:
     def __init__(self, path: str | Path | None):
         self.path = Path(path) if path else None
         self.records: list[dict] = []
+        self.torn: str | None = None   # a torn last line from a crash mid-append, dropped on load
         if self.path and self.path.exists():
-            self.records = [json.loads(x) for x in self.path.read_text().splitlines() if x.strip()]
+            lines = [x for x in self.path.read_text().splitlines() if x.strip()]
+            for i, x in enumerate(lines):
+                try:
+                    self.records.append(json.loads(x))
+                except json.JSONDecodeError:
+                    if i != len(lines) - 1:
+                        raise              # corruption in the middle is not a torn write: refuse to guess
+                    self.torn = x
         self.next_id = 1 + max((r["id"] for r in self.records), default=0)
 
     def _write(self, rec):

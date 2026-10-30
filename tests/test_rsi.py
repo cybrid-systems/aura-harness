@@ -19,6 +19,21 @@ def key(r):
 
 
 class PureTests(unittest.TestCase):
+    def test_ledger_drops_torn_last_line(self):
+        import tempfile
+        from pathlib import Path
+        from aura_harness.rsi.ledger import Ledger
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "l.jsonl"
+            p.write_text('{"id": 1, "op": "keep"}\n{"id": 2, "op": "ke')
+            lg = Ledger(p)
+            self.assertEqual(len(lg.records), 1)
+            self.assertEqual(lg.next_id, 2)
+            self.assertTrue(lg.torn)
+            p.write_text('{"id": 1, "op": "keep"}\n{"id": 2, "op\n{"id": 3}\n')
+            with self.assertRaises(ValueError):
+                Ledger(p)
+
     def test_targets(self):
         tb = seed_table()
         self.assertEqual(target_of(Candidate("compress", tb["compress"], "", "", "x")), Target.STATE)
@@ -71,6 +86,44 @@ class AuraRSITests(unittest.TestCase):
         self.assertGreaterEqual(b["restarts"], 5)
         self.assertEqual(key(a), key(b))
         self.assertEqual(a["final_source"], b["final_source"])
+
+    def test_supervisor_restart_on_first_and_last_call(self):
+        # validation/: table/source/log used to retry on the dead process's bound method (closed file)
+        from aura_harness.agent import run_stream
+        from aura_harness.rsi.loop import run_rsi
+        from aura_harness.rsi.supervisor import SupervisedAura
+        a = run_stream("aura-gated", 2, n=240)
+        h0 = SupervisedAura()
+        run_rsi(2, n=240, backend=h0)
+        h = SupervisedAura()
+        h.inject = {1, h0.calls}
+        b = run_rsi(2, n=240, backend=h)
+        self.assertEqual(key(a), key(b))
+        self.assertEqual(a["final_source"], b["final_source"])
+
+    def test_supervisor_crash_during_replay(self):
+        from aura_harness.rsi.supervisor import SupervisedAura
+        h = SupervisedAura()
+        for i in range(3):
+            c = Candidate("compress", dict(seed_table()["compress"], **{"test-log": ["tail", 800 + i]}), "x", "x",
+                          f"compress test-log tail/{800 + i}")
+            self.assertTrue(h.apply(i, c)["ok"])
+        want = h.table()
+        h.h.pipe.p.kill(); h.h.pipe.p.wait()
+        orig = h.h.__class__.__init__
+        n = {"spawn": 0}
+        def init(self2, *a, **k):            # the first respawned process dies before the ledger replay
+            orig(self2, *a, **k)
+            n["spawn"] += 1
+            if n["spawn"] == 1:
+                self2.pipe.p.kill(); self2.pipe.p.wait()
+        h.h.__class__.__init__ = init
+        try:
+            got = h.table()
+        finally:
+            h.h.__class__.__init__ = orig
+        self.assertEqual(got, want)
+        self.assertGreaterEqual(h.restarts, 2)
 
     def test_supervisor_survives_4670_trace(self):
         from aura_harness.rsi.supervisor import SupervisedAura

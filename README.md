@@ -13,6 +13,33 @@ Everything is offline and reproducible from seeds. No LLM key is needed. There a
 
 > Status: research MVP. The task environment and the "model" are simulated and seeded. The proposer works in a closed grammar (one component, table-level edits). Aura is pinned at `a6c63aa19` (re-pinned 2026-10-22 from `e50951bff`; first published on `c8ad457c9`). Read the caveats before quoting numbers.
 
+## 验证（2026-10-30，中文）：RSI 与 Aura 能力，声明 → 测试 → 结果
+
+完整报告、脚本和原始结果见 [`validation/README.md`](validation/README.md)。被测构建是 Aura main `69d360068`，对照组是 pin `a6c63aa19`，都在 CI 镜像 `dev:v1.0.9` 中运行。
+
+**RSI（重点）**
+
+| 声明 | 测试 | 结果 |
+|---|---|---|
+| TRIAL / ROLLBACK 不改 root；KEEP 后 root = 选中的 trial；版本号 = ledger 长度；PROTECTED 边界不变 | 4 种配置 × 5 seed，每次调用前后经原始管道检查 | PASS：329 TRIAL / 329 VERDICT，0 违例 |
+| 迭代带来提升 | 5 seed × 400 任务，noise 0 / 0.3 / 1.0 | PASS：63.35% / 62.9% / 37.8%，冻结基线 24.1%，与本 README 一致；独立任务流上种子表 14.6% → 最终表 71.3% |
+| KEEP 在未来任务上有用 | 每个 KEEP 做前向 100 任务验证 | 负向 KEEP：noise 0 为 3%，0.3 为 12%，1.0 为 13% |
+| 可复现 | 同 seed 两次 / ws vs snap / jobs 1 vs 2 / 对比 `results/rsi/rsi0.json` | PASS，逐项相同 |
+| 中途崩溃可恢复 | 在每个调用点注入 kill、管道层单次 / 相邻两次 kill、重放中崩溃、异步 SIGKILL、截断的 ledger | 修复前 FAIL（closed-file ValueError、重放中崩溃时中止、截断的 ledger 无法加载）；**本次已修复 supervisor / ledger，修复后全部 PASS** |
+| 守卫挡住越界改动 | 20 个逃逸样本 × ws / snap | PASS：18/18 被挡，2 个合法对照被放行 |
+| 门控不接受有害改动 | 混入 "ttl all 0" 等合法但有害的候选 | 部分 FAIL：better() 在 5 个 seed 中有 4 个共 KEEP 了 8 次，成本 +5–23%；统计准入能挡住，但 n=400 时几乎不 KEEP |
+| 审计可追溯 | 重启 2 次后检查 LOG | FAIL：进程内 LOG 丢失，重放被记成 keep-ungated；持久可信的只有 host ledger |
+| 多 actor 下 KEEP 不吞改动 | TRIAL → 另一个 APPLY → KEEP | ws 模式 FAIL（APPLY 丢失，aura#4776）；snapshot 模式 PASS |
+
+**Aura 原语**：
+- `workspace :merge` 写回整份子快照，fork 之后 root 的修改被回退，冲突也静默（[aura#4776](https://github.com/cybrid-systems/aura/issues/4776)）；
+- merge 之后 `ast:restore` 只恢复源码，运行时不恢复，`merge-root!` 失败回滚因此不可靠（[aura#4777](https://github.com/cybrid-systems/aura/issues/4777)）；
+- main 上并行 fiber body 下 `workspace :switch` 是全局的，fiber worldline 互相串扰（[aura#4778](https://github.com/cybrid-systems/aura/issues/4778)，pin 上正常）；
+- main 上 #4610 回归：3000 次 merge 后 root rebind 慢 9 倍、RSS 3.7 GB（pin 平坦，193 MB）（[aura#4779](https://github.com/cybrid-systems/aura/issues/4779)）；
+- #4729 在 main 上已修复。
+
+**基准**（同一时段的 A/B）：守卫变更往返 main 17.1 ms vs pin 11.3 ms；longrun 600 步 APPLY p50 115 vs 69 ms。两个构建的 APPLY / TRIAL 都随步数线性增长。
+
 ## Why Aura for harness self-evolution
 
 | | typical harness (edit files / plugins, then reload) | aura-harness |

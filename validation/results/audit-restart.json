@@ -1,0 +1,19 @@
+{
+ "keep_verdicts": 8,
+ "no_fault": {
+  "blocked": 1,
+  "keep": 8,
+  "rollback": 4,
+  "trial-ws": 36
+ },
+ "restarts": 2,
+ "same_verdicts": true,
+ "with_restarts": {
+  "blocked": 1,
+  "keep": 3,
+  "keep-ungated": 5,
+  "restart": 2,
+  "rollback": 3,
+  "trial-ws": 18
+ }
+}

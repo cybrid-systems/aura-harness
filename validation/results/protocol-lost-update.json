@@ -1,0 +1,56 @@
+{
+ "ws": {
+  "trial_ok": true,
+  "apply_ok": true,
+  "route_after_apply": "rg-json",
+  "verdict": "KEEP",
+  "route_after_keep": "grep",
+  "compress_after_keep": [
+   "tail",
+   800
+  ],
+  "version": 2,
+  "log": [
+   [
+    "trial-ws",
+    "compress"
+   ],
+   [
+    "keep-ungated",
+    "route-tool"
+   ],
+   [
+    "keep",
+    "compress"
+   ]
+  ],
+  "lost_update": true
+ },
+ "snap": {
+  "trial_ok": true,
+  "apply_ok": true,
+  "route_after_apply": "rg-json",
+  "verdict": "KEEP",
+  "route_after_keep": "rg-json",
+  "compress_after_keep": [
+   "tail",
+   800
+  ],
+  "version": 2,
+  "log": [
+   [
+    "trial-snap",
+    "compress"
+   ],
+   [
+    "keep-ungated",
+    "route-tool"
+   ],
+   [
+    "keep",
+    "compress"
+   ]
+  ],
+  "lost_update": false
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "async_sigkill": {
+  "diff": 0,
+  "error": [],
+  "kills": 39,
+  "runs": 10,
+  "same": 10
+ },
+ "audit_after_restart": {
+  "audit_len": 32,
+  "audit_len_no_fault": 49,
+  "keep_in_audit": 3,
+  "keep_verdicts": 8,
+  "replay_entries": 5,
+  "restarts": 2
+ },
+ "crash_during_replay": {
+  "restarts": 2,
+  "result": "recovered"
+ },
+ "inject_each_call": {
+  "calls": 27,
+  "diff": [],
+  "error": [],
+  "same": 27
+ },
+ "pipe_chaos": {
+  "double_adjacent": {
+   "diff": [],
+   "error": [],
+   "same": 30
+  },
+  "pipe_calls": 28,
+  "single": {
+   "diff": [],
+   "error": [],
+   "same": 30
+  }
+ },
+ "truncated_ledger": {
+  "load": "ok, 8 records"
+ }
+}

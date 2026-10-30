@@ -1,0 +1,10 @@
+;; P7f：200 次 trial+merge 周期，每 25 次打印这 25 次的耗时(ms)；RSS 由 runone.py 报告（对比 N=100/200/400）
+(set-code "(define f (lambda (x) (cond ((equal? x \"a\") 1) (else 0))))\n(define g (lambda (x) (f x)))") (eval-current)
+(define (body k) (string-append "(lambda (x) (cond ((equal? x \"a\") " (number->string k) ") (else 0)))"))
+(define (cycle i) (let ((w (workspace :create "t")))
+  (workspace :switch w) (mutate:rebind "f" (body i) "trial") (eval-current)
+  (workspace :switch 0) (eval-current) (workspace :merge w) (eval-current) (workspace :delete w)))
+(define pts (list))
+(define t0 (current-time-ms))
+(let loop ((i 1)) (if (<= i 200) (begin (cycle i) (if (= 0 (modulo i 25)) (begin (set! pts (cons (- (current-time-ms) t0) pts)) (set! t0 (current-time-ms)))) (loop (+ i 1)))))
+(display (list "N" 200 "ms-per-25-merges" (reverse pts) "g" (g "a") "workspaces" (length (workspace :list)))) (newline)

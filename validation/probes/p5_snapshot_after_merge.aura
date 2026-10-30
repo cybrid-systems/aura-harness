@@ -1,0 +1,12 @@
+;; P5 KEEP 后回滚：ast:snapshot -> merge -> ast:restore 必须回到 merge 前（server.aura merge-root! 的回滚路径）
+(set-code "(define f (lambda (x) 1))\n(define g (lambda (x) 7))") (eval-current)
+(define s0 (current-source :workspace))
+(define w (workspace :create "cand"))
+(workspace :switch w) (mutate:rebind "f" "(lambda (x) 2)" "child") (eval-current)
+(workspace :switch 0) (eval-current)
+(define snap (ast:snapshot "pre-merge"))
+(workspace :merge w) (eval-current)
+(define mid (f 0))
+(ast:restore snap) (eval-current)
+(display (list "after-merge" mid "after-restore" (f 0) (g 0) "src-identical" (equal? s0 (current-source :workspace)))) (newline)
+(display (if (and (= mid 2) (= (f 0) 1) (= (g 0) 7)) "OK" "RESTORE-BROKEN")) (newline)

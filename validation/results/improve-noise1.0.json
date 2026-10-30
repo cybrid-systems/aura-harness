@@ -1,0 +1,901 @@
+{
+ "forward": {
+  "cheaper_neu": 9,
+  "neg": 5,
+  "neu": 15,
+  "pos": 18
+ },
+ "noise": 1.0,
+ "per_seed": [
+  {
+   "curve": [
+    {
+     "after_keep": 0,
+     "post": 0.135,
+     "pre": 0.365
+    },
+    {
+     "after_keep": 1,
+     "post": 0.135,
+     "pre": 0.365
+    },
+    {
+     "after_keep": 2,
+     "post": 0.16,
+     "pre": 0.37
+    },
+    {
+     "after_keep": 3,
+     "post": 0.175,
+     "pre": 0.38
+    },
+    {
+     "after_keep": 4,
+     "post": 0.335,
+     "pre": 0.395
+    },
+    {
+     "after_keep": 5,
+     "post": 0.335,
+     "pre": 0.385
+    },
+    {
+     "after_keep": 6,
+     "post": 0.355,
+     "pre": 0.425
+    },
+    {
+     "after_keep": 7,
+     "post": 0.48,
+     "pre": 0.69
+    },
+    {
+     "after_keep": 8,
+     "post": 0.545,
+     "pre": 0.805
+    }
+   ],
+   "forward": [
+    {
+     "after": [
+      38,
+      100,
+      725414
+     ],
+     "before": [
+      38,
+      100,
+      833173
+     ],
+     "desc": "ttl test-cmd=40",
+     "ts": 42
+    },
+    {
+     "after": [
+      33,
+      100,
+      724637
+     ],
+     "before": [
+      33,
+      100,
+      698752
+     ],
+     "desc": "compress service-log head/1600",
+     "ts": 106
+    },
+    {
+     "after": [
+      21,
+      100,
+      711205
+     ],
+     "before": [
+      20,
+      100,
+      750036
+     ],
+     "desc": "ttl repo-layout=40",
+     "ts": 167
+    },
+    {
+     "after": [
+      33,
+      100,
+      683076
+     ],
+     "before": [
+      22,
+      100,
+      680456
+     ],
+     "desc": "compress service-log grep-errors/1600",
+     "ts": 191
+    },
+    {
+     "after": [
+      36,
+      100,
+      697826
+     ],
+     "before": [
+      36,
+      100,
+      720617
+     ],
+     "desc": "ttl db-schema=40",
+     "ts": 230
+    },
+    {
+     "after": [
+      41,
+      100,
+      662249
+     ],
+     "before": [
+      41,
+      100,
+      575437
+     ],
+     "desc": "route edit->apply-patch",
+     "ts": 265
+    },
+    {
+     "after": [
+      52,
+      100,
+      678960
+     ],
+     "before": [
+      37,
+      100,
+      678960
+     ],
+     "desc": "compress test-log tail/800",
+     "ts": 288
+    },
+    {
+     "after": [
+      58,
+      98,
+      772953
+     ],
+     "before": [
+      49,
+      98,
+      688452
+     ],
+     "desc": "compress code-file head/1600",
+     "ts": 301
+    }
+   ],
+   "frozen": 0.2525,
+   "frozen_windows": [
+    0.3,
+    0.36,
+    0.2,
+    0.15
+   ],
+   "keep": 8,
+   "rollback": 17,
+   "rsi": 0.4,
+   "rsi_windows": [
+    0.3,
+    0.36,
+    0.35,
+    0.59
+   ],
+   "seed": 0
+  },
+  {
+   "curve": [
+    {
+     "after_keep": 0,
+     "post": 0.13,
+     "pre": 0.245
+    },
+    {
+     "after_keep": 1,
+     "post": 0.135,
+     "pre": 0.245
+    },
+    {
+     "after_keep": 2,
+     "post": 0.215,
+     "pre": 0.44
+    },
+    {
+     "after_keep": 3,
+     "post": 0.215,
+     "pre": 0.445
+    },
+    {
+     "after_keep": 4,
+     "post": 0.215,
+     "pre": 0.45
+    },
+    {
+     "after_keep": 5,
+     "post": 0.27,
+     "pre": 0.545
+    },
+    {
+     "after_keep": 6,
+     "post": 0.265,
+     "pre": 0.515
+    }
+   ],
+   "forward": [
+    {
+     "after": [
+      31,
+      100,
+      700415
+     ],
+     "before": [
+      30,
+      100,
+      807253
+     ],
+     "desc": "ttl test-cmd=40",
+     "ts": 42
+    },
+    {
+     "after": [
+      48,
+      100,
+      672733
+     ],
+     "before": [
+      29,
+      100,
+      672733
+     ],
+     "desc": "compress test-log tail/800",
+     "ts": 54
+    },
+    {
+     "after": [
+      51,
+      100,
+      647950
+     ],
+     "before": [
+      50,
+      100,
+      689576
+     ],
+     "desc": "ttl db-schema=40",
+     "ts": 67
+    },
+    {
+     "after": [
+      21,
+      100,
+      662622
+     ],
+     "before": [
+      22,
+      100,
+      737134
+     ],
+     "desc": "ttl repo-layout=160",
+     "ts": 232
+    },
+    {
+     "after": [
+      27,
+      100,
+      625619
+     ],
+     "before": [
+      24,
+      100,
+      556746
+     ],
+     "desc": "compress code-file head/1600",
+     "ts": 265
+    },
+    {
+     "after": [
+      24,
+      95,
+      457011
+     ],
+     "before": [
+      27,
+      95,
+      567287
+     ],
+     "desc": "compress search-results summarize/800",
+     "ts": 304
+    }
+   ],
+   "frozen": 0.225,
+   "frozen_windows": [
+    0.29,
+    0.29,
+    0.15,
+    0.17
+   ],
+   "keep": 6,
+   "rollback": 21,
+   "rsi": 0.35,
+   "rsi_windows": [
+    0.41,
+    0.49,
+    0.26,
+    0.24
+   ],
+   "seed": 1
+  },
+  {
+   "curve": [
+    {
+     "after_keep": 0,
+     "post": 0.175,
+     "pre": 0.26
+    },
+    {
+     "after_keep": 1,
+     "post": 0.175,
+     "pre": 0.255
+    },
+    {
+     "after_keep": 2,
+     "post": 0.18,
+     "pre": 0.255
+    },
+    {
+     "after_keep": 3,
+     "post": 0.18,
+     "pre": 0.255
+    },
+    {
+     "after_keep": 4,
+     "post": 0.195,
+     "pre": 0.31
+    },
+    {
+     "after_keep": 5,
+     "post": 0.195,
+     "pre": 0.31
+    },
+    {
+     "after_keep": 6,
+     "post": 0.175,
+     "pre": 0.26
+    },
+    {
+     "after_keep": 7,
+     "post": 0.185,
+     "pre": 0.285
+    },
+    {
+     "after_keep": 8,
+     "post": 0.2,
+     "pre": 0.285
+    },
+    {
+     "after_keep": 9,
+     "post": 0.355,
+     "pre": 0.64
+    },
+    {
+     "after_keep": 10,
+     "post": 0.355,
+     "pre": 0.645
+    },
+    {
+     "after_keep": 11,
+     "post": 0.355,
+     "pre": 0.65
+    }
+   ],
+   "forward": [
+    {
+     "after": [
+      29,
+      100,
+      830940
+     ],
+     "before": [
+      29,
+      100,
+      851781
+     ],
+     "desc": "ttl db-schema=40",
+     "ts": 41
+    },
+    {
+     "after": [
+      33,
+      100,
+      683774
+     ],
+     "before": [
+      32,
+      100,
+      836169
+     ],
+     "desc": "ttl test-cmd=40",
+     "ts": 47
+    },
+    {
+     "after": [
+      29,
+      100,
+      662353
+     ],
+     "before": [
+      29,
+      100,
+      672984
+     ],
+     "desc": "ttl repo-layout=40",
+     "ts": 116
+    },
+    {
+     "after": [
+      19,
+      100,
+      629184
+     ],
+     "before": [
+      17,
+      100,
+      557994
+     ],
+     "desc": "compress code-file head/1600",
+     "ts": 207
+    },
+    {
+     "after": [
+      25,
+      100,
+      650792
+     ],
+     "before": [
+      25,
+      100,
+      655332
+     ],
+     "desc": "ttl repo-layout=80",
+     "ts": 261
+    },
+    {
+     "after": [
+      26,
+      100,
+      578177
+     ],
+     "before": [
+      26,
+      100,
+      667880
+     ],
+     "desc": "compress code-file summarize/1600",
+     "ts": 268
+    },
+    {
+     "after": [
+      27,
+      100,
+      615902
+     ],
+     "before": [
+      27,
+      100,
+      559025
+     ],
+     "desc": "route edit->apply-patch",
+     "ts": 288
+    },
+    {
+     "after": [
+      24,
+      88,
+      721355
+     ],
+     "before": [
+      23,
+      88,
+      563143
+     ],
+     "desc": "route search->rg-json",
+     "ts": 311
+    },
+    {
+     "after": [
+      16,
+      33,
+      282636
+     ],
+     "before": [
+      8,
+      33,
+      286394
+     ],
+     "desc": "route test->pytest-q",
+     "ts": 366
+    },
+    {
+     "after": [
+      9,
+      21,
+      194270
+     ],
+     "before": [
+      9,
+      21,
+      194270
+     ],
+     "desc": "ttl db-schema=80",
+     "ts": 378
+    }
+   ],
+   "frozen": 0.24,
+   "frozen_windows": [
+    0.25,
+    0.34,
+    0.15,
+    0.22
+   ],
+   "keep": 11,
+   "rollback": 21,
+   "rsi": 0.2725,
+   "rsi_windows": [
+    0.26,
+    0.34,
+    0.17,
+    0.32
+   ],
+   "seed": 2
+  },
+  {
+   "curve": [
+    {
+     "after_keep": 0,
+     "post": 0.17,
+     "pre": 0.245
+    },
+    {
+     "after_keep": 1,
+     "post": 0.17,
+     "pre": 0.245
+    },
+    {
+     "after_keep": 2,
+     "post": 0.265,
+     "pre": 0.475
+    },
+    {
+     "after_keep": 3,
+     "post": 0.265,
+     "pre": 0.495
+    },
+    {
+     "after_keep": 4,
+     "post": 0.27,
+     "pre": 0.495
+    },
+    {
+     "after_keep": 5,
+     "post": 0.365,
+     "pre": 0.55
+    },
+    {
+     "after_keep": 6,
+     "post": 0.36,
+     "pre": 0.55
+    },
+    {
+     "after_keep": 7,
+     "post": 0.345,
+     "pre": 0.535
+    },
+    {
+     "after_keep": 8,
+     "post": 0.3,
+     "pre": 0.51
+    },
+    {
+     "after_keep": 9,
+     "post": 0.365,
+     "pre": 0.605
+    }
+   ],
+   "forward": [
+    {
+     "after": [
+      32,
+      100,
+      697466
+     ],
+     "before": [
+      32,
+      100,
+      800021
+     ],
+     "desc": "ttl test-cmd=40",
+     "ts": 42
+    },
+    {
+     "after": [
+      51,
+      100,
+      655012
+     ],
+     "before": [
+      32,
+      100,
+      677203
+     ],
+     "desc": "compress test-log grep-errors/800",
+     "ts": 47
+    },
+    {
+     "after": [
+      44,
+      100,
+      674249
+     ],
+     "before": [
+      45,
+      100,
+      717149
+     ],
+     "desc": "ttl db-schema=40",
+     "ts": 129
+    },
+    {
+     "after": [
+      27,
+      100,
+      642041
+     ],
+     "before": [
+      27,
+      100,
+      732885
+     ],
+     "desc": "ttl repo-layout=160",
+     "ts": 206
+    },
+    {
+     "after": [
+      38,
+      100,
+      737419
+     ],
+     "before": [
+      25,
+      100,
+      697662
+     ],
+     "desc": "compress service-log grep-errors/800",
+     "ts": 222
+    },
+    {
+     "after": [
+      35,
+      100,
+      899778
+     ],
+     "before": [
+      36,
+      100,
+      800928
+     ],
+     "desc": "ttl repo-layout=0",
+     "ts": 271
+    },
+    {
+     "after": [
+      18,
+      63,
+      402741
+     ],
+     "before": [
+      23,
+      63,
+      485967
+     ],
+     "desc": "compress config summarize/800",
+     "ts": 336
+    }
+   ],
+   "frozen": 0.2525,
+   "frozen_windows": [
+    0.32,
+    0.35,
+    0.18,
+    0.16
+   ],
+   "keep": 9,
+   "rollback": 21,
+   "rsi": 0.4175,
+   "rsi_windows": [
+    0.41,
+    0.57,
+    0.36,
+    0.33
+   ],
+   "seed": 3
+  },
+  {
+   "curve": [
+    {
+     "after_keep": 0,
+     "post": 0.12,
+     "pre": 0.31
+    },
+    {
+     "after_keep": 1,
+     "post": 0.255,
+     "pre": 0.39
+    },
+    {
+     "after_keep": 2,
+     "post": 0.35,
+     "pre": 0.6
+    },
+    {
+     "after_keep": 3,
+     "post": 0.35,
+     "pre": 0.62
+    },
+    {
+     "after_keep": 4,
+     "post": 0.34,
+     "pre": 0.625
+    },
+    {
+     "after_keep": 5,
+     "post": 0.335,
+     "pre": 0.625
+    },
+    {
+     "after_keep": 6,
+     "post": 0.345,
+     "pre": 0.62
+    },
+    {
+     "after_keep": 7,
+     "post": 0.415,
+     "pre": 0.69
+    }
+   ],
+   "forward": [
+    {
+     "after": [
+      42,
+      100,
+      888583
+     ],
+     "before": [
+      36,
+      100,
+      863324
+     ],
+     "desc": "compress service-log grep-errors/800",
+     "ts": 80
+    },
+    {
+     "after": [
+      61,
+      100,
+      880088
+     ],
+     "before": [
+      42,
+      100,
+      880088
+     ],
+     "desc": "compress test-log tail/800",
+     "ts": 84
+    },
+    {
+     "after": [
+      53,
+      100,
+      678527
+     ],
+     "before": [
+      52,
+      100,
+      780480
+     ],
+     "desc": "ttl test-cmd=40",
+     "ts": 110
+    },
+    {
+     "after": [
+      47,
+      100,
+      662045
+     ],
+     "before": [
+      47,
+      100,
+      698897
+     ],
+     "desc": "ttl db-schema=40",
+     "ts": 135
+    },
+    {
+     "after": [
+      43,
+      100,
+      719261
+     ],
+     "before": [
+      43,
+      100,
+      719261
+     ],
+     "desc": "compress search-results tail/800",
+     "ts": 164
+    },
+    {
+     "after": [
+      35,
+      100,
+      765197
+     ],
+     "before": [
+      35,
+      100,
+      748483
+     ],
+     "desc": "ttl db-schema=0",
+     "ts": 249
+    },
+    {
+     "after": [
+      41,
+      100,
+      833228
+     ],
+     "before": [
+      36,
+      100,
+      760766
+     ],
+     "desc": "compress code-file head/1600",
+     "ts": 265
+    }
+   ],
+   "frozen": 0.235,
+   "frozen_windows": [
+    0.32,
+    0.34,
+    0.1,
+    0.18
+   ],
+   "keep": 7,
+   "rollback": 21,
+   "rsi": 0.45,
+   "rsi_windows": [
+    0.36,
+    0.61,
+    0.41,
+    0.42
+   ],
+   "seed": 4
+  }
+ ],
+ "summary": {
+  "curves_monotone_within_2pt": "3/5",
+  "frozen": 0.241,
+  "indep_post_final": 0.389,
+  "indep_post_seed_table": 0.146,
+  "indep_pre_final": 0.653,
+  "indep_pre_seed_table": 0.285,
+  "rsi": 0.378,
+  "w2_frozen": 0.336,
+  "w2_rsi": 0.474,
+  "w4_frozen": 0.176,
+  "w4_rsi": 0.38
+ }
+}

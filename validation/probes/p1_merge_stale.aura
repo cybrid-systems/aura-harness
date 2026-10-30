@@ -1,0 +1,19 @@
+;; P1 merge 语义：TRIAL 建子 worldline 后，root 上又被 APPLY 了另一个 define（g），再 merge 子 worldline。
+;; 期望：合并结果 = 子的 f + root 新的 g（只合并子改过的 define），不应把 root 的 g 回退到 fork 时的值。
+(set-code "(define f (lambda (x) 1))\n(define g (lambda (x) 1))") (eval-current)
+(define w (workspace :create "cand"))
+(workspace :switch w)
+(mutate:rebind "f" "(lambda (x) 2)" "child edits f") (eval-current)
+(workspace :switch 0) (eval-current)
+(mutate:rebind "g" "(lambda (x) 3)" "root edits g after fork") (eval-current)
+(define mr (workspace :merge w))
+(eval-current)
+(display (list "merge-result" mr)) (newline)
+(display (list "f" (f 0) "g" (g 0))) (newline)
+(display (cond ((and (= (f 0) 2) (= (g 0) 3)) "OK child-f+root-g")
+               ((and (= (f 0) 2) (= (g 0) 1)) "LOST-ROOT-EDIT g reverted to fork value")
+               (else (string-append "OTHER f=" (number->string (f 0)) " g=" (number->string (g 0)))))) (newline)
+;; 源码与运行时是否一致：merge 之后 (current-source) 里 g 是哪个版本？再 eval 一遍源码后 g 是多少？
+(display (list "source-after-merge" (current-source :workspace))) (newline)
+(set-code (current-source :workspace)) (eval-current)
+(display (list "after-reload-from-source f" (f 0) "g" (g 0))) (newline)

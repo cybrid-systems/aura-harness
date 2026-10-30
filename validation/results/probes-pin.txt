@@ -1,0 +1,70 @@
+# aura = cybrid-systems/aura main a6c63aa19 (fix(audit) #4661), build-rel from /workspace/aura-4547; .so copied; lib = aur
+== validation/probes/p1_merge_stale.aura
+(merge-result (("f" . "merged") ("g" . "merged")))
+(f 2 g 1)
+LOST-ROOT-EDIT g reverted to fork value
+(source-after-merge (begin (define f (lambda (x) 2)) (define g (lambda (x) 1))))
+(after-reload-from-source f 2 g 1)
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p2_merge_conflict.aura
+(merge-result (("f" . "merged")) f 2)
+SILENT f=2
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p3_merge_deleted.aura
+(merge-deleted #f f 1)
+(new-id 2 old-id 1 reused #f)
+(fresh-child-f 1)
+SILENT-NOOP 
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p4_prov_after_merge.aura
+(root-log-before 2 after-merge 0)
+(child-prov <hash[16]>)
+(root-last-prov ())
+PROVENANCE-LOST
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p5_snapshot_after_merge.aura
+(after-merge 2 after-restore 2 7 src-identical #t)
+RESTORE-BROKEN
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p5b_restore_after_merge_detail.aura
+(snap 0)
+(src-after-merge (begin (define f (lambda (x) 2)) (define g (lambda (x) 7))))
+(restore #t)
+(src-after-restore (begin (define f (lambda (x) 1)) (define g (lambda (x) 7))) f 2)
+(2nd eval f 2)
+(after set-code f 1)
+(control g 7)
+rc=0 rss_mb=96 wall_s=0.05
+== validation/probes/p6_fiber_worldlines.aura
+(got (100 101 102 103 104 105 106 107) root-f 0 active-ws 0)
+OK isolated
+[fiber:join] WARN: workspace mutated during join (defuse_version 2 -> 42). The joiner resumed after concurrent mutate:* primitives. Result is still valid; re-validate callers if they depend on workspace state.
+rc=0 rss_mb=97 wall_s=0.05
+== validation/probes/p7_trial_leak.aura
+(root-100-rebinds-ms before 25 after 26 3000-cycles-ms 1313 workspaces 1 g 100)
+FLAT
+rc=0 rss_mb=101 wall_s=1.41
+== validation/probes/p7b_growth_trial.aura
+(mode trial cost-per-100-root-rebinds-ms-at-cycle ((0 27) (500 27) (1000 30) (1500 31) (2000 34) (2500 36) (3000 40)) mutation-log 10)
+rc=0 rss_mb=100 wall_s=2.18
+== validation/probes/p7c_growth_merge.aura
+(mode merge cost-per-100-root-rebinds-ms-at-cycle ((0 25) (500 24) (1000 24) (1500 24) (2000 24) (2500 24) (3000 25)) mutation-log 0)
+rc=0 rss_mb=193 wall_s=2.65
+== validation/probes/p7d_growth_root.aura
+(mode root cost-per-100-root-rebinds-ms-at-cycle ((0 24) (500 36) (1000 51) (1500 68) (2000 84) (2500 103) (3000 116)) mutation-log 10)
+rc=0 rss_mb=101 wall_s=2.64
+== validation/probes/p7e_merge_400.aura
+(mode merge cost-per-100-root-rebinds-ms-at-cycle ((0 28) (50 24) (100 24) (150 24) (200 32) (250 27) (300 28) (350 27) (400 80)) mutation-log 0)
+rc=0 rss_mb=105 wall_s=0.73
+== validation/probes/p7f_merge_n100.aura
+(N 100 ms-per-25-merges (29 23 22 25) g 100 workspaces 1)
+rc=0 rss_mb=98 wall_s=0.17
+== validation/probes/p7f_merge_n200.aura
+(N 200 ms-per-25-merges (20 20 20 20 26 24 21 20) g 200 workspaces 1)
+rc=0 rss_mb=98 wall_s=0.23
+== validation/probes/p7g_mixed_n200.aura
+(N 200 ms-per-25-merges (29 31 28 30 29 31 28 27) g 200 workspaces 1)
+rc=0 rss_mb=99 wall_s=0.29
+== validation/probes/p7h_samedefine_n100.aura
+(N 100 ms-per-25-merges (47 48 46 44) g 100 workspaces 1)
+rc=0 rss_mb=99 wall_s=0.25

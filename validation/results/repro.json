@@ -1,0 +1,106 @@
+{
+ "runs": {
+  "0": {
+   "jobs1_vs_2": true,
+   "keep": 10,
+   "rollback": 12,
+   "same_seed_twice": true,
+   "success": 0.6175,
+   "ws_vs_snap": true
+  },
+  "1": {
+   "jobs1_vs_2": true,
+   "keep": 14,
+   "rollback": 8,
+   "same_seed_twice": true,
+   "success": 0.59,
+   "ws_vs_snap": true
+  },
+  "2": {
+   "jobs1_vs_2": true,
+   "keep": 11,
+   "rollback": 8,
+   "same_seed_twice": true,
+   "success": 0.68,
+   "ws_vs_snap": true
+  },
+  "3": {
+   "jobs1_vs_2": true,
+   "keep": 12,
+   "rollback": 5,
+   "same_seed_twice": true,
+   "success": 0.6825,
+   "ws_vs_snap": true
+  },
+  "4": {
+   "jobs1_vs_2": true,
+   "keep": 13,
+   "rollback": 6,
+   "same_seed_twice": true,
+   "success": 0.5975,
+   "ws_vs_snap": true
+  }
+ },
+ "vs_committed": {
+  "0": {
+   "committed": [
+    0.6175,
+    10,
+    12
+   ],
+   "now": [
+    0.6175,
+    10,
+    12
+   ]
+  },
+  "1": {
+   "committed": [
+    0.59,
+    14,
+    8
+   ],
+   "now": [
+    0.59,
+    14,
+    8
+   ]
+  },
+  "2": {
+   "committed": [
+    0.68,
+    11,
+    8
+   ],
+   "now": [
+    0.68,
+    11,
+    8
+   ]
+  },
+  "3": {
+   "committed": [
+    0.6825,
+    12,
+    5
+   ],
+   "now": [
+    0.6825,
+    12,
+    5
+   ]
+  },
+  "4": {
+   "committed": [
+    0.5975,
+    13,
+    6
+   ],
+   "now": [
+    0.5975,
+    13,
+    6
+   ]
+  }
+ }
+}

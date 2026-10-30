@@ -1,0 +1,11 @@
+;; P2 写写冲突：子和 root 在 fork 后都改了同一个 f。merge 是否报告冲突？
+(set-code "(define f (lambda (x) 1))") (eval-current)
+(define w (workspace :create "cand"))
+(workspace :switch w) (mutate:rebind "f" "(lambda (x) 2)" "child") (eval-current)
+(workspace :switch 0) (eval-current)
+(mutate:rebind "f" "(lambda (x) 3)" "root") (eval-current)
+(define mr (try (workspace :merge w) (catch (e) (list "raised" e))))
+(eval-current)
+(display (list "merge-result" mr "f" (f 0))) (newline)
+(display (if (and (pair? mr) (equal? (car mr) "raised")) "CONFLICT-RAISED"
+             (string-append "SILENT f=" (number->string (f 0))))) (newline)

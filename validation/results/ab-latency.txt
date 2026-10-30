@@ -1,0 +1,28 @@
+##### main /workspace/ahv-bin/aura
+ 09:51:57 up  1:44,  0 users,  load average: 5.39, 12.11, 28.67
+  "guarded_apply_us": 14500,
+  "trial_ws_us": 14650,
+  "rebind_eval_us": 1600
+ "ablation_4585_no_set_code_decision_rt_ms": 0.26961599996866425,
+  "guarded_apply_us": 16000,
+  "trial_ws_us": 15450,
+  "rebind_eval_us": 4550
+ "aura_decision_rt_ms": 0.24529900019842898,
+ "aura_guarded_change_rt_ms": 17.090541000470694,
+ "aura_blocked_attempt_rt_ms": 0.5803710000691353,
+ "file_decision_rt_ms": 0.016637000044283923,
+ "file_change_edit_restart_ms": 29.11306300029537,
+##### pin /workspace/ahv-bin-pin/aura
+ 09:53:23 up  1:45,  0 users,  load average: 8.91, 11.49, 26.99
+  "guarded_apply_us": 10250,
+  "trial_ws_us": 11500,
+  "rebind_eval_us": 1500
+ "ablation_4585_no_set_code_decision_rt_ms": 0.2124800003002747,
+  "guarded_apply_us": 9900,
+  "trial_ws_us": 10800,
+  "rebind_eval_us": 1500
+ "aura_decision_rt_ms": 0.20923800002492499,
+ "aura_guarded_change_rt_ms": 11.304902999654587,
+ "aura_blocked_attempt_rt_ms": 0.3841660000034608,
+ "file_decision_rt_ms": 0.009917000170389656,
+ "file_change_edit_restart_ms": 28.314959999988787,

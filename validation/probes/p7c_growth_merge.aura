@@ -1,0 +1,16 @@
+;; P7-merge：每次 trial 都 merge 回 root（KEEP 路径）
+;; 每 500 个周期测一次"100 次 root rebind+eval"的耗时(ms)，看是否随历史线性增长。
+(set-code "(define f (lambda (x) (cond ((equal? x \"a\") 1) (else 0))))\n(define g (lambda (x) (f x)))") (eval-current)
+(define (body k) (string-append "(lambda (x) (cond ((equal? x \"a\") " (number->string k) ") (else 0)))"))
+(define (root-rb n) (let ((t0 (current-time-ms))) (let loop ((i 1)) (if (<= i n) (begin (mutate:rebind "f" (body i) "m") (eval-current) (loop (+ i 1))))) (max 1 (- (current-time-ms) t0))))
+(define mode "merge")
+(define (cycle i)
+  (cond ((equal? mode "root") (mutate:rebind "f" (body i) "root") (eval-current))
+        (else (let ((w (workspace :create "t")))
+                (workspace :switch w) (mutate:rebind "f" (body i) "trial") (eval-current)
+                (workspace :switch 0) (eval-current)
+                (if (equal? mode "merge") (begin (workspace :merge w) (eval-current)))
+                (workspace :delete w)))))
+(define pts (list))
+(let loop ((i 0)) (if (<= i 3000) (begin (if (= 0 (modulo i 500)) (set! pts (cons (list i (root-rb 100)) pts))) (cycle i) (loop (+ i 1)))))
+(display (list "mode" mode "cost-per-100-root-rebinds-ms-at-cycle" (reverse pts) "mutation-log" (length (query :mutation-log)))) (newline)

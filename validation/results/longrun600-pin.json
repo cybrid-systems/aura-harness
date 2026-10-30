@@ -1,0 +1,107 @@
+{
+ "steps": 600,
+ "worldlines": "ws",
+ "audit_entries": 1400,
+ "rows": [
+  {
+   "step": 100,
+   "rss_mb": 118.9,
+   "source_chars": 1197,
+   "compactions": 0,
+   "wall_s": 2.6,
+   "apply_ms_p50": 12.88,
+   "trial_ms_p50": 26.63,
+   "verdict_ms_p50": 0.56,
+   "decide_ms_p50": 0.32,
+   "source_ms_p50": 7.98,
+   "bench_us": {
+    "guarded_apply_us": 13200,
+    "static_check_us": 1320,
+    "n": 5,
+    "admit_us": 2960,
+    "decision_call_us": 12,
+    "snapshot_us": 1000,
+    "materialize_table_us": 3600,
+    "trial_snap_us": 16200,
+    "restore_eval_us": 3200,
+    "blocked_check_us": 0,
+    "trial_ws_us": 13200,
+    "rebind_eval_us": 2200
+   }
+  },
+  {
+   "step": 200,
+   "rss_mb": 153.0,
+   "source_chars": 1705,
+   "compactions": 0,
+   "wall_s": 7.4,
+   "apply_ms_p50": 19.53,
+   "trial_ms_p50": 37.12,
+   "verdict_ms_p50": 0.84,
+   "decide_ms_p50": 0.34,
+   "source_ms_p50": 13.84
+  },
+  {
+   "step": 300,
+   "rss_mb": 195.7,
+   "source_chars": 1900,
+   "compactions": 0,
+   "wall_s": 13.6,
+   "apply_ms_p50": 29.66,
+   "trial_ms_p50": 61.84,
+   "verdict_ms_p50": 1.0,
+   "decide_ms_p50": 0.34,
+   "source_ms_p50": 14.4
+  },
+  {
+   "step": 400,
+   "rss_mb": 242.3,
+   "source_chars": 2217,
+   "compactions": 0,
+   "wall_s": 22.4,
+   "apply_ms_p50": 41.29,
+   "trial_ms_p50": 101.11,
+   "verdict_ms_p50": 1.21,
+   "decide_ms_p50": 0.35,
+   "source_ms_p50": 16.71
+  },
+  {
+   "step": 500,
+   "rss_mb": 286.9,
+   "source_chars": 2316,
+   "compactions": 0,
+   "wall_s": 33.0,
+   "apply_ms_p50": 36.24,
+   "trial_ms_p50": 79.59,
+   "verdict_ms_p50": 1.89,
+   "decide_ms_p50": 0.36,
+   "source_ms_p50": 18.31,
+   "bench_us": {
+    "guarded_apply_us": 49400,
+    "static_check_us": 9820,
+    "n": 5,
+    "admit_us": 12640,
+    "decision_call_us": 16,
+    "snapshot_us": 10200,
+    "materialize_table_us": 3800,
+    "trial_snap_us": 73400,
+    "restore_eval_us": 22400,
+    "blocked_check_us": 60,
+    "trial_ws_us": 43200,
+    "rebind_eval_us": 7200
+   }
+  },
+  {
+   "step": 600,
+   "rss_mb": 350.4,
+   "source_chars": 2501,
+   "compactions": 0,
+   "wall_s": 52.7,
+   "apply_ms_p50": 68.98,
+   "trial_ms_p50": 209.84,
+   "verdict_ms_p50": 2.24,
+   "decide_ms_p50": 0.38,
+   "source_ms_p50": 19.78
+  }
+ ]
+}

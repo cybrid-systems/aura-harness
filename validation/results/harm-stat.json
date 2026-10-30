@@ -1,0 +1,41 @@
+{
+ "clean_stat_success": [
+  0.2525,
+  0.225,
+  0.24,
+  0.2525,
+  0.2925
+ ],
+ "harm": [
+  {
+   "harm_kept": 0,
+   "keep": 0,
+   "seed": 0,
+   "success": 0.2525
+  },
+  {
+   "harm_kept": 0,
+   "keep": 0,
+   "seed": 1,
+   "success": 0.225
+  },
+  {
+   "harm_kept": 0,
+   "keep": 0,
+   "seed": 2,
+   "success": 0.24
+  },
+  {
+   "harm_kept": 0,
+   "keep": 0,
+   "seed": 3,
+   "success": 0.2525
+  },
+  {
+   "harm_kept": 0,
+   "keep": 1,
+   "seed": 4,
+   "success": 0.2925
+  }
+ ]
+}

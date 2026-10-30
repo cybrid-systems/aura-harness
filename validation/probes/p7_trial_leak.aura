@@ -1,0 +1,18 @@
+;; P7 长期 RSI：3000 次 trial 周期（create/switch/rebind/eval/switch 0/delete）+ 每 10 次一次 merge-KEEP。
+;; 测 root rebind 成本是否随历史增长（#4583/#4610 的回归），并打印 workspace 数量。
+(set-code "(define f (lambda (x) (cond ((equal? x \"a\") 1) (else 0))))\n(define g (lambda (x) (f x)))") (eval-current)
+(define (body k) (string-append "(lambda (x) (cond ((equal? x \"a\") " (number->string k) ") (else 0)))"))
+(define (root-rb n) (let ((t0 (current-time-ms))) (let loop ((i 1)) (if (<= i n) (begin (mutate:rebind "f" (body i) "m") (eval-current) (loop (+ i 1))))) (max 1 (- (current-time-ms) t0))))
+(define (cycle i)
+  (let ((w (workspace :create "t")))
+    (workspace :switch w) (mutate:rebind "f" (body i) "trial") (eval-current)
+    (workspace :switch 0) (eval-current)
+    (if (= 0 (modulo i 10)) (begin (workspace :merge w) (eval-current)))
+    (workspace :delete w)))
+(define before (root-rb 100))
+(define t0 (current-time-ms))
+(let loop ((i 1)) (if (<= i 3000) (begin (cycle i) (loop (+ i 1)))))
+(define cyc (- (current-time-ms) t0))
+(define after (root-rb 100))
+(display (list "root-100-rebinds-ms before" before "after" after "3000-cycles-ms" cyc "workspaces" (length (workspace :list)) "g" (g "a"))) (newline)
+(display (if (< (/ after before) 1.5) "FLAT" "GROWS")) (newline)

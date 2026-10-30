@@ -1,0 +1,177 @@
+{
+ "async_sigkill": {
+  "diff": 1,
+  "error": [
+   "RuntimeError('harness process exited (rc=-9): ')",
+   "RuntimeError('harness process exited (rc=-9): ')"
+  ],
+  "kills": 35,
+  "runs": 10,
+  "same": 7
+ },
+ "audit_after_restart": {
+  "audit_len": 49,
+  "audit_len_no_fault": 49,
+  "keep_in_audit": 8,
+  "keep_verdicts": 8,
+  "replay_entries": 0,
+  "restarts": 0
+ },
+ "crash_during_replay": {
+  "restarts": 1,
+  "result": "raised: BrokenPipeError(32, 'Broken pipe')"
+ },
+ "inject_each_call": {
+  "calls": 27,
+  "diff": [],
+  "error": [
+   [
+    1,
+    "ValueError('I/O operation on closed file.')"
+   ],
+   [
+    26,
+    "ValueError('I/O operation on closed file.')"
+   ],
+   [
+    27,
+    "ValueError('I/O operation on closed file.')"
+   ]
+  ],
+  "same": 24
+ },
+ "pipe_chaos": {
+  "double_adjacent": {
+   "diff": [
+    [
+     3,
+     2
+    ],
+    [
+     3,
+     2
+    ],
+    [
+     3,
+     2
+    ]
+   ],
+   "error": [
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     14,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     9,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     19,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     6,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     11,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     15,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     6,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     19,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     5,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     11,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     19,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     23,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     7,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     5,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     22,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     8,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     13,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     5,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     19,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     24,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ],
+    [
+     20,
+     "BrokenPipeError(32, 'Broken pipe')"
+    ]
+   ],
+   "same": 1
+  },
+  "pipe_calls": 28,
+  "single": {
+   "diff": [],
+   "error": [],
+   "same": 30
+  }
+ },
+ "truncated_ledger": {
+  "load": "raised: JSONDecodeError('Expecting value: line 1 column 647 (char 646)')"
+ }
+}
