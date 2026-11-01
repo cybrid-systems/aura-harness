@@ -1,0 +1,23 @@
+;; p14_edsl_errloc -- error message quality: does an error point at the user's file/line/form?
+;; Each case evaluates a snippet via eval-string/read and records the message; checks require a line or the offending name.
+(define (msg th) (try (begin (th) "NO-ERROR") (catch (e) (str e))))
+(define cases (list
+  (list "unbound-in-fn" (lambda () (define (f x) (+ x undefined-var-zz)) (f 1)) "undefined-var-zz")
+  (list "car-of-int" (lambda () (car 42)) "car")
+  (list "arity-user-fn" (lambda () (define (g a b) a) (g 1)) "g")
+  (list "macro-arity" (lambda () (eval '(begin (defmacro (m2 a b) (list '+ a b)) (m2 1)))) "m2")
+  (list "macro-expands-to-bad" (lambda () (eval '(begin (defmacro (mbad x) (list 'car x)) (mbad 7)))) "car")
+  (list "hygienic-arity" (lambda () (eval '(begin (define-hygienic-macro (hm a) a) (hm 1 2)))) "hm")
+  (list "type-plus-string" (lambda () (+ 1 "two")) "+")
+  (list "vector-oob" (lambda () (vector-ref (vector 1 2) 5)) "vector-ref")
+  (list "string-ref-oob" (lambda () (string-ref "ab" 9)) "string-ref")
+  (list "hash-ref-missing" (lambda () (hash-ref (hash) "nokey")) "nokey")
+  (list "apply-non-proc" (lambda () (5 1)) "5")
+  (list "rule-bad-pattern" (lambda () (eval '(begin (require std/rule) (rule:define "r" :pattern 5)))) "pattern")))
+(for-each (lambda (c)
+  (let ((m (msg (cadr c))))
+    (info! (string-append "errloc." (car c)) (format "~s" m))
+    (check! (string-append "errloc." (car c) ".is-error") (not (equal? m "NO-ERROR")) "no error raised")
+    (check! (string-append "errloc." (car c) ".names-culprit") (string-contains? m (caddr c)) (format "~s lacks ~s" m (caddr c)))))
+  cases)
+(emit "done" "ok")

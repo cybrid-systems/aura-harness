@@ -1,0 +1,36 @@
+;; p12_gc_fiber -- gc-heap while many fibers/agents hold live data and allocate.
+(define (garbage n) (let loop ((i 0)) (when (< i n) (cons i (cons i i)) (loop (+ i 1)))))
+(define (mk i) (map (lambda (k) (cons k (format "f~a-~a" i k))) (range 200)))
+(define (sum-ok? xs i) (and (= (length xs) 200) (equal? (cdr (list-ref xs 199)) (format "f~a-199" i))))
+;; 1) 32 fibers each build a private list, yield while the main fiber runs gc-heap repeatedly, then verify their list
+(define go (channel:create 64))
+(define fs (map (lambda (i) (fiber:spawn (lambda ()
+   (let ((mine (mk i)))
+     (let loop ((k 0)) (when (< k 30) (garbage 500) (fiber:yield) (loop (+ k 1))))
+     (if (sum-ok? mine i) 'ok (format "corrupt ~a" i)))))) (range 32)))
+(define gcs (map (lambda (r) (fiber:yield) (safe (lambda () (gc-heap)) 'raised)) (range 40)))
+(define rs (map (lambda (f) (safe (lambda () (fiber:join f)) 'raised)) fs))
+(info! "gcfiber.gc-results" (distinct-count (map str gcs)))
+(check! "gcfiber.fiber-data-survives" (all? (lambda (r) (eq? r 'ok)) rs) (format "~a" (list-head-safe (filter (lambda (r) (not (eq? r 'ok))) rs) 3)))
+;; 2) fibers that themselves call gc-heap concurrently
+(define g2 (map (lambda (i) (fiber:spawn (lambda () (let ((mine (mk i))) (let loop ((k 0)) (when (< k 10) (garbage 300) (gc-heap) (fiber:yield) (loop (+ k 1)))) (if (sum-ok? mine i) 'ok 'corrupt))))) (range 16)))
+(define r2 (map (lambda (f) (safe (lambda () (fiber:join f)) 'raised)) g2))
+(check! "gcfiber.concurrent-gc-calls" (all? (lambda (r) (eq? r 'ok)) r2) (format "~a" r2))
+;; 3) agents holding data across gc
+(for-each (lambda (i) (orch:spawn-agent (format "p12-a~a" i) (lambda () (let ((mine (mk i))) (let loop ((k 0)) (when (< k 20) (garbage 400) (fiber:yield) (loop (+ k 1)))) (if (sum-ok? mine i) 'ok (error "agent data corrupt")))))) (range 12))
+(define g3 (map (lambda (r) (safe (lambda () (gc-heap)) 'raised)) (range 20)))
+(define aj (map (lambda (i) (orch:agent-join (format "p12-a~a" i) :timeout-ms 8000)) (range 12)))
+(check! "gcfiber.agent-data-survives" (all? (lambda (j) (eq? #t (hg j "ok" #f))) aj) (format "~a" (map (lambda (j) (list (hg j "status" 'x) (hg j "error" ""))) aj)))
+;; 4) channel payloads in flight across gc
+(define ch (channel:create 1024))
+(for-each (lambda (i) (channel:send ch (mk i))) (range 50))
+(garbage 20000) (gc-heap) (gc-heap)
+(define got (map (lambda (i) (channel:recv ch)) (range 50)))
+(check! "gcfiber.channel-payload-survives" (all? (lambda (i) (sum-ok? (list-ref got i) i)) (range 50)) "channel payload damaged")
+;; 5) overlay values across gc
+(fiber:overlay-begin) (for-each (lambda (i) (fiber:overlay-define (format "p12-o~a" i) (mk i))) (range 20)) (fiber:overlay-commit)
+(garbage 20000) (gc-heap)
+(check! "gcfiber.overlay-values-survive" (all? (lambda (i) (sum-ok? (fiber:overlay-get (format "p12-o~a" i) (list)) i)) (range 20)) "overlay value damaged")
+(define st (stat "gc-heap-stats"))
+(info! "gcfiber.stats" (if (hash? st) (map (lambda (k) (cons k (hash-ref st k))) (hash-keys st)) st))
+(emit "done" "ok")

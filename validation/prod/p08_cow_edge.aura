@@ -69,12 +69,13 @@
 (bench! "cow.get5000.ms" (- (monotonic-ms) t6b) "ms")
 (check! "cow.define5000.all-visible" (= rd 5000) (format "~a/5000 commit=~a" rd (show cb)))
 ;; 7) 32 fibers each committing its own key 20 times: no conflicts expected on disjoint keys
+;; keys are defined first: since aura#4845 overlay-set! on an unbound name is an error
+(for-each (lambda (k) (fiber:overlay-begin) (fiber:overlay-define (format "p08-own-~a" k) -1) (fiber:overlay-commit)) (range 32))
 (define t7 (monotonic-ms))
 (define d7 (map (lambda (k) (fiber:spawn (lambda ()
   (let loop ((i 0) (fails 0)) (if (< i 20)
     (begin (fiber:overlay-begin) (fiber:overlay-set! (format "p08-own-~a" k) i) (fiber:yield)
            (loop (+ i 1) (+ fails (if (lost? (try (fiber:overlay-commit) (catch (e) (list 'conflict (str e))))) 1 0)))) fails))))) (range 32)))
-(map (lambda (k) (fiber:overlay-begin) (fiber:overlay-define (format "p08-own-~a" k) -1) (fiber:overlay-commit)) (list))
 (define f7 (map (lambda (f) (safe (lambda () (fiber:join f)) 'raised)) d7))
 (bench! "cow.disjoint32x20.ms" (- (monotonic-ms) t7) "ms")
 (info! "cow.disjoint.fails" f7)
