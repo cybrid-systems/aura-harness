@@ -25,9 +25,9 @@
   (let ((i (string-index s ":")))
     (if (< i 0) s (let* ((rest (substring s (+ i 1) (string-length s))) (j (string-index rest ":")))
                     (if (< j 0) rest (substring rest (+ j 1) (string-length rest)))))))
-;; aura#4831: this loop intermittently crashes (double free / SIGSEGV) or hangs on 02f65c038.
-;; aura#4825: in an agent body agent-recv ignores :wait/:timeout-ms (returns empty at once), so the
-;; worker polls (non-blocking recv + fiber:yield) and gives up after ~20k idle polls.
+;; aura#4831: this poll-worker + ask loop used to crash mid-run (fixed in 76dc312cd); the exit-time
+;; race with a still-running worker is still open. aura#4825 (recv :wait ignored in agent bodies) is
+;; fixed; the worker keeps polling (non-blocking recv + fiber:yield) on purpose to exercise #4831.
 (orch:spawn-agent "p02-echo" (lambda ()
   (let loop ((n 0) (idle 0))
     (let ((m (orch:agent-recv "p02-echo" :wait #f)))

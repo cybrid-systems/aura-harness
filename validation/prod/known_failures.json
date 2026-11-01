@@ -1,7 +1,4 @@
 {
- "orch.agent-join.error-not-ok": "aura#4822",
- "orch.agent-join.error-message": "aura#4822",
- "orch.recv-wait-honoured": "aura#4825",
  "file:p02_orch.aura": "aura#4831 (intermittent heap corruption / hang in agent-body poll worker + agent-ask loop)",
  "fiber.join.raise-symbol-preserved": "aura#4823",
  "fiber.join.raise-hash-preserved": "aura#4823",
