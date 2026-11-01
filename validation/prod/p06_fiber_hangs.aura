@@ -1,0 +1,22 @@
+;; p06_fiber_hangs -- joins that can block forever on the CLI thread backend (AURA_PIPELINE_STRICT=0).
+;; Own file: a hang only loses this file. 4) runs first so a rejoin hang does not hide it.
+;; 4) cancel a fiber blocked in channel:recv on an empty channel: join must return promptly
+(define ch (channel:create 4))
+(define fb (fiber:spawn (lambda () (channel:recv ch))))
+(fiber:yield)
+(define ca (safe (lambda () (fiber:cancel fb)) 'raised))
+(define tc (monotonic-ms))
+(define jb (try (list 'ok (fiber:join fb)) (catch (e) (list 'err e))))
+(define tcm (- (monotonic-ms) tc))
+(info! "fiber.cancel-blocked-recv" (format "cancel=~a join=~a after ~a ms" ca jb tcm))
+(check! "fiber.cancel-blocked-recv.returns" (< tcm 2000) (format "join took ~a ms" tcm))
+;; 2) join the same fiber twice: second join must give the same answer (value or error)
+(define fv (fiber:spawn (lambda () 7)))
+(define j1 (safe (lambda () (fiber:join fv)) 'raised))
+(define j2 (safe (lambda () (fiber:join fv)) 'raised))
+(check! "fiber.join-twice.value" (and (equal? j1 7) (equal? j2 7)) (format "~a / ~a" j1 j2))
+(define fe (fiber:spawn (lambda () (raise 'twice))))
+(define k1 (try (fiber:join fe) (catch (e) e)))
+(define k2 (try (fiber:join fe) (catch (e) e)))
+(check! "fiber.join-twice.error" (and (eq? k1 'twice) (eq? k2 'twice)) (format "~a / ~a" k1 k2))
+(emit "done" "ok")

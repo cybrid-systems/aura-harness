@@ -1,6 +1,8 @@
 {
- "file:p02_orch.aura": "aura#4831 (intermittent heap corruption / hang in agent-body poll worker + agent-ask loop)",
- "fiber.join.raise-symbol-preserved": "aura#4823",
- "fiber.join.raise-hash-preserved": "aura#4823",
- "fiber.join.error-not-relabelled": "aura#4823"
+ "file:p02_orch.aura": "aura#4831 (residual: SIGSEGV at exit while an agent-body poll worker is still live, ~2/40)",
+ "file:p01_fiber.aura": "aura#4841 (heap corruption after cancelling 64 yield-spinners, ~1/3 runs)",
+ "file:p06_fiber_hangs.aura": "aura#4840 / aura#4839 (join after cancel of a recv-blocked fiber hangs; second join of a fiber hangs)",
+ "fiber.rethrow-in-handler": "aura#4838",
+ "orch.nested.child-error-bubbles": "aura#4842",
+ "cow.misuse.set-outside-tx-no-write": "aura#4845"
 }
