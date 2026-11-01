@@ -1,0 +1,64 @@
+;; validation/lib.aura -- tiny check/bench framework, prepended to every validation/v*.aura file.
+;; Output protocol (parsed by run_validation.py):
+;;   @@check.<id>=pass|FAIL <detail>      one line per falsifiable claim
+;;   @@bench.<id>=<number> <unit>          one line per measurement
+;;   @@info.<id>=<anything>                observed behaviour worth recording
+;;   @@done=ok                             the file ran to the end (a hang / abort leaves it out)
+(define (emit k v) (display "@@") (display k) (display "=") (display v) (newline))
+(define (hg h k d) (if (and (hash? h) (hash-has-key? h k)) (hash-ref h k) d))
+(define (check! id ok detail) (emit (string-append "check." id) (if ok "pass" (format "FAIL ~a" detail))) ok)
+(define (bench! id v unit) (emit (string-append "bench." id) (format "~a ~a" v unit)))
+(define (info! id v) (emit (string-append "info." id) v))
+(define (safe th d) (try (th) (catch (e) d)))
+(define (err-of th) (try (begin (th) #f) (catch (e) (format "~a" e))))
+(define (range n) (let loop ((i (- n 1)) (acc (list))) (if (< i 0) acc (loop (- i 1) (cons i acc)))))
+(define (count-if p xs) (foldl (lambda (a x) (if (p x) (+ a 1) a)) 0 xs))
+(define (all? p xs) (= (count-if p xs) (length xs)))
+(define (str x) (format "~a" x))
+(define (sorted-strs xs) (list-sort string<? xs))
+(define (distinct-count xs) (let ((h (hash))) (for-each (lambda (x) (hash-set! h x #t)) xs) (length (hash-keys h))))
+(define (split-on s ch)
+  (let ((n (string-length s)) (c (car (string->list ch))))
+    (let loop ((i 0) (start 0) (acc (list)))
+      (cond ((= i n) (reverse (cons (substring s start n) acc)))
+            ((= (string-ref s i) c) (loop (+ i 1) (+ i 1) (cons (substring s start i) acc)))
+            (else (loop (+ i 1) start acc))))))
+(define (r3 x) (/ (round (* x 1000.0)) 1000.0))
+;; spawn a fiber whose body can never leave the coordinator blocked: the body's value or
+;; "ERR:<e>" is always sent on ch (a raised error inside a fiber otherwise just kills it).
+;; The let re-binds ch/tag inside the fiber: on 69d360068 a catch handler in a fiber body cannot
+;; see the enclosing procedure's parameters ("unbound variable"), see v10_fiber_catch.aura.
+(define (spawn-reporting ch tag th)
+  (fiber:spawn (lambda ()
+    (let ((ch ch) (tag tag) (th th))
+      (let ((v (try (th) (catch (e) (format "ERR:~a:~a" tag e)))))
+        (try (channel:send ch v) (catch (e) (channel:send ch (format "ERR:~a:send:~a" tag e)))))
+      tag))))
+;; channel:recv with a deadline (polls try-recv; "" is what try-recv returns on empty)
+(define (recv-within ch ms)
+  (let ((t0 (monotonic-ms)))
+    (let loop ()
+      (let ((v (channel:try-recv ch)))
+        (cond ((not (equal? v "")) v)
+              ((> (- (monotonic-ms) t0) ms) 'timeout)
+              (else (fiber:yield) (loop)))))))
+;; NOTE: on aura 69d360068 `equal?` only walks 64 levels and answers #t past that, so two lists
+;; that differ after element 64 compare equal (filed upstream). Compare long lists with list=?.
+(define (list=? a b)
+  (cond ((and (null? a) (null? b)) #t)
+        ((or (null? a) (null? b)) #f)
+        ((equal? (car a) (car b)) (list=? (cdr a) (cdr b)))
+        (else #f)))
+;; --- prod suite additions ---
+;; resident set size of this process in KB (reads /proc/self/status; -1 if unavailable)
+(define (rss-kb)
+  (safe (lambda ()
+    (let* ((s (read-file "/proc/self/status")) (i (string-index s "VmRSS:")))
+      (if (< i 0) -1
+          (let loop ((j (+ i 6)) (acc 0) (seen #f))
+            (let ((c (string-ref s j)))
+              (cond ((char-numeric? c) (loop (+ j 1) (+ (* acc 10) (- (char->integer c) 48)) #t))
+                    (seen acc)
+                    (else (loop (+ j 1) acc seen)))))))) -1))
+(define (stat k) (safe (lambda () (stats:get k)) #f))
+(define (list-head-safe xs n) (if (or (null? xs) (= n 0)) (list) (cons (car xs) (list-head-safe (cdr xs) (- n 1)))))

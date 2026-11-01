@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 runs/
 .scratch/
+validation/prod/results.*
+__pycache__/

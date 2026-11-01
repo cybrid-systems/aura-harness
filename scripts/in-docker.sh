@@ -15,5 +15,5 @@ for p in "$(dirname "$AURA_BIN")" "$AURA_LIB"; do mounts+=(-v "$p:$p"); done
 # --memory: a runaway rebind (cybrid-systems/aura#4583) must not take the host down
 exec $DOCKER run --rm -i --memory="${AURA_HARNESS_MEM:-4g}" --memory-swap="${AURA_HARNESS_MEM:-4g}" \
   --entrypoint bash --user "$(id -u):$(id -g)" -e HOME=/tmp "${mounts[@]}" -w "$REPO" \
-  -e AURA_BIN="$AURA_BIN" -e AURA_LIB="$AURA_LIB" -e AURA_SANDBOX=off -e AURA_PIPELINE_STRICT=0 \
+  -e AURA_BIN="$AURA_BIN" -e AURA_LIB="$AURA_LIB" -e VAL_TIMEOUT="${VAL_TIMEOUT:-}" -e AURA_SANDBOX=off -e AURA_PIPELINE_STRICT=0 \
   "$IMAGE" -c "$*"
