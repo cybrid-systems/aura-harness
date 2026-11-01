@@ -46,10 +46,21 @@ def forms(src: str) -> list[str]:
     return out
 
 
+def _aura_env() -> tuple[str, dict]:
+    """AURA_BIN + env for a child aura. AURA_LIB (set by scripts/in-docker.sh) goes on AURA_PATH: Aura only finds its
+    stdlib via AURA_PATH or a cwd-relative ../lib (cybrid-systems/aura#4824), so a copied/pinned binary run from the
+    repo root otherwise fails with "cannot resolve 'std/list'" / unbound make-hash."""
+    aura = os.environ.get("AURA_BIN") or "aura"
+    env = dict(os.environ, AURA_SANDBOX="off", AURA_PIPELINE_STRICT="0")
+    lib = os.environ.get("AURA_LIB")
+    if lib:
+        env["AURA_PATH"] = lib + (":" + env["AURA_PATH"] if env.get("AURA_PATH") else "")
+    return aura, env
+
+
 class Aura:
     def __init__(self, timeout: float = 600, workers: int | None = None):
-        aura = os.environ.get("AURA_BIN") or "aura"
-        env = dict(os.environ, AURA_SANDBOX="off", AURA_PIPELINE_STRICT="0")
+        aura, env = _aura_env()
         args = [aura, "--serve-async"] + ([f"--worker-threads={workers}"] if workers else [])
         self.p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                   text=True, bufsize=1, env=env, cwd=os.environ.get("AURA_CWD") or None)
@@ -113,8 +124,7 @@ def _cli(expr: str, timeout: float = 600, supervisor: bool = False, trace: bool 
     """CLI backend: one process per run; returns (last display line, peak RSS kB, wall ms). trace=True turns on the
     per-task trace rows (aura/swarm.aura trace-on); they are left in _LAST_TRACE[0]."""
     import tempfile
-    aura = os.environ.get("AURA_BIN") or "aura"
-    env = dict(os.environ, AURA_SANDBOX="off", AURA_PIPELINE_STRICT="0")
+    aura, env = _aura_env()
     with tempfile.NamedTemporaryFile("w", suffix=".aura", delete=False) as fh:
         # evaluate first: runtime warnings printed during the run must not split the @@ line
         src = SWARM.read_text() + (("\n" + SUPERVISOR.read_text()) if supervisor else "")

@@ -3,7 +3,7 @@
 #   AURA_BIN=~/aura/build-rel/aura scripts/in-docker.sh 'python3 -m aura_harness bench'
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${AURA_IMAGE:-ghcr.io/cybrid-systems/dev:v1.0.9}"
+IMAGE="${AURA_IMAGE:-ghcr.io/cybrid-systems/dev:v1.1.1}"
 : "${AURA_BIN:?set AURA_BIN to an Aura build-rel/aura}"
 if [ -z "${AURA_LIB:-}" ]; then
   if [ -d "$(dirname "$AURA_BIN")/lib" ]; then AURA_LIB="$(cd "$(dirname "$AURA_BIN")/lib" && pwd)"
