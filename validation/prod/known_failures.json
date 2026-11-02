@@ -1,23 +1,7 @@
 {
- "orch.nested.child-error-bubbles": "aura#4853 / aura#4842 (agent-body scope-join-all after earlier scope activity in the same process: err-count 0 / timeout; force-soa and --serve-async-bench still wrong)",
- "file:p09_observe_concurrent.aura": "aura#4853 / aura#4847 (concurrent agents each with a scope: inner joins time out; heap corruption / SIGABRT before @@done)",
- "observe.concurrent48.status-per-agent": "aura#4850 (symbol raised in an agent body is reported as \"runtime error\")",
- "observe.concurrent-scopes.all-joined-ok": "aura#4853",
- "orchfail.kinds.message-kept": "aura#4850",
- "orchfail.chain3.leaf-msg-at-top": "aura#4853 (agent -> agent -> scope child: mid join times out, leaf error lost)",
- "orchfail.cancel-policy.prompt": "aura#4851",
- "orchfail.cancel-policy.siblings-cancelled": "aura#4851",
- "orchfail.policy-typo.rejected": "aura#4851",
- "orchfail.restart.reran-or-says-why": "aura#4858 (join-all restart never reruns; restart counters all 0)",
- "orchfail.retry-loop.ok": "aura#4853 (second and later scope-join-all rounds in one agent time out)",
- "gcfiber.overlay-values-survive": "aura#4849 (pending overlay values are not GC roots)",
- "leak.agent-spawn-join.bounded": "aura#4854",
- "leak.agent-error-join.bounded": "aura#4854",
- "leak.scope-batch.bounded": "aura#4854",
- "leak.channel-create.bounded": "aura#4854",
- "leak.eval-datum.bounded": "aura#4854",
- "soak.rss-bounded": "aura#4854",
- "errloc.type-plus-string.names-culprit": "aura#4855",
- "errloc.hash-ref-missing.is-error": "aura#4855",
- "errloc.hash-ref-missing.names-culprit": "aura#4855"
+ "file:p09_observe_concurrent.aura": "aura#4860 (d44d1077e: 8 fibers calling stats:get \"gc-heap-stats\" while agents run -> double free / SIGABRT before @@done, 5/6 runs; concurrent scope joins themselves are fixed)",
+ "observe.scope-join.documented": "aura#4861 (restart-exhausted / restart-max keys in the scope-join report are not in docs/orch-join-report.md)",
+ "orchfail.restart-recovered.status-ok": "aura#4861 (restart-n child that eventually succeeds is still reported ok #f / partial)",
+ "leak.channel-create.bounded": "aura#4854 (d44d1077e: agent/scope/eval fixed, channel-create still ~0.77 KB per channel)",
+ "soak.rss-bounded": "aura#4854 (d44d1077e 600 s soak: 102 MB -> 336 MB, ~38 KB/round; 60 s suite run passes)"
 }

@@ -52,9 +52,20 @@
 (check! "orchfail.restart.reran-or-says-why" (or (> (hash-ref attempts "n") 1) (> (hg rj "restart-skipped-no-spec" 0) 0)) (format "attempts=~a attempted=~a skipped=~a" (hash-ref attempts "n") (hg rj "restart-attempted" 'x) (hg rj "restart-skipped-no-spec" 'x)))
 ;; 5) unknown :on-join-fail value: silently report-only? record
 (orch:scope-spawn "p11-typo" (lambda () (error "x")))
-(define yj (orch:scope-join-all :timeout-ms 2000 :on-join-fail "cancle"))
-(info! "orchfail.policy-typo" (format "eff=~a status=~a" (hg yj "on-join-fail-effective" 'x) (hg yj "status" 'x)))
-(check! "orchfail.policy-typo.rejected" (not (equal? (str (hg yj "on-join-fail-effective" "")) "report-only")) (format "typo 'cancle' silently became ~a" (hg yj "on-join-fail-effective" 'x)))
+;; since aura d44d1077e (#4851) an unknown policy raises a type error -- that counts as rejected
+(define yj (try (orch:scope-join-all :timeout-ms 2000 :on-join-fail "cancle") (catch (e) (list 'raised (format "~a" e)))))
+(define yj-raised (and (pair? yj) (eq? (car yj) 'raised)))
+(info! "orchfail.policy-typo" (if yj-raised (cadr yj) (format "eff=~a status=~a" (hg yj "on-join-fail-effective" 'x) (hg yj "status" 'x))))
+(check! "orchfail.policy-typo.rejected" (or yj-raised (not (equal? (str (hg yj "on-join-fail-effective" "")) "report-only"))) (format "typo 'cancle' silently became ~a" (if yj-raised 'raised (hg yj "on-join-fail-effective" 'x))))
+(safe (lambda () (orch:scope-join-all :timeout-ms 2000)) #f)
+;; 5b) restart-n with enough fuel: child fails twice then succeeds -> report should say ok (aura#4861)
+(define attempts2 (hash))
+(hash-set! attempts2 "n" 0)
+(orch:scope-spawn "p11-flaky2" (lambda () (hash-set! attempts2 "n" (+ 1 (hash-ref attempts2 "n"))) (if (< (hash-ref attempts2 "n") 3) (error "flaky2") 'finally)))
+(define rk (orch:scope-join-all :timeout-ms 5000 :on-join-fail "restart-n" :max-restarts 3))
+(info! "orchfail.restart-recovered" (format "attempts=~a status=~a ok=~a err=~a restart-ok=~a restart-exhausted=~a" (hash-ref attempts2 "n") (hg rk "status" 'x) (hg rk "ok" 'x) (hg rk "err-count" 'x) (hg rk "restart-ok" 'x) (hg rk "restart-exhausted" 'x)))
+(check! "orchfail.restart-recovered.reran" (= (hash-ref attempts2 "n") 3) (format "attempts=~a" (hash-ref attempts2 "n")))
+(check! "orchfail.restart-recovered.status-ok" (eq? (hg rk "ok" #f) #t) (format "status=~a ok=~a err=~a" (hg rk "status" 'x) (hg rk "ok" 'x) (hg rk "err-count" 'x)))
 ;; 6) app-level retry loop: an agent retries a flaky scope child 5x; total time bounded
 (define t6 (monotonic-ms))
 (orch:spawn-agent "p11-retrier" (lambda ()
