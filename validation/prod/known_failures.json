@@ -1,7 +1,4 @@
 {
- "file:p09_observe_concurrent.aura": "aura#4860 (d44d1077e: 8 fibers calling stats:get \"gc-heap-stats\" while agents run -> double free / SIGABRT before @@done, 5/6 runs; concurrent scope joins themselves are fixed)",
- "observe.scope-join.documented": "aura#4861 (restart-exhausted / restart-max keys in the scope-join report are not in docs/orch-join-report.md)",
- "orchfail.restart-recovered.status-ok": "aura#4861 (restart-n child that eventually succeeds is still reported ok #f / partial)",
- "leak.channel-create.bounded": "aura#4854 (d44d1077e: agent/scope/eval fixed, channel-create still ~0.77 KB per channel)",
- "soak.rss-bounded": "aura#4854 (d44d1077e 600 s soak: 102 MB -> 336 MB, ~38 KB/round; 60 s suite run passes)"
+ "observe.scope-join.documented": "aura#4868 (217a7690e: attempt-errors / restart-exhausted / restart-max in the scope-join report are not in docs/orch-join-report.md)",
+ "soak.rss-bounded": "aura#4854 (217a7690e 600 s soak: 4161 rounds, 103 MB -> 260 MB, ~38 KB/round, round time 34 -> 304 ms; agent/scope keep ~0.8 KB each; 60 s suite run passes)"
 }
