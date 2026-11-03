@@ -1,9 +1,4 @@
 {
-  "soak.rss-bounded": "aura#4854 (04c69b1b5 600 s soak: 10825 rounds, 99 MB -> 352 MB, ~24.5 KB/round, round time 30 -> 79 ms; fiber residual fixed, remaining growth = agent-join of an erroring agent inside foldl, see p19; 60 s suite run passes)",
-  "leak.err-join-foldl-bounded": "aura#4854 (04c69b1b5: ~22 KB per agent-join of an erroring agent called from a foldl lambda; map/for-each are flat)",
-  "fiber.rejoin.after-1600": "aura#4872 (04c69b1b5: re-joining a fiber evicted from the 1024-entry joined cache blocks forever instead of returning)",
-  "proddef.vector-fill-denied": "aura#4874 (Restricted: vector-fill! skips the Mutate gate that vector-set!/string-fill! honour)",
-  "proddef.two-blocking-workers-answer": "aura#4873 (intermittent: a worker blocked in agent-recv :wait #t keeps the other agent from running until its recv times out)",
-  "proddef.blocked-recv-does-not-starve-spawn": "aura#4873 (intermittent: second agent starts only after the first agent's blocking agent-recv times out)",
-  "proddef.user-macro-expands": "aura#4876 (04c69b1b5, Restricted: expanding a user define-hygienic-macro/defmacro fails with 'internal error: capability-deny', no location; aura soft does not grant it)"
+  "proddef.user-macro-expands": "aura#4876 (reopened on 420b8d577: inside eval/try the Restricted macro deny is still a bare 'internal error: capability-deny'; the top-level driver now names macro-self-evo)",
+  "proddef.user-defmacro-diagnostic": "aura#4876 (reopened on 420b8d577: a defmacro expansion under Restricted still fails with a bare 'internal error: capability-deny', no macro-self-evo hint)"
 }

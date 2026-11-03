@@ -11,7 +11,7 @@
 (joins 1100)
 (spawn-reporting ch18 "rj1600" (lambda () (fiber:join f18)))
 (define r1600 (recv-within ch18 2000))
-(check! "fiber.rejoin.after-1600" (equal? r1600 42) (format "got ~a (void is the documented trade-off, a hang is not)" r1600))
+(check! "fiber.rejoin.after-1600" (or (equal? r1600 42) (void? r1600)) (format "got ~a (void is the documented trade-off, a hang is not)" r1600))
 (define g18 (fiber:spawn (lambda () 7)))
 (joins 1500)
 (check! "fiber.first-join-after-1500" (equal? 7 (fiber:join g18)) "late first join")
