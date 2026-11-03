@@ -7,6 +7,7 @@
   "reclaimed-count" "must-wait-count" "reservation-held-count" "cleanup-pending-count" "wait-reclaimed" "wait-timeout"
   "on-join-fail-effective" "join-fail-action-taken" "restart-attempted" "restart-skipped-no-spec" "restart-ok" "restart-denied"
   "restart-deny-class" "tree" "tree-settled" "descendants-live" "swept-cleaned" "swept-still-pending" "isolation-level"
+  "restart-max" "restart-exhausted" "attempt-errors" ;; documented by aura#4868 (dd7da85c0)
   "region-key-missing" "region-key-missing-serialized" "distinct-region-keys"))
 (define (undocumented ks doc) (filter (lambda (k) (not (member k doc))) ks))
 ;; 1) agent-join default report == documented keys, no markers; :debug is a superset
