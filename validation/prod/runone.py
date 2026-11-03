@@ -4,16 +4,20 @@ group on timeout, and keep every line printed before the hang.  Used by run_vali
 import os, pty, select, signal, subprocess, sys, time
 
 
-def run(path, timeout=120.0, env=None, cwd=None):
+def run(path, timeout=120.0, env=None, cwd=None, unset=()):
+    """unset: env var names removed after the defaults are applied (e.g. the production-default
+    face: no AURA_SANDBOX, no AURA_PIPELINE_STRICT)."""
     aura = os.environ["AURA_BIN"]
     lib = os.environ.get("AURA_LIB")  # aura only finds its stdlib via AURA_PATH / cwd ../lib (aura#4824)
     if lib and lib not in os.environ.get("AURA_PATH", "").split(":"):
         env = {"AURA_PATH": lib + (":" + os.environ["AURA_PATH"] if os.environ.get("AURA_PATH") else ""), **(env or {})}
     m, s = pty.openpty()
     t0 = time.monotonic()
+    penv = {**os.environ, "AURA_SANDBOX": "off", "AURA_PIPELINE_STRICT": "0", **(env or {})}
+    for k in unset:
+        penv.pop(k, None)
     p = subprocess.Popen([aura, "--load", path], stdin=subprocess.DEVNULL, stdout=s, stderr=s,
-                         start_new_session=True, cwd=cwd,
-                         env={**os.environ, "AURA_SANDBOX": "off", "AURA_PIPELINE_STRICT": "0", **(env or {})})
+                         start_new_session=True, cwd=cwd, env=penv)
     os.close(s)
     buf, timed_out = bytearray(), False
     while True:

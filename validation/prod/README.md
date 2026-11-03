@@ -20,11 +20,14 @@ AURA_BIN=/path/aura VAL_TIMEOUT=240 scripts/in-docker.sh 'python3 validation/pro
 | p10_fiber_cow | fiber + overlay：16 个 fiber 计数器无丢失更新，子 fiber 不读到未提交值，rollback，悬空事务，agent 写不相交 key，取消 32 个事务中的 fiber |
 | p11_orch_failure | 各种 error 载荷在 agent-join 中的样子（#4850），agent→agent→scope 三层错误冒泡、agent 内多轮重试（#4853），`:on-join-fail` cancel / 拼错（#4851，已修，拼错现在抛类型错误）/ restart（#4858，已修）/ restart-n 最终成功后的报告（#4861，已修） |
 | p12_gc_fiber | fiber、agent、channel 持有的数据在并发 gc-heap 后完整；未提交 overlay 值在 GC 后完整（#4849，已修） |
-| p13_leak | 每类操作 10 批的 RSS 斜率：fiber、agent、scope、overlay、channel、eval、string/hash、try/catch（bf93198e3 上 agent / scope / channel / eval 已有界，#4854 的 orch 结果 hash 泄漏已修；fiber spawn+join 每个仍约 80 B，见 #4854） |
+| p13_leak | 每类操作 10 批的 RSS 斜率：fiber、agent、scope、overlay、channel、eval、string/hash、try/catch（bf93198e3 上 agent / scope / channel / eval 已有界，#4854 的 orch 结果 hash 泄漏已修；04c69b1b5 上 fiber spawn+join 降到每个约 8 B） |
 | p14_edsl_errloc | 常见错误（未绑定、类型、arity、越界、宏、rule）是否报错并点名出错位置（#4855 已修：类型错误点名运算符，hash-ref 缺键报错） |
-| p15_soak | 混合负载（fiber/agent/scope/COW/channel/gc）跑 `SOAK_SEC` 秒（套件默认 60，10 分钟 soak 设 600）：无失败轮次、COW 计数 = 4×轮数、后半程 RSS 有界（#4854：735135de6 上 600 s 内 100 MB → 1.06 GB；d44d1077e 上 6115 轮 102 MB → 336 MB，约 38 KB/轮，每轮耗时 28 → 139 ms，仍未有界；217a7690e 上 4161 轮 103 MB → 260 MB，约 38 KB/轮，每轮耗时 34 → 304 ms；bf93198e3 上 5006 轮 103 MB → 246 MB，约 28 KB/轮，每轮耗时 30 → 209 ms，残留来自 fiber，#4854 再次重开） |
+| p15_soak | 混合负载（fiber/agent/scope/COW/channel/gc）跑 `SOAK_SEC` 秒（套件默认 60，10 分钟 soak 设 600）：无失败轮次、COW 计数 = 4×轮数、后半程 RSS 有界（#4854：735135de6 上 600 s 内 100 MB → 1.06 GB；d44d1077e 上 6115 轮 102 MB → 336 MB，约 38 KB/轮，每轮耗时 28 → 139 ms，仍未有界；217a7690e 上 4161 轮 103 MB → 260 MB，约 38 KB/轮，每轮耗时 34 → 304 ms；bf93198e3 上 5006 轮 103 MB → 246 MB，约 28 KB/轮，每轮耗时 30 → 209 ms，残留来自 fiber，#4854 再次重开；04c69b1b5 上 10825 轮 99 MB → 352 MB，约 24.5 KB/轮，每轮耗时 30 → 79 ms，残留定位到 foldl 里 agent-join 出错 agent，见 p19，#4854 再次重开） |
 | p16_orch_args | orch 关键字参数校验（#4867，已修）：`:timeout-ms` 传字符串、关键字拼错、agent-join 负超时都要报错；同名存活 agent 二次 spawn 被拒、第一个照常跑完；阻塞 `agent-recv :wait #t` 的 ask/reply worker 自行退出（空闲阻塞 worker 退出时崩溃见 #4871） |
+| p17_prod_default | 生产默认（首行 `@@prod-default`：不设 `AURA_SANDBOX` / `AURA_PIPELINE_STRICT`）：agent / scope body 执行、嵌套 scope、agent-ask、无 `:region-key` 并发 spawn 明确被拒、带 region-key 并发 spawn、两个阻塞 worker 都应答（偶发失败 #4873）、阻塞 recv 不饿死后续 spawn（#4873）、Restricted 下 vector-set! / hash-set! 被拒、vector-fill! 被拒（未拒，#4874） |
+| p18_fiber_rejoin | 已 join 的 fiber 再 join：立即、隔 500 / 1600 次其它 join 后；首次 join 在 1500 次之后（隔 1600 次后再 join 会挂住，fiber:join 缓存 1024 项 FIFO，#4872） |
+| p19_join_err_foldl | foldl / map 里 agent-join 出错 agent 的 RSS 斜率（map 有界；foldl 每次约 22 KB，#4854 的 soak 残留） |
 
 `known_failures.json` 列出对应上游 open issue 的已知失败；用 `--allow-known` 时会被容忍。`file:<name>` 表示整个文件未跑完属于已知问题。跑到 `@@done` 之后退出时崩溃（#4847）不计为失败。结果写入 `results.json` 和 `results.md`（不入库）。
 
-最近一次结果（aura `bf93198e3`，dev:v1.1.1，默认配置，`AURA_SANDBOX=off`）：16 个文件，139 项通过、0 项失败。60 s soak 通过；600 s soak 仍未有界（见 p15，#4854）。生产默认不设 `AURA_SANDBOX=off` 时 agent / scope body 不执行，见 #4870。
+最近一次结果（aura `04c69b1b5`，dev:v1.1.1，默认配置 `AURA_SANDBOX=off`，p17 为生产默认）：19 个文件，153 项通过、4 项已知失败（#4874 vector-fill! 未拒、#4876 宏 capability-deny、#4872 fiber 再 join 挂住、#4854 foldl 里 join 出错 agent 泄漏），0 项新失败。60 s soak 通过；600 s soak 10825 轮 99 MB → 352 MB 仍未有界（见 p15/p19，#4854）。p17 的两项 #4873 检查是间歇性的，本次通过。

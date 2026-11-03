@@ -30,11 +30,15 @@ LINE = re.compile(r"^@@([^=]+)=(.*)$")
 
 def run_one(path: Path, timeout: int):
     lib = (HERE / "lib.aura").read_text()
+    src = path.read_text()
+    # a file whose first line has "@@prod-default" runs on the production-default face:
+    # AURA_SANDBOX and AURA_PIPELINE_STRICT unset (aura#4870), instead of SANDBOX=off STRICT=0
+    unset = ("AURA_SANDBOX", "AURA_PIPELINE_STRICT") if "@@prod-default" in src.splitlines()[0] else ()
     with tempfile.NamedTemporaryFile("w", suffix=".aura", delete=False, dir="/tmp") as tf:
-        tf.write(lib + "\n" + path.read_text())
+        tf.write(lib + "\n" + src)
         tmp = tf.name
     try:
-        r = run_file(tmp, timeout)
+        r = run_file(tmp, timeout, unset=unset)
     finally:
         os.unlink(tmp)
     checks, benches, infos, done = {}, {}, {}, False

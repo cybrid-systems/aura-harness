@@ -1,0 +1,16 @@
+;; p19_join_err_foldl -- joining an agent whose body raised, from inside a foldl lambda, must not retain memory
+;; (aura#4854 residual on 04c69b1b5: ~22 KB per call, gc-heap does not reclaim; map / for-each are flat).
+;; This is what keeps the 600 s p15 soak unbounded (its count-if is a foldl over agent-join results).
+(define (leak-per-iter body n)
+  (let loop ((r 0) (k1 0))
+    (if (>= r n) (quotient (* 1024 (- (rss-kb) k1)) (- n (quotient n 4)))
+        (begin (body r) (when (= 0 (modulo r 5)) (gc-heap))
+               (loop (+ r 1) (if (= r (quotient n 4)) (rss-kb) k1))))))
+(define (erragent r) (let ((nm (format "p19-~a" r))) (orch:spawn-agent nm (lambda () (error "planned"))) nm))
+(define b-map (leak-per-iter (lambda (r) (let ((nm (erragent r))) (map (lambda (k) (hash-ref (orch:agent-join nm :timeout-ms 5000) "ok")) (list 1)))) 1200))
+(define b-fold (leak-per-iter (lambda (r) (let ((nm (erragent (+ r 100000)))) (foldl (lambda (a k) (hash-ref (orch:agent-join nm :timeout-ms 5000) "ok")) 0 (list 1)))) 1200))
+(bench! "leak.err-join-map" b-map "B/iter")
+(bench! "leak.err-join-foldl" b-fold "B/iter")
+(check! "leak.err-join-map-bounded" (< b-map 2048) (format "~a B/iter" b-map))
+(check! "leak.err-join-foldl-bounded" (< b-fold 2048) (format "~a B/iter" b-fold))
+(emit "done" "ok")
