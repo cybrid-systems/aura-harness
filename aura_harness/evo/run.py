@@ -43,6 +43,11 @@ class Cfg:
     hv_target: float | None = None
     polish_rounds: int = 2
     polish_cap: int = 84
+    # Cheap-first polish: when surrogate screening is on, every coordinate
+    # probe is scored on one cheap stream (1 seed x 200 tasks) and only the
+    # best `polish_full` *distinct genes* pay the full 5-stream evaluation.
+    # 0 keeps the old behaviour (full-evaluate every probe).
+    polish_full: int = 16
     max_gens: int = 36
     log: str = ""
     tag: str = "run"
@@ -231,10 +236,10 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
         nonlocal elite, tip, full_evals, cheap_evals
         chosen = list(range(len(uniq)))
         screen_info = None
-        # The prescreen ranks free-form proposals (MOEA/D offspring and
-        # grammar mutations). The structured polish batch is not screened:
-        # every neighbour tests one gene, and dropping probes there starves
-        # the search of exactly the moves that change a discrete choice.
+        # Free-form proposals (MOEA/D offspring, grammar mutations) are
+        # ranked by the GP/kNN surrogate below. The structured polish batch
+        # gets the cheaper screen: one held-out stream per probe, ranked by
+        # distance to the acceptance point (see polish_prefilter).
         structured = bool(uniq) and uniq[0].get("origin") == "polish"
         if cfg.surrogate and cfg.prescreen and not structured and len(X) >= 8 and uniq:
             k = max(1, math.ceil(len(uniq) * 0.4))
@@ -249,7 +254,54 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
         # the full 5-stream evaluation. The margin keeps a candidate whose
         # single-seed estimate is noisy but whose mean is good.
         quick: dict[int, float] = {}
-        if cfg.staged and cfg.race and structured and len(chosen) > 1 and full_evals >= cfg.ask:
+        # Cheap-first polish (Issue #4943, second cut). The memetic sweep is
+        # the expensive phase: 84 coordinate probes per target, four targets
+        # per seed. Score every probe on the cheap stream first, keep the best
+        # probe *per gene* (a sweep tests one gene at a time, so keeping the
+        # top 12 raw scores would spend the budget on five values of one
+        # gene), then send only those to the full held-out evaluation. Every
+        # dropped probe stays in the log with its cheap score, so the
+        # false-kill audit can spot-check them.
+        polish_prefilter = None
+        if (cfg.surrogate and cfg.prescreen and structured and not quick
+                and cfg.polish_full > 0 and full_evals >= cfg.ask
+                and len(uniq) > cfg.polish_full):
+            cheap_all: dict[int, tuple] = {}
+            for i, c in enumerate(uniq):
+                tbl = G.decode(c["genome"])
+                if check(tbl, boundary):
+                    continue
+                q = evaluate(tbl, seeds=(cfg.seeds[0],), n=200)
+                cheap_evals += 1
+                cheap_all[i] = (q["success"], q["tokens"])
+            # Rank by distance to the issue's acceptance point, not by raw
+            # cheap success: on this bench success saturates while tokens is
+            # the binding objective, so a success-only ranking forwards
+            # candidates that can never satisfy the token cut.
+            isucc = baseline["issue"]["success"]
+            itok = 0.90 * baseline["issue"]["tokens"]
+
+            def goal_key(sc):
+                succ, tok = sc
+                ds = max(0.0, isucc - succ) / 0.05
+                dt = max(0.0, tok - itok) / 600.0
+                passed = 0.5 if (succ >= isucc and tok <= itok) else 0.0
+                return (passed - (ds * ds + dt * dt), succ, -tok)
+
+            by_gene: dict[object, tuple] = {}
+            for i, sc in cheap_all.items():
+                gk = uniq[i].get("gene", i)
+                if gk not in by_gene or goal_key(sc) > by_gene[gk][0]:
+                    by_gene[gk] = (goal_key(sc), i)
+            ranked = sorted(by_gene.values(), key=lambda e: e[0], reverse=True)
+            chosen = [i for _sc, i in ranked[:cfg.polish_full]]
+            for i in chosen:
+                quick[i] = cheap_all[i][0]
+            polish_prefilter = {"n": len(uniq), "cheap": len(cheap_all),
+                                "kept": len(chosen)}
+            screen_info = {"k": len(chosen), "n": len(uniq), "cold": False,
+                           "rows": [], "polish": polish_prefilter}
+        if cfg.staged and cfg.race and structured and not quick and len(chosen) > 1 and full_evals >= cfg.ask:
             for i in chosen:
                 tbl = G.decode(uniq[i]["genome"])
                 if check(tbl, boundary):
@@ -368,7 +420,8 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
                          "grammar_props": len(pr.get("props", [])),
                          "screen": None if screen_info is None else
                          {"k": screen_info["k"], "n": screen_info["n"],
-                          "cold": screen_info["cold"]}})
+                          "cold": screen_info["cold"],
+                          "polish": screen_info.get("polish")}})
         print(f"[{cfg.tag}] gen {gen:2d} pool={len(pool):2d} eval={len(evals):2d} "
               f"full={full_evals:3d} front={len(front):2d} hv={hv:.2f} "
               f"dom={st['dominates_baseline']} cut={st['token_cut_10']}", flush=True)

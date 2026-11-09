@@ -38,6 +38,8 @@ def main(argv=None) -> int:
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--polish-rounds", type=int, default=2)
     ap.add_argument("--polish-cap", type=int, default=84)
+    ap.add_argument("--polish-full", type=int, default=16,
+                    help="cheap-first polish: full evaluations kept per sweep (0 = all)")
     ap.add_argument("--max-gens", type=int, default=36)
     ap.add_argument("--baseline", default=str(DEFAULT_BASELINE))
     ap.add_argument("--out", default=str(ROOT / "results" / "evo" / "moead"))
@@ -64,6 +66,7 @@ def main(argv=None) -> int:
                   staged=not a.no_staged, gate=a.gate,
                   hv_target=a.hv_target, max_gens=a.max_gens,
                   polish_rounds=a.polish_rounds, polish_cap=a.polish_cap,
+                  polish_full=a.polish_full,
                   race_margin=a.race_margin, race=a.race,
                   restarts_at=tuple(range(3, max(3, a.max_gens), 4))[:a.restarts] if a.restarts else (),
                   tag=a.tag)

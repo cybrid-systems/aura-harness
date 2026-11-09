@@ -1,0 +1,119 @@
+{
+ "mean": {
+  "success": 0.6532,
+  "tokens": 7639.7244,
+  "latency": 96.78620000000001
+ },
+ "per_table": [
+  {
+   "seed": 0,
+   "kept": [
+    "compress code-file head/1600",
+    "ttl test-cmd=40",
+    "compress test-log tail/800",
+    "compress service-log grep-errors/800",
+    "route edit->apply-patch",
+    "route search->rg-json",
+    "delegate refactor>=6",
+    "delegate refactor>=4",
+    "ttl repo-layout=40",
+    "retry sql|rate-limit=3"
+   ],
+   "success": 0.789,
+   "tokens": 10459.9215,
+   "tokens_heldout": 10388.978,
+   "latency": 78.293
+  },
+  {
+   "seed": 1,
+   "kept": [
+    "compress code-file summarize/800",
+    "compress test-log tail/800",
+    "ttl db-schema=40",
+    "route edit->apply-patch",
+    "ttl test-cmd=40",
+    "compress service-log grep-errors/800",
+    "ttl repo-layout=40",
+    "compress code-file tail/800",
+    "ttl repo-layout=80",
+    "delegate refactor>=2",
+    "retry sql|rate-limit=3",
+    "route search->lsp-find",
+    "compress code-file tail/1600",
+    "ttl test-cmd=80"
+   ],
+   "success": 0.503,
+   "tokens": 5411.7665,
+   "tokens_heldout": 5282.258,
+   "latency": 80.66
+  },
+  {
+   "seed": 2,
+   "kept": [
+    "route edit->apply-patch",
+    "compress test-log tail/800",
+    "compress code-file head/1600",
+    "ttl db-schema=40",
+    "ttl test-cmd=160",
+    "compress service-log grep-errors/800",
+    "delegate refactor>=2",
+    "retry grep|timeout=3",
+    "ttl test-cmd=0",
+    "ttl repo-layout=40",
+    "ttl test-cmd=40"
+   ],
+   "success": 0.797,
+   "tokens": 9156.513,
+   "tokens_heldout": 9161.239,
+   "latency": 98.586
+  },
+  {
+   "seed": 3,
+   "kept": [
+    "route edit->apply-patch",
+    "ttl db-schema=40",
+    "compress test-log grep-errors/800",
+    "ttl test-cmd=40",
+    "compress code-file head/1600",
+    "compress service-log grep-errors/800",
+    "ttl repo-layout=40",
+    "retry grep|timeout=3",
+    "delegate refactor>=5",
+    "retry sql|rate-limit=3",
+    "route search->lsp-find",
+    "delegate refactor>=2"
+   ],
+   "success": 0.504,
+   "tokens": 5466.138,
+   "tokens_heldout": 5375.016,
+   "latency": 82.682
+  },
+  {
+   "seed": 4,
+   "kept": [
+    "compress test-log tail/800",
+    "compress code-file summarize/800",
+    "ttl test-cmd=40",
+    "route edit->apply-patch",
+    "ttl db-schema=160",
+    "compress service-log grep-errors/800",
+    "ttl repo-layout=160",
+    "ttl test-cmd=10",
+    "retry sql|rate-limit=3",
+    "retry grep|timeout=3",
+    "ttl repo-layout=40",
+    "delegate refactor>=6",
+    "ttl db-schema=40"
+   ],
+   "success": 0.673,
+   "tokens": 7704.283,
+   "tokens_heldout": 7718.166,
+   "latency": 143.71
+  }
+ ],
+ "issue": {
+  "success": 0.634,
+  "tokens": 8377.0,
+  "latency": 96.78620000000001
+ }
+}
