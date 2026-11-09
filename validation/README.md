@@ -1,5 +1,9 @@
 # aura-harness 验证报告：RSI 与它依赖的 Aura 能力
 
+> v0.2 的 evo 验证（MOEA/D 三目标、prop:grammar、surrogate、`evo:record!` 重启谱系）单独成篇：
+> [`validation/evo-report.md`](evo-report.md)，脚本 `validation/evo_validate.py` / `evo_report.py`，
+> 原始结果在 `results/evo/`。本文件保留 2026-10-30 的 RSI / Aura 原语验证（含那条审计 FAIL 的历史记录）。
+
 2026-10-30（UTC+8）。Aura **main 69d360068**（CI 镜像 `ghcr.io/cybrid-systems/dev:v1.0.9` 构建，下称 main）。A/B 对照用仓库原 pin **a6c63aa19**（下称 pin）。机器：8 核 / 16 GB 的共享机器，负载 4–50 不等，所以延迟数字只在同一时段的 A/B 内比较。
 
 全部脚本在本目录。`run_all.sh` 一键复跑，`ab.sh` 做 main/pin 对照，结果（JSON / 文本）在 `results/`。

@@ -28,7 +28,7 @@ Everything is offline and reproducible from seeds. No LLM key is needed. There a
 | 中途崩溃可恢复 | 在每个调用点注入 kill、管道层单次 / 相邻两次 kill、重放中崩溃、异步 SIGKILL、截断的 ledger | 修复前 FAIL（closed-file ValueError、重放中崩溃时中止、截断的 ledger 无法加载）；**本次已修复 supervisor / ledger，修复后全部 PASS** |
 | 守卫挡住越界改动 | 20 个逃逸样本 × ws / snap | PASS：18/18 被挡，2 个合法对照被放行 |
 | 门控不接受有害改动 | 混入 "ttl all 0" 等合法但有害的候选 | 部分 FAIL：better() 在 5 个 seed 中有 4 个共 KEEP 了 8 次，成本 +5–23%；统计准入能挡住，但 n=400 时几乎不 KEEP |
-| 审计可追溯 | 重启 2 次后检查 LOG | FAIL：进程内 LOG 丢失，重放被记成 keep-ungated；持久可信的只有 host ledger |
+| 审计可追溯 | 重启 2 次后检查 LOG | v0.2 起 **PASS**：审计改为 `evo:record!` worldline（`AURA_EVO_LOG`，一行一个 JSON），重启时从文件读回 tip/parent 后继续；5 个 seed 各强杀 2 次，`aura evo log --lineage <tip>` 的链都能追到根，跨 3 个进程 run id。旧实现（进程内 LOG）的 FAIL 保留在 [`validation/README.md`](validation/README.md)，见 [`validation/evo-report.md`](validation/evo-report.md) §4 |
 | 多 actor 下 KEEP 不吞改动 | TRIAL → 另一个 APPLY → KEEP | ws 模式 FAIL（APPLY 丢失，aura#4776）；snapshot 模式 PASS |
 
 **Aura 原语**：
@@ -39,6 +39,30 @@ Everything is offline and reproducible from seeds. No LLM key is needed. There a
 - #4729 在 main 上已修复。
 
 **基准**（同一时段的 A/B）：守卫变更往返 main 17.1 ms vs pin 11.3 ms；longrun 600 步 APPLY p50 115 vs 69 ms。两个构建的 APPLY / TRIAL 都随步数线性增长。
+
+## v0.2：三目标 MOEA/D 替换手写 KEEP/DROP（#4946）
+
+v0.2 把上面这条字典序门（"held-out 成功数更多，或持平且 token 少 ≥3%"）换成了多目标搜索。
+完整报告见 [`validation/evo-report.md`](validation/evo-report.md)，原始结果在 `results/evo/`。
+
+| 旧 | 新 |
+|---|---|
+| `better()`：单目标字典序，KEEP/DROP | `std/moead`（Tchebycheff，DE + 多项式变异）+ `std/pareto` 前沿：成功率↑ / tokens↓ / 延迟↓ |
+| 提案器手写一个组件 | `std/proposer` 的 `prop:grammar`（自带 scope guard）；`prop:llm` 接口保留、默认关闭、不联网 |
+| 进程内 LOG | `evo:record!` worldline（`AURA_EVO_LOG`），重启后从文件恢复 tip |
+| 无 | `std/surrogate` 预筛 + `evo:staged-eval` 低成本筛选 |
+
+- 搜索在 `aura/evo_server.aura`（Aura 侧），宿主的 `aura_harness/evo/` 只做模拟评测；genome 是 38 个可变基因，受保护的 4 个 define 没有基因位，每个候选还要过 `post_check`。
+- 5 个 seed，每个 seed 的最终前沿都同时有：一个弱支配 (63.4%, 8,377) 的点，和一个成功率 ≥63.4% 且 token 降 ≥10% 的点。
+- surrogate 组达到同等前沿（超体积 ≥ 无 surrogate 组最终前沿的 95%）用掉的完整评估次数，比无 surrogate 组少 **27.7%**（940 vs 1,300 次；未达 40% 目标，原因见报告 §5）。
+- 重启 2 次后 `aura evo log --lineage <tip>` 的链完整（跨 3 个进程 run id，无悬空 parent），修掉上表那条审计 FAIL。
+
+```
+python3 -m aura_harness.evo --seeds 0 1 2 3 4 --gens 10 --ask 10 --propose 4 --H 6
+AURA_BIN=... AURA_LIB=... python3 validation/evo_validate.py   # 一键复跑全部判据
+python3 validation/evo_report.py                              # 从原始结果生成报告
+```
+
 
 ## Why Aura for harness self-evolution
 

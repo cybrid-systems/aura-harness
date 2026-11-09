@@ -1,0 +1,88 @@
+{
+ "mode": "aura-gated",
+ "seed": 3,
+ "n": 400,
+ "shift": 200,
+ "success": 0.6825,
+ "windows": [
+  0.58,
+  0.84,
+  0.61,
+  0.7
+ ],
+ "heldout_success": 0.675,
+ "cost_per_task": 8819.9925,
+ "cost_windows": [
+  8138.12,
+  7087.4,
+  9319.82,
+  10734.63
+ ],
+ "failure_modes": {
+  "info-lost": 28,
+  "tool-error": 35,
+  "context-overflow": 22,
+  "model-error": 28,
+  "stale-memory": 12,
+  "handoff-loss": 2
+ },
+ "proposals": 17,
+ "keep": 12,
+ "rollback": 5,
+ "blocked": 1,
+ "blocked_reasons": {
+  "protected define: context-budget": 1
+ },
+ "kept": [
+  "route edit->apply-patch",
+  "ttl db-schema=40",
+  "compress test-log grep-errors/800",
+  "ttl test-cmd=40",
+  "compress code-file head/1600",
+  "compress service-log grep-errors/800",
+  "ttl repo-layout=40",
+  "retry grep|timeout=3",
+  "delegate refactor>=5",
+  "retry sql|rate-limit=3",
+  "route search->lsp-find",
+  "delegate refactor>=2"
+ ],
+ "latency": {
+  "TABLE": {
+   "p50_ms": 2.82,
+   "p99_ms": 2.82,
+   "n": 1
+  },
+  "TRIAL": {
+   "p50_ms": 39.94,
+   "p99_ms": 76.26,
+   "n": 17
+  },
+  "VERDICT": {
+   "p50_ms": 7.63,
+   "p99_ms": 13.87,
+   "n": 17
+  },
+  "LOG": {
+   "p50_ms": 0.48,
+   "p99_ms": 0.48,
+   "n": 1
+  },
+  "SOURCE": {
+   "p50_ms": 20.88,
+   "p99_ms": 20.88,
+   "n": 1
+  }
+ },
+ "gate": {
+  "p50_ms": 82.55,
+  "p99_ms": 115.25,
+  "n": 17
+ },
+ "change": {
+  "p50_ms": 7.64,
+  "p99_ms": 13.89,
+  "n": 17
+ },
+ "wall_s": 1.39
+}

@@ -1,0 +1,767 @@
+[
+ {
+  "ts": 38,
+  "verdict": "KEEP",
+  "chosen": "compress test-log tail/800",
+  "candidates": [
+   "compress test-log head/1600",
+   "compress test-log tail/800",
+   "compress test-log head-tail/800",
+   "compress test-log grep-errors/800",
+   "compress test-log summarize/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    8,
+    20,
+    168338
+   ],
+   "candidates": {
+    "compress test-log head/1600": [
+     9,
+     20,
+     170535
+    ],
+    "compress test-log tail/800": [
+     11,
+     20,
+     168338
+    ],
+    "compress test-log head-tail/800": [
+     11,
+     20,
+     168338
+    ],
+    "compress test-log grep-errors/800": [
+     10,
+     20,
+     163245
+    ],
+    "compress test-log summarize/800": [
+     10,
+     20,
+     166566
+    ]
+   },
+   "window": [
+    0,
+    38
+   ],
+   "heldout": 20
+  },
+  "why": "info-lost test-log",
+  "gate_ms": 110.8
+ },
+ {
+  "ts": 44,
+  "verdict": "KEEP",
+  "chosen": "compress code-file summarize/800",
+  "candidates": [
+   "compress code-file head/1600",
+   "compress code-file tail/800",
+   "compress code-file head-tail/800",
+   "compress code-file grep-errors/800",
+   "compress code-file summarize/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    13,
+    23,
+    193861
+   ],
+   "candidates": {
+    "compress code-file head/1600": [
+     13,
+     23,
+     224490
+    ],
+    "compress code-file tail/800": [
+     12,
+     23,
+     201983
+    ],
+    "compress code-file head-tail/800": [
+     9,
+     23,
+     181137
+    ],
+    "compress code-file grep-errors/800": [
+     5,
+     23,
+     116810
+    ],
+    "compress code-file summarize/800": [
+     13,
+     23,
+     180017
+    ]
+   },
+   "window": [
+    0,
+    44
+   ],
+   "heldout": 23
+  },
+  "why": "info-lost code-file",
+  "gate_ms": 95.1
+ },
+ {
+  "ts": 45,
+  "verdict": "KEEP",
+  "chosen": "ttl test-cmd=40",
+  "candidates": [
+   "ttl test-cmd=40",
+   "ttl test-cmd=160"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    13,
+    23,
+    180017
+   ],
+   "candidates": {
+    "ttl test-cmd=40": [
+     14,
+     23,
+     152221
+    ],
+    "ttl test-cmd=160": [
+     14,
+     23,
+     152221
+    ]
+   },
+   "window": [
+    0,
+    45
+   ],
+   "heldout": 23
+  },
+  "why": "rediscover test-cmd",
+  "gate_ms": 47.0
+ },
+ {
+  "ts": 51,
+  "verdict": "KEEP",
+  "chosen": "route edit->apply-patch",
+  "candidates": [
+   "route edit->apply-patch",
+   "retry sed|bad-args=0"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    16,
+    26,
+    169041
+   ],
+   "candidates": {
+    "route edit->apply-patch": [
+     19,
+     26,
+     171134
+    ],
+    "retry sed|bad-args=0": [
+     16,
+     26,
+     162827
+    ]
+   },
+   "window": [
+    0,
+    51
+   ],
+   "heldout": 26
+  },
+  "why": "tool-error sed|bad-args",
+  "gate_ms": 56.9
+ },
+ {
+  "ts": 57,
+  "verdict": "KEEP",
+  "chosen": "ttl db-schema=160",
+  "candidates": [
+   "ttl db-schema=40",
+   "ttl db-schema=160"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    21,
+    29,
+    193095
+   ],
+   "candidates": {
+    "ttl db-schema=40": [
+     21,
+     29,
+     187483
+    ],
+    "ttl db-schema=160": [
+     21,
+     29,
+     185627
+    ]
+   },
+   "window": [
+    0,
+    57
+   ],
+   "heldout": 29
+  },
+  "why": "rediscover db-schema",
+  "gate_ms": 58.3
+ },
+ {
+  "ts": 64,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "compress code-file summarize/1600",
+   "compress code-file tail/800",
+   "compress code-file head-tail/800",
+   "compress code-file grep-errors/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    23,
+    32,
+    229159
+   ],
+   "candidates": {
+    "compress code-file summarize/1600": [
+     23,
+     32,
+     229159
+    ],
+    "compress code-file tail/800": [
+     22,
+     32,
+     230040
+    ],
+    "compress code-file head-tail/800": [
+     19,
+     32,
+     217184
+    ],
+    "compress code-file grep-errors/800": [
+     10,
+     32,
+     126876
+    ]
+   },
+   "window": [
+    0,
+    64
+   ],
+   "heldout": 32
+  },
+  "why": "info-lost code-file",
+  "gate_ms": 82.5
+ },
+ {
+  "ts": 73,
+  "verdict": "KEEP",
+  "chosen": "compress service-log grep-errors/800",
+  "candidates": [
+   "compress service-log head/1600",
+   "compress service-log tail/800",
+   "compress service-log head-tail/800",
+   "compress service-log grep-errors/800",
+   "compress service-log summarize/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    27,
+    36,
+    255353
+   ],
+   "candidates": {
+    "compress service-log head/1600": [
+     28,
+     36,
+     263749
+    ],
+    "compress service-log tail/800": [
+     27,
+     36,
+     255353
+    ],
+    "compress service-log head-tail/800": [
+     27,
+     36,
+     255353
+    ],
+    "compress service-log grep-errors/800": [
+     30,
+     36,
+     265209
+    ],
+    "compress service-log summarize/800": [
+     30,
+     36,
+     268371
+    ]
+   },
+   "window": [
+    0,
+    73
+   ],
+   "heldout": 36
+  },
+  "why": "info-lost service-log",
+  "gate_ms": 128.1
+ },
+ {
+  "ts": 93,
+  "verdict": "KEEP",
+  "chosen": "ttl repo-layout=160",
+  "candidates": [
+   "ttl repo-layout=40",
+   "ttl repo-layout=160"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    33,
+    42,
+    326035
+   ],
+   "candidates": {
+    "ttl repo-layout=40": [
+     33,
+     42,
+     323008
+    ],
+    "ttl repo-layout=160": [
+     33,
+     42,
+     314742
+    ]
+   },
+   "window": [
+    10,
+    93
+   ],
+   "heldout": 42
+  },
+  "why": "rediscover repo-layout",
+  "gate_ms": 60.4
+ },
+ {
+  "ts": 154,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "compress code-file summarize/1600",
+   "compress code-file tail/800",
+   "compress code-file head-tail/800",
+   "compress code-file grep-errors/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    32,
+    42,
+    300548
+   ],
+   "candidates": {
+    "compress code-file summarize/1600": [
+     32,
+     42,
+     300548
+    ],
+    "compress code-file tail/800": [
+     30,
+     42,
+     343332
+    ],
+    "compress code-file head-tail/800": [
+     30,
+     42,
+     335124
+    ],
+    "compress code-file grep-errors/800": [
+     14,
+     42,
+     212300
+    ]
+   },
+   "window": [
+    70,
+    154
+   ],
+   "heldout": 42
+  },
+  "why": "info-lost code-file",
+  "gate_ms": 103.6
+ },
+ {
+  "ts": 219,
+  "verdict": "KEEP",
+  "chosen": "ttl test-cmd=10",
+  "candidates": [
+   "ttl test-cmd=10",
+   "ttl test-cmd=0"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    25,
+    41,
+    214728
+   ],
+   "candidates": {
+    "ttl test-cmd=10": [
+     27,
+     41,
+     235475
+    ],
+    "ttl test-cmd=0": [
+     27,
+     41,
+     275069
+    ]
+   },
+   "window": [
+    140,
+    219
+   ],
+   "heldout": 41
+  },
+  "why": "stale-memory test-cmd",
+  "gate_ms": 52.8
+ },
+ {
+  "ts": 229,
+  "verdict": "KEEP",
+  "chosen": "retry sql|rate-limit=3",
+  "candidates": [
+   "retry sql|rate-limit=3"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    26,
+    41,
+    263335
+   ],
+   "candidates": {
+    "retry sql|rate-limit=3": [
+     27,
+     41,
+     268916
+    ]
+   },
+   "window": [
+    150,
+    229
+   ],
+   "heldout": 41
+  },
+  "why": "tool-error sql|rate-limit",
+  "gate_ms": 47.6
+ },
+ {
+  "ts": 230,
+  "verdict": "KEEP",
+  "chosen": "retry grep|timeout=3",
+  "candidates": [
+   "retry grep|timeout=3",
+   "route search->rg-json",
+   "route search->lsp-find"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    27,
+    41,
+    268916
+   ],
+   "candidates": {
+    "retry grep|timeout=3": [
+     28,
+     41,
+     274092
+    ],
+    "route search->rg-json": [
+     27,
+     41,
+     301287
+    ],
+    "route search->lsp-find": [
+     17,
+     41,
+     159427
+    ]
+   },
+   "window": [
+    150,
+    230
+   ],
+   "heldout": 41
+  },
+  "why": "tool-error grep|timeout",
+  "gate_ms": 74.2
+ },
+ {
+  "ts": 271,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "compress code-file summarize/1600",
+   "compress code-file tail/800",
+   "compress code-file head-tail/800",
+   "compress code-file grep-errors/800"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    24,
+    40,
+    332379
+   ],
+   "candidates": {
+    "compress code-file summarize/1600": [
+     24,
+     40,
+     332379
+    ],
+    "compress code-file tail/800": [
+     18,
+     40,
+     348207
+    ],
+    "compress code-file head-tail/800": [
+     23,
+     40,
+     368746
+    ],
+    "compress code-file grep-errors/800": [
+     7,
+     40,
+     161423
+    ]
+   },
+   "window": [
+    190,
+    271
+   ],
+   "heldout": 40
+  },
+  "why": "info-lost code-file",
+  "gate_ms": 111.3
+ },
+ {
+  "ts": 285,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "route edit->sed",
+   "retry apply-patch|bad-args=0"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    25,
+    42,
+    399812
+   ],
+   "candidates": {
+    "route edit->sed": [
+     22,
+     42,
+     288834
+    ],
+    "retry apply-patch|bad-args=0": [
+     25,
+     42,
+     399812
+    ]
+   },
+   "window": [
+    200,
+    285
+   ],
+   "heldout": 42
+  },
+  "why": "tool-error apply-patch|bad-args",
+  "gate_ms": 75.3
+ },
+ {
+  "ts": 288,
+  "verdict": "KEEP",
+  "chosen": "ttl repo-layout=40",
+  "candidates": [
+   "ttl repo-layout=40",
+   "ttl repo-layout=0"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    25,
+    43,
+    426611
+   ],
+   "candidates": {
+    "ttl repo-layout=40": [
+     26,
+     43,
+     442088
+    ],
+    "ttl repo-layout=0": [
+     25,
+     43,
+     484243
+    ]
+   },
+   "window": [
+    200,
+    288
+   ],
+   "heldout": 43
+  },
+  "why": "stale-memory repo-layout",
+  "gate_ms": 61.6
+ },
+ {
+  "ts": 291,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "ttl test-cmd=20"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    24,
+    40,
+    424331
+   ],
+   "candidates": {
+    "ttl test-cmd=20": [
+     23,
+     40,
+     407679
+    ]
+   },
+   "window": [
+    210,
+    291
+   ],
+   "heldout": 40
+  },
+  "why": "rediscover test-cmd",
+  "gate_ms": 41.2
+ },
+ {
+  "ts": 317,
+  "verdict": "ROLLBACK",
+  "chosen": null,
+  "candidates": [
+   "ttl test-cmd=20"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    22,
+    42,
+    404645
+   ],
+   "candidates": {
+    "ttl test-cmd=20": [
+     22,
+     42,
+     398853
+    ]
+   },
+   "window": [
+    230,
+    317
+   ],
+   "heldout": 42
+  },
+  "why": "rediscover test-cmd",
+  "gate_ms": 36.1
+ },
+ {
+  "ts": 342,
+  "verdict": "KEEP",
+  "chosen": "delegate refactor>=6",
+  "candidates": [
+   "raise context-budget to 8000",
+   "delegate refactor>=6",
+   "compress code-file summarize/400"
+  ],
+  "blocked": [
+   "raise context-budget to 8000"
+  ],
+  "scores": {
+   "base": [
+    19,
+    41,
+    446060
+   ],
+   "candidates": {
+    "delegate refactor>=6": [
+     20,
+     41,
+     438773
+    ],
+    "compress code-file summarize/400": [
+     19,
+     41,
+     446060
+    ]
+   },
+   "window": [
+    260,
+    342
+   ],
+   "heldout": 41
+  },
+  "why": "context-overflow refactor",
+  "gate_ms": 62.6
+ },
+ {
+  "ts": 343,
+  "verdict": "KEEP",
+  "chosen": "ttl db-schema=40",
+  "candidates": [
+   "ttl db-schema=40",
+   "ttl db-schema=0"
+  ],
+  "blocked": [],
+  "scores": {
+   "base": [
+    20,
+    41,
+    438773
+   ],
+   "candidates": {
+    "ttl db-schema=40": [
+     21,
+     41,
+     453179
+    ],
+    "ttl db-schema=0": [
+     21,
+     41,
+     464737
+    ]
+   },
+   "window": [
+    260,
+    343
+   ],
+   "heldout": 41
+  },
+  "why": "stale-memory db-schema",
+  "gate_ms": 69.8
+ }
+]

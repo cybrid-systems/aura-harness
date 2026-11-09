@@ -1,0 +1,314 @@
+;; aura/evo_server.aura — v0.2 evo control plane for aura-harness (#4946).
+;;
+;; The multi-objective self-evolution loop lives here, in Aura, on top of
+;; std/moead (search), std/pareto (front), std/proposer (prop:grammar
+;; proposals with its scope guard), std/surrogate (cheap prescreen) and the
+;; evo:record! worldline (audit + lineage across restarts).
+;;
+;; Python (aura_harness/evo) owns the simulated solver: it evaluates a
+;; genome on the task streams and sends the objective vector back. Every
+;; decision — variation, archive, prescreen, recording — is made here.
+;;
+;; Protocol: one request per line, "CMD<TAB>json". One reply line,
+;; "R<TAB>json". Same shape as aura/server.aura.
+;;
+;; A genome is a list of floats in [0,1]; (policy-src g) renders it as the
+;; single mutable define the harness evaluates. No genome position can name
+;; a protected define: the boundary lives outside this projection.
+
+(require "std/moead" all:)
+(require "std/pareto" all:)
+(require "std/proposer" all:)
+(require "std/surrogate" all:)
+(require "std/evo" all:)
+(require "std/string" all:)
+(require "std/list" all:)
+
+(define POLICY "harness-policy")
+(define MUTABLE (list POLICY))
+
+(define *st* #f)
+(define *tip* "")
+(define *search* "evo")
+(define *n* 0)
+(define *gen* 0)
+(define *records* 0)
+
+;; ── json helpers ────────────────────────────────────────────────────
+(define (jget h k d)
+  (if (hash? h)
+      (let ((v (hash-ref h k ())))
+        (if (null? v) d v))
+      d))
+
+(define (jint v d)
+  (cond ((and (integer? v) (not (inexact? v))) v)
+        ((number? v) (inexact->exact (floor v)))
+        (else d)))
+
+(define (jnum v d) (if (number? v) (* 1.0 v) d))
+
+(define (jlist v) (if (list? v) v (list)))
+
+(define (reply h) (display "R\t") (display (json-encode h)) (newline))
+
+(define (join xs sep)
+  (if (null? xs)
+      ""
+      (foldl (lambda (acc x) (string-append acc sep x)) (car xs) (cdr xs))))
+
+;; ── genome <-> policy source ───────────────────────────────────────
+(define (q1000 x) (inexact->exact (round (* 10000.0 (jnum x 0.0)))))
+
+(define (policy-src g)
+  (string-append "(define (" POLICY " g) (list "
+                 (join (map (lambda (x) (number->string (q1000 x))) g) " ")
+                 "))"))
+
+(define (all-num? xs)
+  (if (null? xs) #t (if (number? (car xs)) (all-num? (cdr xs)) #f)))
+
+(define (find-num-list d)
+  (cond ((and (pair? d) (all-num? d) (not (null? d))) d)
+        ((pair? d) (let ((r (find-num-list (car d))))
+                     (if r r (find-num-list (cdr d)))))
+        (else #f)))
+
+(define (src-genome text dim)
+  ; -> (list genome-or-#f reason)
+  (let ((p (prop:parse text)))
+    (if (not (jget p "ok" #f))
+        (list #f "unparsable")
+        (let ((forms (jlist (jget p "forms" (list)))))
+          (if (not (= 1 (length forms)))
+              (list #f "multi-form")
+              (let ((nums (find-num-list (car forms))))
+                (cond ((not nums) (list #f "no-numbers"))
+                      ((not (= dim (length nums))) (list #f "dim-mismatch"))
+                      (else (list (map (lambda (n)
+                                        (let ((v (/ (* 1.0 n) 10000.0)))
+                                          (cond ((< v 0.0) 0.0) ((> v 1.0) 1.0) (else v))))
+                                      nums) #f)))))))))
+
+;; ── recording ──────────────────────────────────────────────────────
+(define (rec! target decision reason evidence src dur parent objectives viol)
+  (set! *records* (+ *records* 1))
+  (evo:record! target decision reason evidence src dur parent
+               (hash "algo" "moead" "gen" *gen* "slot" 0 "search" *search*
+                     "candidate" (string-append *search* "#" (number->string *records*))
+                     "objectives" objectives
+                     "constraints" (list viol))))
+
+;; ── commands ───────────────────────────────────────────────────────
+(define (do-init p)
+  (set! *search* (jget p "search" "evo"))
+  (set! *tip* (jget p "tip" ""))
+  (set! *gen* (jint (jget p "gen" 0) 0))
+  (set! *n* 0)
+  (set! *records* 0)
+  ;; slot 0 at INIT: a restarted process must draw the same (seed, gen, slot)
+  ;; streams as the process it replaces, so the search resumes bit-identically.
+  (set! *st* (moead:make (hash "n-obj" (jint (jget p "n-obj" 3) 3)
+                               "H" (jint (jget p "H" 4) 4)
+                               "T" (jint (jget p "T" 5) 5)
+                               "seed" (jint (jget p "seed" 0) 0)
+                               "dim" (jint (jget p "dim" 8) 8)
+                               "dd" (eq? (jget p "dd" #t) #t)
+                               "objectives" (list "success" "tokens" "latency")
+                               "dirs" (list "max" "min" "min")
+                               "bounds" (list (list 0.0 1.0)))))
+  (hash-set! *st* "slot" 0)
+  ;; resume: replay the worldline so a restart continues the same search
+  (let ((rs (jlist (jget p "resume" (list)))))
+    (for-each
+      (lambda (r)
+        (let* ((g (jlist (jget r "genome" (list))))
+               (sub (jint (jget r "sub" 0) 0))
+               (objs (jlist (jget r "objectives" (list 0.0 0.0 0.0))))
+               (c (evo:candidate g (hash "meta" (hash "sub" sub) "gen" 0 "slot" 0))))
+          (moead:tell! *st* (list c) (list objs))
+          (set! *n* (+ *n* 1))))
+      rs))
+  (reply (hash "ok" #t "pop" (length (moead:weights *st*)) "dim" (jget *st* "dim" 0)
+               "tip" *tip* "resumed" *n* "weights" (length (moead:weights *st*)))))
+
+(define (do-ask p)
+  (let* ((k (max 1 (jint (jget p "k" 8) 8)))
+         (g (jint (jget *st* "gen" 0) 0))
+         (cs (moead:ask *st* k)))
+    (set! *gen* g)
+    (hash-set! *st* "gen" (+ g 1))
+    (hash-set! *st* "slot" 0)
+    (reply (hash "cands"
+                 (map (lambda (c)
+                        (hash "id" (jget c "id" "")
+                              "genome" (jget c "genome" (list))
+                              "sub" (jget (jget c "meta" (hash)) "sub" 0)
+                              "slot" (jget c "slot" 0)
+                              "parents" (jget c "parents" (list))))
+                      cs)
+                 "gen" g))))
+
+(define (do-propose p)
+  (let* ((k (max 1 (jint (jget p "k" 4) 4)))
+         (seed (jint (jget p "seed" 0) 0))
+         (g (jint (jget p "gen" 0) 0))
+         (dim (jint (jget *st* "dim" 8) 8))
+         (parent (jlist (jget p "parent" (list))))
+         (audit (prop:audit))
+         (base (if (null? parent)
+                   (string-append "(define (" POLICY " g) (list "
+                                  (join (map (lambda (i) "5000") (iota dim)) " ") "))")
+                   (policy-src parent)))
+         (ctx (prop:ctx (hash "base" base "defines" MUTABLE "k" k "gen" g
+                              "seed" seed "audit" audit
+                              "goal" (hash "seed-genome" base))))
+         (prop (prop:grammar (hash "ops" (list 'tweak-literal 'tweak-literal
+                                               'scale-body 'copy-subtree)
+                                   "rounds" 1 "seed" seed)))
+         (prs (prop ctx)))
+    (reply (hash "props"
+                 (map (lambda (pr)
+                        (let* ((src (jget pr "genome" ""))
+                               (parsed (src-genome src dim)))
+                          (hash "source" src
+                                "genome" (car parsed)
+                                "reject" (cadr parsed)
+                                "thought" (jget pr "thought" "")
+                                "strategy" (jget pr "strategy" "grammar"))))
+                      prs)
+                 "rejected" (prop:audit-count audit)
+                 "guard" (prop:check-proposal (if (null? prs) (hash) (car prs)) ctx)))))
+
+(define (tell-evals! evs)
+  ;; MOEA/D learns only from full evaluations (feasible or not); every one
+  ;; lands in the evo worldline as a TRIAL record.
+  (for-each
+    (lambda (e)
+      (let* ((g (jlist (jget e "genome" (list))))
+             (sub (jint (jget e "sub" 0) 0))
+             (objs (jlist (jget e "objectives" (list 0.0 0.0 0.0))))
+             (viol (jnum (jget e "viol" 0.0) 0.0))
+             (learn (eq? (jget e "learn" #t) #t))
+             (c (evo:candidate g (hash "meta" (hash "sub" sub) "gen" *gen* "slot" 0
+                                       "constraints" (hash "boundary" viol)))))
+        ;; every evaluation is recorded; only the ones the caller marks learn
+        ;; feed the search (a local-search sweep records 150 neighbours but
+        ;; tells MOEA/D its best few)
+        (if learn (moead:tell! *st* (list c) (list objs)) #f)
+        (set! *n* (+ *n* 1))
+        (rec! POLICY "TRIAL" (jget e "reason" "evaluated")
+              (hash "success" (car objs) "tokens" (car (cdr objs))
+                    "latency" (car (cdr (cdr objs))) "sub" sub "learn" learn
+                    "genome" g "surrogate" (jget e "surrogate" #f))
+              (jget e "source" (policy-src g)) (jnum (jget e "dur" 0) 0) *tip*
+              objs viol)))
+    evs))
+
+(define (keep-elite! evs elite)
+  ;; The generation elite advances the worldline tip: one KEEP record whose
+  ;; parent is the previous tip. A restart reads the tip back from the log,
+  ;; so the KEEP chain survives the process.
+  (if (and (>= elite 0) (< elite (length evs)))
+      (let* ((e (list-ref evs elite))
+             (objs (jlist (jget e "objectives" (list 0.0 0.0 0.0))))
+             (g (jlist (jget e "genome" (list))))
+             (id (rec! POLICY "KEEP" (jget e "reason" "generation elite")
+                       (hash "success" (car objs) "tokens" (car (cdr objs))
+                             "latency" (car (cdr (cdr objs))) "rank" "elite" "learn" #f)
+                       (jget e "source" (policy-src g)) 0.0 *tip*
+                       objs (jnum (jget e "viol" 0.0) 0.0))))
+        (set! *tip* id)
+        id)
+      #f))
+
+(define (do-tell p)
+  (let ((evs (jlist (jget p "evals" (list)))))
+    (tell-evals! evs)
+    (keep-elite! evs (jint (jget p "elite" -1) -1))
+    (reply (hash "ok" #t "nfe" *n* "tip" *tip* "records" *records*))))
+
+(define (do-front p)
+  (let ((f (moead:front *st*)))
+    (reply (hash "front"
+                 (map (lambda (e)
+                        (let ((c (jget e "cand" #f)))
+                          (hash "id" (if (hash? c) (jget c "id" "") "")
+                                "genome" (if (hash? c) (jget c "genome" (list)) (list))
+                                "objectives" (jget e "objs" (list)))))
+                      f)))))
+
+(define (do-screen p)
+  (let* ((X (jlist (jget p "X" (list))))
+         (y (jlist (jget p "y" (list))))
+         (cands (jlist (jget p "cands" (list))))
+         (k (max 1 (jint (jget p "k" 1) 1)))
+         (dim (jint (jget *st* "dim" 8) 8)))
+    (if (or (< (length X) 3) (< (length y) 3))
+        (reply (hash "ok" #t "cold" #t "selected" (map (lambda (i) i) (iota (min k (length cands))))))
+        (let* ((m (surr:auto (length X) dim (hash "sense" "max" "k" 3)))
+               (m2 (surr:fit! m X y))
+               (res (surr:prescreen m2 cands k (hash "acq" "ei")))
+               (sel (jlist (jget res "selected" (list))))
+               (rows (jlist (jget res "audit" (list)))))
+          (reply (hash "ok" #t "cold" #f
+                       "selected" (map (lambda (r) (jint (jget r "index" 0) 0)) sel)
+                       "rows" (map (lambda (r)
+                                     (hash "index" (jint (jget r "index" 0) 0)
+                                           "mean" (jnum (jget r "mean" 0) 0)
+                                           "var" (jnum (jget r "var" 0) 0)
+                                           "score" (jnum (jget r "score" 0) 0)
+                                           "sent" (if (eq? (jget r "sent" #f) #t) #t #f)))
+                                   rows)))))))
+
+(define (do-record p)
+  (let ((id (rec! (jget p "target" POLICY)
+                  (jget p "decision" "KEEP")
+                  (jget p "reason" "")
+                  (jget p "evidence" (hash))
+                  (jget p "source" "")
+                  (jnum (jget p "dur" 0) 0)
+                  (jget p "parent" *tip*)
+                  (jlist (jget p "objectives" (list)))
+                  (jnum (jget p "viol" 0.0) 0.0))))
+    (if (equal? (jget p "decision" "KEEP") "KEEP") (set! *tip* id) #f)
+    (reply (hash "ok" #t "id" id "tip" *tip*))))
+
+(define (do-hv p)
+  ;; hypervolume of a front in problem space, computed by std/pareto
+  (let* ((front (jlist (jget p "front" (list))))
+         (ref (jlist (jget p "ref" (list))))
+         (dirs (jlist (jget p "dirs" (list "max" "min" "min")))))
+    (reply (hash "ok" #t "hv" (pareto:hypervolume front ref (hash "dirs" dirs))
+                 "n" (length front)))))
+
+(define (do-stats p)
+  (reply (hash "ok" #t "nfe" *n* "gen" *gen* "tip" *tip* "records" *records*
+               "front" (length (moead:front *st*)))))
+
+(define (handle line)
+  (let* ((fs (string-split line "\t"))
+         (cmd (if (null? fs) "" (car fs)))
+         (raw (if (null? (cdr fs)) "{}" (cadr fs)))
+         (p (try (json-parse raw) (catch (e) (hash)))))
+    (cond ((equal? cmd "INIT") (do-init p))
+          ((equal? cmd "ASK") (do-ask p))
+          ((equal? cmd "PROPOSE") (do-propose p))
+          ((equal? cmd "TELL") (do-tell p))
+          ((equal? cmd "FRONT") (do-front p))
+          ((equal? cmd "SCREEN") (do-screen p))
+          ((equal? cmd "RECORD") (do-record p))
+          ((equal? cmd "HV") (do-hv p))
+          ((equal? cmd "STATS") (do-stats p))
+          ((equal? cmd "PING") (reply (hash "pong" #t)))
+          ((equal? cmd "QUIT") #t)
+          (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
+
+(define (serve)
+  (let ((line (read-line)))
+    (if (or (eof-object? line) (equal? line "QUIT"))
+        #t
+        (begin (handle line) (serve)))))
+
+(reply (hash "ready" #t "policy" POLICY "lib" "std/moead,std/pareto,std/proposer,std/surrogate"))
+(serve)
