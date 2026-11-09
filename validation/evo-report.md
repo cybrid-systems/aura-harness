@@ -27,7 +27,7 @@ python3 validation/evo_report.py
 - 每 seed held-out：63.5%, 58.5%, 72.0%, 67.5%, 58.5%
 - 每 seed tokens：9,453, 6,807, 8,890, 8,820, 7,917
 - README 的 8,377 逐位复现（差 0.3）；held-out 64.0% 也逐位复现。全任务成功率是 64.0%，README 写 63.4%（差 0.6 pt）。
-- 差异说明：README 的数字产生于 pin `a6c63aa19`；本机是 Aura dev **99a86dc25**。判据所用的 held-out 与 token 完全一致，全任务成功率差 0.6 pt，在 seed 间波动范围内。
+- 差异说明：README 的数字产生于 pin `a6c63aa19`；本机是 aura dev (99ddc81c9)。判据所用的 held-out 与 token 完全一致，全任务成功率差 0.6 pt，在 seed 间波动范围内。
 - 本次会话早先在**同一构建**上还跑出过一次 63.4% / 8,377（窗口 53/76/56/68，与 README 完全一致），之后未能再次复现；因此这里只声称「held-out 64.0% / 8,377 逐位一致」，全任务成功率记为 64.0% vs 63.4%。
 
 ## 2. 用 MOEA/D + std/pareto 替换手写 KEEP/DROP（三目标，5 seeds）
@@ -131,7 +131,7 @@ python3 validation/evo_report.py
 | `results/evo/moead-restart/seed*/evo-log.jsonl` | 两次重启的 worldline |
 | `results/evo/validation.json` | 全部结论的结构化汇总 |
 
-注：validation/evo_validate.py 需要 `AURA_BIN` 指向带 `std/moead` 的 Aura 构建；本机为 `/home/dev/code/aura/build/aura`（dev 99a86dc25）。
+注：validation/evo_validate.py 需要 `AURA_BIN` 指向带 `std/moead` 的 Aura 构建；本机为 `/home/dev/code/aura/build/aura`（aura dev (99ddc81c9)）。
 ## 附录：seed 0 的两个代表点改了什么
 
 与种子 harness 相比（只列改动过的行）：

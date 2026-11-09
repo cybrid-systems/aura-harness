@@ -96,7 +96,7 @@ def main() -> int:
     A(f"- 每 seed tokens：{', '.join(f'{x:,.0f}' for x in base['tokens_each'])}")
     A(f"- README 的 8,377 逐位复现（差 {abs(base['tokens']-8377):.1f}）；held-out 64.0% 也逐位复现。"
       f"全任务成功率是 {pct(base['success'])}，README 写 63.4%（差 {abs(100*(base['success']-0.634)):.1f} pt）。")
-    A("- 差异说明：README 的数字产生于 pin `a6c63aa19`；本机是 Aura dev **99a86dc25**。"
+    A("- 差异说明：README 的数字产生于 pin `a6c63aa19`；本机是 " + v.get("aura_version", "Aura") + "。"
       "判据所用的 held-out 与 token 完全一致，全任务成功率差 0.6 pt，在 seed 间波动范围内。")
     A("- 本次会话早先在**同一构建**上还跑出过一次 63.4% / 8,377（窗口 53/76/56/68，"
       "与 README 完全一致），之后未能再次复现；因此这里只声称"
@@ -249,7 +249,7 @@ def main() -> int:
     A("| `results/evo/validation.json` | 全部结论的结构化汇总 |")
     A("")
     A("注：validation/evo_validate.py 需要 `AURA_BIN` 指向带 `std/moead` 的 Aura 构建；"
-      "本机为 `/home/dev/code/aura/build/aura`（dev 99a86dc25）。")
+      "本机为 `/home/dev/code/aura/build/aura`（" + v.get("aura_version", "") + "）。")
     A("## 附录：seed 0 的两个代表点改了什么")
     A("")
     A("与种子 harness 相比（只列改动过的行）：")
