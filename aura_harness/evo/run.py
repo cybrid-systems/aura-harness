@@ -182,6 +182,17 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
     log = cfg.log or str(out / "evo-log.jsonl")
     if os.path.exists(log):
         os.remove(log)
+    # Side log for the false-kill audit (#4943): one row per cheap-first
+    # polish batch with every dropped probe's cheap score and genome, plus
+    # the full goal of the probes that were forwarded. Kept out of run.json
+    # so the main artefact stays small.
+    drops_log = str(out / "polish-drops.jsonl")
+    if os.path.exists(drops_log):
+        os.remove(drops_log)
+    itok_full = 0.90 * baseline["issue"]["tokens"]
+
+    def goal_of(objs: list) -> float:
+        return objs[0] - 1e-4 * max(0.0, objs[1] - itok_full)
     boundary = boundary_of()
     drv = EvoDriver(log)
     history: list[dict] = []
@@ -263,6 +274,7 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
         # dropped probe stays in the log with its cheap score, so the
         # false-kill audit can spot-check them.
         polish_prefilter = None
+        pending_drops = None
         if (cfg.surrogate and cfg.prescreen and structured and not quick
                 and cfg.polish_full > 0 and full_evals >= cfg.ask
                 and len(uniq) > cfg.polish_full):
@@ -295,6 +307,15 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
                     by_gene[gk] = (goal_key(sc), i)
             ranked = sorted(by_gene.values(), key=lambda e: e[0], reverse=True)
             chosen = [i for _sc, i in ranked[:cfg.polish_full]]
+            chosen_set = set(chosen)
+            pending_drops = {
+                "gen": gen, "n": len(uniq), "chosen": list(chosen),
+                "dropped": [
+                    {"gene": uniq[i].get("gene", i),
+                     "cheap": [cheap_all[i][0], cheap_all[i][1]],
+                     "genome": [round(float(x), 6) for x in uniq[i]["genome"]]}
+                    for i in sorted(cheap_all) if i not in chosen_set],
+            }
             for i in chosen:
                 quick[i] = cheap_all[i][0]
             polish_prefilter = {"n": len(uniq), "cheap": len(cheap_all),
@@ -338,6 +359,18 @@ def run(cfg: Cfg, baseline: dict, out_dir: str) -> dict:
             y.append(m["success"])
             seen.add(G.key(c["genome"]))
             history.append(evals[-1])
+        if pending_drops is not None:
+            full_by_key = {G.key(e["genome"]): e["objectives"] for e in evals}
+            kept = []
+            for i in pending_drops["chosen"]:
+                g = uniq[i]["genome"]
+                objs = full_by_key.get(G.key(g))
+                if objs:
+                    kept.append({"gene": uniq[i].get("gene", i),
+                                 "objectives": objs, "goal": goal_of(objs)})
+            pending_drops["kept_full"] = kept
+            with open(drops_log, "a") as fh:
+                fh.write(json.dumps(pending_drops) + chr(10))
         elite_i = _argmax_elite(evals)
         # Record every evaluation, but feed the search only the best few of a
         # large batch (local-search sweeps): telling 150 neighbours one by one

@@ -1269,10 +1269,10 @@
   }
  ],
  "records": 111,
- "tip": "20261109T103549Z-1142747#111",
+ "tip": "20261109T110257Z-1163989#111",
  "restarts": 0,
- "wall_s": 25.835953354951926,
- "log": "/tmp/evo-final-s/seed2/evo-log.jsonl",
+ "wall_s": 23.57616889802739,
+ "log": "/tmp/evo-drops/seed2/evo-log.jsonl",
  "front_descriptions": [
   {
    "objectives": [
