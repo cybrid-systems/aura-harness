@@ -12,6 +12,8 @@
 ;;   VERDICT ts chosen scores why  KEEP candidate #chosen (ws: `workspace :merge` of its trial child + root post-check;
 ;;                                 snap: re-applied to the root through the guard) or ROLLBACK (-1)
 ;;   ADMIT name body               dry run of the static guard stage: reason or null, and the instrumented body
+;;   PROV [n] [mode]              root (query :mutation-log), last provenance, orch metrics (prov-metrics).
+;;                                mode is empty in normal use; see prov-metrics for the test seams.
 ;;   SOURCE [raw] | FIND name | LOG | VERSION | GUARD | COMPACT | PING | QUIT
 ;;   (APPLY / TRIAL / VERDICT count as root mutations; every AURA_HARNESS_COMPACT_EVERY of them the root is
 ;;    reloaded from its own source after the reply, see compact!)
@@ -646,6 +648,53 @@
           "rebind_eval_us" r-rebind "snapshot_us" r-snap "restore_eval_us" r-restore
           "guarded_apply_us" r-apply "trial_ws_us" r-ws "trial_snap_us" r-snapt "blocked_check_us" r-block)))
 
+;; ---------------------------------------------------------------- PROV metrics
+;; (orch:metrics) is not a primitive on current Aura: the counters live in the stats impl
+;; "orch:metrics", read with (stats:get "orch:metrics"). On the CLI backend that impl returns
+;; void until orch_sched_holder starts the scheduler (aura#5054); this control plane never
+;; starts it, so that read is void for a normal PROV. (stats:get "query:orch-module-stats")
+;; is a hash of live counters on the CLI backend (agents-spawned, agent-ask-total, ...).
+;; aura#5118 may put the bare name back as a deprecated alias, so it is the last fallback.
+;; A read that completes with void / #f / "" is no metrics: #f. A read that raises is not
+;; the same result: {"error": msg, "status": "read-failed"}. #f is returned only when at
+;; least one source completed with no value. If every source raises, the error hash is
+;; returned. PROV's optional second field is a test seam:
+;;   fail       the read raises (read-failed hash)
+;;   empty      the read completes with no value (#f)
+;;   bare       only the deprecated (orch:metrics) name
+;;   scheduler  spawn one agent, then read stats:get "orch:metrics" (skip the module hash)
+;;   orch       spawn one agent, then the normal source order
+(define (metric-usable? x)
+  (or (hash? x) (and (string? x) (> (string-length x) 0))))
+(define (metric-read th)
+  (try (let ((x (th))) (if (metric-usable? x) x #f))
+       (catch (e) (hash "error" (format "~a" e) "status" "read-failed"))))
+(define (metric-failed? x)
+  (and (hash? x) (equal? (hash-ref x "status" "") "read-failed")))
+(define (prov-metrics-loop sources)
+  (let loop ((ss sources) (saw-empty #f) (err #f))
+    (if (null? ss)
+        (if (and err (not saw-empty)) err #f)
+        (let ((r (metric-read (car ss))))
+          (cond ((metric-failed? r) (loop (cdr ss) saw-empty (if err err r)))
+                (r r)
+                (else (loop (cdr ss) #t err)))))))
+(define (prov-spawn-probe)
+  (try (begin (orch:spawn-agent "prov-ac-probe" (lambda () 1)) #t) (catch (e) #f)))
+(define (prov-metrics mode)
+  (cond ((equal? mode "fail") (metric-read (lambda () (error "prov metrics forced failure"))))
+        ((equal? mode "empty") (metric-read (lambda () (void))))
+        ((equal? mode "bare") (prov-metrics-loop (list (lambda () (orch:metrics)))))
+        ((equal? mode "scheduler")
+         (begin (prov-spawn-probe)
+                (prov-metrics-loop (list (lambda () (stats:get "orch:metrics"))
+                                         (lambda () (orch:metrics))))))
+        (else
+         (begin (if (equal? mode "orch") (prov-spawn-probe) #f)
+                (prov-metrics-loop (list (lambda () (stats:get "query:orch-module-stats"))
+                                         (lambda () (stats:get "orch:metrics"))
+                                         (lambda () (orch:metrics))))))))
+
 ;; ---------------------------------------------------------------- protocol
 (define (reply h) (display "R ") (display (json-encode h)) (newline))
 (define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
@@ -729,10 +778,10 @@
       ((equal? cmd "FIND")
        (reply (hash "name" (field fs 1) "node" (let ((r (try (query :find (field fs 1)) (catch (e) #f)))) (if (number? r) r #f)))))
       ((equal? cmd "PROV")          ;; Aura's own provenance for the root workspace (docs/observability.md)
-       (let ((n (fnum fs 1)))
+       (let ((n (fnum fs 1)) (mode (field fs 2)))
          (reply (hash "mutation_log" (try (let ((l (query :mutation-log (if n n 100000)))) (if (list? l) l (list))) (catch (e) (list)))
                       "last" (try (let ((p (query:last-mutation-provenance))) (if (hash? p) p #f)) (catch (e) #f))
-                      "metrics" (try (let ((x (orch:metrics))) (if (string? x) x #f)) (catch (e) #f))
+                      "metrics" (prov-metrics mode)
                       "version" *version* "log_n" *seq* "blocked" *blocked* "compactions" *compactions*))))
       ((equal? cmd "LOG") (reply (hash "log" (reverse *log*) "version" *version* "blocked" *blocked*)))
       ((equal? cmd "VERSION") (reply (hash "version" *version* "blocked" *blocked* "compactions" *compactions*

@@ -133,9 +133,23 @@ class AuraHarness:
     def log(self) -> list[dict]:
         return self.pipe.call("LOG")["log"] or []
 
-    def prov(self, n: int = 0) -> dict:
-        """Aura's own provenance for the root workspace: its mutation log (query :mutation-log), the last mutation's
-        provenance record (query:last-mutation-provenance) and the control-plane version (docs/observability.md)"""
+    def prov(self, n: int = 0, metrics_mode: str = "") -> dict:
+        """Aura's own provenance for the root workspace (docs/observability.md).
+
+        ``mutation_log`` is ``(query :mutation-log)``, ``last`` is ``query:last-mutation-provenance``, and
+        ``version`` is the control-plane version. ``metrics`` is the orch snapshot from ``prov-metrics``:
+        a dict (``stats:get "query:orch-module-stats"``) or a non-empty string (scheduler JSON from
+        ``stats:get "orch:metrics"``, or a bare ``orch:metrics`` if that deprecated name is bound).
+        ``False`` means a source completed and had no value. A dict with ``status`` ``"read-failed"``
+        and ``error`` means the read raised. Those two are different results; this method returns both
+        and does not raise for a metrics failure, so the log and provenance are still delivered.
+
+        ``metrics_mode`` is empty in normal use. Tests pass ``"orch"`` (spawn one probe agent, then
+        read), ``"scheduler"`` (that spawn, then only ``orch:metrics``), ``"bare"`` (the deprecated
+        name alone), ``"fail"`` (forced read-failed hash) or ``"empty"`` (forced no-metrics ``False``).
+        """
+        if metrics_mode:
+            return self.pipe.call("PROV", n or "", metrics_mode)
         return self.pipe.call("PROV", n or "")
 
     def close(self):
