@@ -150,5 +150,61 @@ class AuraTraceTests(unittest.TestCase):
             self.skipTest(f"supervisor run not accepted on this Aura (workers-dead={r.get('workers-dead')}; aura#4730)")
         self.assertTrue(r["trace"]["ok"], r["trace"])
 
+    def test_prov_metrics_ac(self):
+        """AC1-AC4: orch metrics are a real snapshot, read failure is not `false`, docs match, validation stays clean."""
+        from pathlib import Path
+        from aura_harness.control import AuraHarness
+        from aura_harness.rsi.loop import run_rsi
+
+        doc = Path("docs/observability.md").read_text()
+        self.assertIn('query:orch-module-stats', doc)
+        self.assertIn("read-failed", doc)
+        self.assertIn("AuraHarness.prov()", doc)
+        self.assertNotIn("and `orch:metrics` (`AuraHarness.prov()`)", doc)
+
+        # AC1: with an orch spawn in this process, metrics is a hash (or scheduler JSON), not #f.
+        # "scheduler" is the fallback source after that spawn: stats:get "orch:metrics", not the module hash.
+        h = AuraHarness()
+        try:
+            sched = h.prov(metrics_mode="scheduler")
+            p = h.prov(metrics_mode="orch")
+            # AC2: a raised read is {"error", "status": "read-failed"}; a completed empty read is False.
+            bare = h.prov(metrics_mode="bare")
+            failed = h.prov(metrics_mode="fail")
+            empty = h.prov(metrics_mode="empty")
+        finally:
+            h.close()
+        sm = sched["metrics"]
+        self.assertIsInstance(sm, str)
+        self.assertIn("fibers_spawned", sm)
+        self.assertNotIn('"fibers_spawned": 0', sm)
+        m = p["metrics"]
+        self.assertNotIn("error", p)
+        self.assertIsInstance(m, dict)
+        self.assertNotEqual(m.get("status"), "read-failed", m.get("error"))
+        self.assertGreaterEqual(m.get("agents-spawned", 0), 1)
+        self.assertIn("agent-ask-total", m)
+        self.assertIsInstance(failed["metrics"], dict)
+        self.assertEqual(failed["metrics"].get("status"), "read-failed")
+        self.assertIn("forced failure", failed["metrics"].get("error", ""))
+        self.assertIn("version", failed)
+        bm = bare["metrics"]
+        # Unbound on current builds (read-failed). A build that re-binds the name (aura#5118)
+        # must surface that value, not a silent false.
+        if isinstance(bm, dict) and bm.get("status") == "read-failed":
+            self.assertIn("orch:metrics", bm.get("error", ""))
+        else:
+            self.assertTrue(isinstance(bm, (dict, str)) and bm not in (False, "", None))
+        self.assertIs(empty["metrics"], False)
+        self.assertIn("version", empty)
+        self.assertNotEqual(failed["metrics"], empty["metrics"])
+        self.assertNotEqual(bm, empty["metrics"])
+
+        # AC4: the trace/provenance join does not read metrics and still reports no problems.
+        out = run_rsi(seed=1, n=40, tracer=Tracer(), supervise=False)
+        v = out["trace"]["validation"]
+        self.assertEqual(v["problems"], [], v)
+        self.assertTrue(v["ok"], v)
+
 if __name__ == "__main__":
     unittest.main()
