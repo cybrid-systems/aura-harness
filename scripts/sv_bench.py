@@ -75,8 +75,8 @@ def main() -> int:
         x, p = r["supervisor"], r["supervisor_validate"]["ping"]
         L.append(f"| {r['N']} | {mean(x,'rtt-ms','rtt-n')} | {g(x,'rtt-max-ms')} | {g(x,'rtt-n')} | {mean(p,'ping-wall-ms','ping-n')} | {g(p,'ping-max-ms')} | {g(p,'ping-n')} |")
     oa = out["orch_ask"]
-    L += ["", f"orch:agent-ask to an in-process responder (timeout 500 ms): status={g(oa,'ask-status')}, elapsed {g(oa,'ask-ms')} ms, "
-          f"responder agent-reply status={g(oa,'ask-reply-status')} (aura#4722).", "",
+    L += ["", f"orch:ask to an in-process responder (timeout 500 ms): status={g(oa,'ask-status')}, elapsed {g(oa,'ask-ms')} ms, "
+          f"reply={g(oa,'ask-reply')} (std/orch; the old orch:agent-ask could not correlate the reply, aura#4722).", "",
           "## worker failure (worker 0 raises holding work) and cooperative cancel", "",
           "| N | mode | join errors | recovered via | done | accepted | wall ms | cancel: stop->last exit ms | done at stop | partial valid |",
           "|---|---|---|---|---|---|---|---|---|---|"]
@@ -85,15 +85,16 @@ def main() -> int:
         f2, c2 = r["supervisor_validate"]["fail"], r["supervisor_validate"]["cancel"]
         L.append(f"| {r['N']} | swarm | {g(f1,'join-error')} | {g(f1,'claims-stolen')} lease steals | {g(f1,'done')} | {g(f1,'accepted')} | {g(f1,'wall-ms')} | {g(c1,'cancel-lat-ms')} | {g(c1,'done')} | {g(c1,'done-valid')} |")
         L.append(f"| {r['N']} | supervisor | {g(f2,'join-error')} | {g(f2,'jobs-redispatched')} re-dispatched jobs | {g(f2,'done')} | {g(f2,'accepted')} | {g(f2,'wall-ms')} | {g(c2,'cancel-lat-ms')} | {g(c2,'done')} | {g(c2,'done-valid')} |")
-    L += ["", "## Aura orch:* primitives at N", "",
-          "supervise-batch: N tasks, task 0 raises, policy collect-all :max-retries 1. scope-cancel-all: N orch:scope-spawn bodies "
-          "looping on fiber:yield; cancel, yield 2000 times, count body steps, then scope-join-all :timeout-ms 1000; then set the "
-          "cooperative stop flag and join again.", "",
-          "| N | supervise-batch default watch: status ok/err ran | :watch-scope #f: status ok/err ran | cancel-all cancelled | body steps after cancel | join-all(1000ms) status / ms | after stop flag: status / ms |",
-          "|---|---|---|---|---|---|---|"]
+    L += ["", "## Aura std/orch at N", "",
+          "orch:supervise: N tasks, task 0 raises, one retry allowed. Agent lifecycle: N orch:spawn bodies looping on "
+          "fiber:yield; orch:cancel stops them, yield 2000 times, count body steps, then join (a cancelled child's join "
+          "reports the cancel); then a second group exits on the cooperative stop flag, the agents are stopped and joined.",
+          "",
+          "| N | supervise: status ok/err ran | cancel-all cancelled | body steps after cancel | join after cancel: status / ms | join after stop flag: status / ms |",
+          "|---|---|---|---|---|---|"]
     for r in out["rows"]:
         o = r["supervisor_validate"]["orch"]
-        L.append(f"| {r['N']} | {g(o,'sbw-status')} {g(o,'sbw-ok')}/{g(o,'sbw-err')} ran {g(o,'sbw-ran')} | {g(o,'sbn-status')} {g(o,'sbn-ok')}/{g(o,'sbn-err')} ran {g(o,'sbn-ran')} | {g(o,'cx-cancelled')} | {g(o,'cx-steps-after-cancel')} | {g(o,'cx-join-status')} / {g(o,'cx-join-ms')} | {g(o,'cx-join2-status')} / {g(o,'cx-join2-ms')} |")
+        L.append(f"| {r['N']} | {g(o,'sbw-status')} {g(o,'sbw-ok')}/{g(o,'sbw-err')} ran {g(o,'sbw-ran')} | {g(o,'cx-cancelled')} | {g(o,'cx-steps-after-cancel')} | {g(o,'cx-join-status')} / {g(o,'cx-join-ms')} | {g(o,'cx-join2-status')} / {g(o,'cx-join2-ms')} |")
     (ROOT / "results" / "sv-bench.md").write_text("\n".join(L) + "\n")
     print("\n".join(L))
     return 0
