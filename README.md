@@ -57,6 +57,33 @@ v0.2 把上面这条字典序门（"held-out 成功数更多，或持平且 toke
 - surrogate 组达到同等前沿（超体积 ≥ 无 surrogate 组最终前沿的 95%）用掉的完整评估次数，比无 surrogate 组少 **27.7%**（940 vs 1,300 次；未达 40% 目标，原因见报告 §5）。
 - 重启 2 次后 `aura evo log --lineage <tip>` 的链完整（跨 3 个进程 run id，无悬空 parent），修掉上表那条审计 FAIL。
 
+## v0.2.1：编排探针迁到 `std/orch`
+
+Aura v0.2.1 关闭了 v0.2.0 的别名窗口，`orch:compose-workflow` / `orch:supervise-batch` / `orch:scope-*` /
+`orch:agent-*` 这批非内核 `orch:` 名字**被注销**，而 `std/orch` 从来没有对应实现（上游 issue
+[cybrid-systems/aura#5118](https://github.com/cybrid-systems/aura/issues/5118)）。本仓库的编排探针因此
+整体迁到 `std/orch`：
+
+| 旧（已注销） | 新（`std/orch`） | 探针现在测什么 |
+|---|---|---|
+| `orch:compose-workflow` + `orch:supervise-batch tasks pol :watch-scope #f` | `orch:supervise fns input max-restarts` | N 个任务、任务 0 抛错、允许 1 次重试 → ok N-1 / err 1 |
+| `orch:scope-spawn` | `orch:spawn name handler` | 每个子进程一个具名 agent |
+| `orch:scope-cancel-all` | `orch:cancel name` | 硬取消：子进程的步数必须随之归零 |
+| `orch:scope-join-all` | `orch:join name` | 被取消的子进程 join 报 `cancelled`；自行结束的报 `ok` |
+| `orch:agent-ask` / `agent-recv` / `agent-reply` | `orch:ask` / `orch:send` / `orch:recv` | 本地 agent 的 ask/reply 往返现在**一次就通**（旧的 aura#4722 只能看到超时） |
+
+迁移后三条历史行（aura#4723 默认 `:watch-scope` 什么都不跑、aura#4724 `scope-join-all` 超时三倍、
+aura#4722 `agent-ask` 忽略 `:timeout-ms`）测的是被删掉的 scope / agent API 的缺陷，随之消失；
+`results/sv-bench.md` 的表头同步改成 `std/orch`。
+
+在本机用 Aura main `41748887a` 复跑：`tests/test_supervisor.py` 5/5 通过，`scripts/sv_bench.py --ns 1,8`
+的编排行为 `partial 7/1 ran 7`（N=8）、`cancelled` / `ok` 两段 join 都符合预期。
+
+```sh
+AURA_BIN=... AURA_LIB=... python3 -m unittest tests.test_supervisor -v
+AURA_BIN=... AURA_LIB=... python3 scripts/sv_bench.py --ns 1,8
+```
+
 ```
 python3 -m aura_harness.evo --seeds 0 1 2 3 4 --gens 10 --ask 10 --propose 4 --H 6
 AURA_BIN=... AURA_LIB=... python3 validation/evo_validate.py   # 一键复跑全部判据

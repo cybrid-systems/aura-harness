@@ -8,6 +8,11 @@
 ;; family's windows are all back it verifies and merges every subtask of that family itself.
 ;; Workers hold no shared state: receive job -> scan window -> reply. A worker whose heartbeat lease
 ;; expires with outstanding jobs is marked dead and its jobs are re-dispatched.
+;;
+;; The orchestration probes use std/orch (the v0.2.1 alias window closed the
+;; non-kernel orch: names, so orch:compose-workflow / orch:supervise-batch /
+;; orch:scope-* are gone; std/orch is the surface now).
+(require "std/orch" all:)
 (define SV-Q 2)
 (define sv-res #f)          ; result channel (worker -> supervisor)
 (define sv-fin #f)          ; supervisor finished
@@ -169,57 +174,117 @@
                       (begin (hash-set! m "ping-wall-ms" (- (monotonic-ms) tw)) (set! sv-fin #t))))))))
     (bump! "join-void" (join-all (cons cli ws)))
     (kv-dump)))
-;; orch:agent-ask round trip to an in-process responder (see aura#4722): status + elapsed
+;; orch:ask round trip to an in-process responder, on std/orch.
+;; The old probe could only observe the aura#4722 failure (a timeout and an
+;; unknown-corr reply): the reply was not correlated with the request. With
+;; std/orch the local agent answers on its own outbox, so the round trip is
+;; observable: ask-ms (elapsed), ask-status (ok / slow / error) and ask-reply.
 (define (orch-ask-probe timeout-ms)
   (set! m (make-hash))
   (try
    (begin
-     (orch:spawn-agent "sv-svc" (lambda () 0) :attach-mailbox #t)
+     (orch:spawn "sv-svc" (lambda (p) "pong"))
      (let* ((t0 (monotonic-ms))
-            (srv (fiber:spawn (lambda () (let loop ((k 0)) (let ((r (orch:agent-recv "sv-svc" :wait #f)))
-                                (if (hash-ref r "ok") (let ((p (hash-ref r "payload")))
-                                                        (hash-set! m "ask-reply-status" (str-of (let ((x (orch:agent-reply (let c ((i 4)) (if (char=? (string-ref p i) #\:) (string->number (substring p 4 i)) (c (+ i 1)))) "pong"))) (hash-ref x "status")))))
-                                    (if (< k 200000) (begin (fiber:yield) (loop (+ k 1))) 0)))))))
-            (a (orch:agent-ask "sv-svc" "ping" :timeout-ms timeout-ms)))
+            (a (orch:ask "sv-svc" "ping")))
        (hash-set! m "ask-ms" (- (monotonic-ms) t0))
-       (hash-set! m "ask-status" (str-of (hash-ref a "status")))
-       (fiber:join srv) (kv-dump)))
+       (hash-set! m "ask-status" (if (< (- (monotonic-ms) t0) timeout-ms) "ok" "slow"))
+       (hash-set! m "ask-reply" (str-of a))
+       (kv-dump)))
    (catch (e) (hash-set! m "ask-status" "error") (kv-dump))))
 
-;; ------------------------------------------------------------ orch:* primitives at N
-;; supervise-batch failure recovery: N tasks, task 0 raises; compare default :watch-scope vs #f (aura#4723).
-;; scope-cancel-all: N scope bodies looping on fiber:yield; does cancel stop them (aura#4724)?
+;; ------------------------------------------------------------ std/orch at N
+;; Failure recovery: N tasks, task 0 raises; std/orch's orch:supervise runs each
+;; task in a fiber and retries a failure up to max-retries. The old rows measured
+;; aura#4723 (the default :watch-scope ran nothing and reported ok 0/0) and
+;; aura#4724 (scope-join-all timed out); both were scope-API defects and are
+;; gone with the scope API, so these rows measure the std/orch supervisor.
+;; Agent lifecycle: N children looping on fiber:yield; orch:cancel stops them,
+;; orch:join reaps them. The bodies only exit on the cooperative flag, so the
+;; hard cancel is what stops them and the join returns at once.
 (define sb-ran (make-hash))
 (define (sb-tasks n) (let loop ((i (- n 1)) (acc (list))) (if (< i 0) acc (loop (- i 1) (cons (if (= i 0) (lambda () (error "sv: injected task failure")) (let ((j i)) (lambda () (hash-set! sb-ran j 1) j))) acc)))))
 (define cx-stop #f)
 (define cx-steps 0)
 (define (cx-body) (let loop ((k 0)) (if (or cx-stop (> k 2000000)) k (begin (set! cx-steps (+ cx-steps 1)) (fiber:yield) (loop (+ k 1))))))
 (define (str-of v) (cond ((string? v) v) ((number? v) (number->string v)) ((symbol? v) (symbol->string v)) ((eq? v #t) "t") ((eq? v #f) "f") (else "?")))
+;; std/orch: supervise N task thunks, retrying a failed task up to max-retries.
+;; The task that raises is retried and fails again, so it is the one error.
+;; orch:supervise calls each thunk with one argument, so the zero-argument task
+;; thunks are wrapped.
+(define (sb-supervise n max-retries)
+  (set! sb-ran (make-hash))
+  (let* ((fns (map (lambda (t) (lambda (ignored) (t))) (sb-tasks n)))
+         (rs (orch:supervise fns '() max-retries))
+         (ok (length (filter (lambda (r) (and (not (eq? r 'error)) (not (eq? r #f)))) rs)))
+         (err (- (length rs) ok)))
+    (hash "status" (if (> err 0) "partial" "ok")
+          "ok-count" ok "err-count" err "ran" (length sb-ran))))
+;; std/orch agents: one named agent per child, orch:cancel stops one,
+;; orch:join reaps one. The names are kept here because std/orch's registry
+;; is process-global and the probe owns its own children.
+(define cx-names (list))
+(define (cx-spawn-all n)
+  (set! cx-names (list))
+  (let loop ((i 0))
+    (if (< i n)
+        (let ((nm (string-append "cx-" (number->string i))))
+          (orch:spawn nm cx-body)
+          (set! cx-names (cons nm cx-names))
+          (loop (+ i 1)))
+        n)))
+(define (cx-cancel-all)
+  (let loop ((ns cx-names) (c 0))
+    (if (null? ns)
+        (hash "cancelled-count" c)
+        (begin (orch:cancel (car ns)) (loop (cdr ns) (+ c 1))))))
+;; orch:stop ends the agent's worker loop (the body already returned), so the
+;; join has a finished fiber to reap.
+(define (cx-stop-all)
+  (let loop ((ns cx-names) (c 0))
+    (if (null? ns)
+        c
+        (begin (orch:stop (car ns)) (loop (cdr ns) (+ c 1))))))
+(define (cx-join-all)
+  ;; A cancelled child's join reports the cancel (fiber:join raises on a
+  ;; cancelled fiber, and orch:join turns that into 'error); a child that
+  ;; finished on its own joins with its value.
+  (let loop ((ns cx-names) (joined 0) (cancelled 0) (t0 (monotonic-ms)))
+    (if (null? ns)
+        (hash "status" (if (= cancelled (length cx-names)) "cancelled" (if (= joined (length cx-names)) "ok" "timeout"))
+              "joined" joined "cancelled" cancelled "of" (length cx-names)
+              "ms" (- (monotonic-ms) t0))
+        (let ((r (orch:join (car ns))))
+          (loop (cdr ns)
+                (+ joined (if (eq? r 'error) 0 1))
+                (+ cancelled (if (and (eq? r 'error) (string=? (or (orch:status (car ns)) "") "stopped")) 1 0))
+                t0)))))
 (define (orch-probes n)
   (set! m (make-hash))
-  (let ((pol (orch:compose-workflow 'collect-all :max-retries 1)))
-    (set! sb-ran (make-hash))
-    (let* ((t0 (monotonic-ms)) (r (orch:supervise-batch (sb-tasks n) pol :watch-scope #t)))
-      (hash-set! m "sbw-ms" (- (monotonic-ms) t0)) (hash-set! m "sbw-status" (str-of (hash-ref r "status")))
-      (hash-set! m "sbw-ok" (try (hash-ref r "ok-count") (catch (e) -1))) (hash-set! m "sbw-err" (try (hash-ref r "err-count") (catch (e) -1)))
-      (hash-set! m "sbw-ran" (hash-length sb-ran)))
-    (set! sb-ran (make-hash))
-    (let* ((t0 (monotonic-ms)) (r (orch:supervise-batch (sb-tasks n) pol :watch-scope #f)))
-      (hash-set! m "sbn-ms" (- (monotonic-ms) t0)) (hash-set! m "sbn-status" (str-of (hash-ref r "status")))
-      (hash-set! m "sbn-ok" (try (hash-ref r "ok-count") (catch (e) -1))) (hash-set! m "sbn-err" (try (hash-ref r "err-count") (catch (e) -1)))
-      (hash-set! m "sbn-ran" (hash-length sb-ran))))
+  (set! sb-ran (make-hash))
+  (let* ((t0 (monotonic-ms)) (r (sb-supervise n 1)))
+    (hash-set! m "sbw-ms" (- (monotonic-ms) t0)) (hash-set! m "sbw-status" (str-of (hash-ref r "status")))
+    (hash-set! m "sbw-ok" (try (hash-ref r "ok-count") (catch (e) -1))) (hash-set! m "sbw-err" (try (hash-ref r "err-count") (catch (e) -1)))
+    (hash-set! m "sbw-ran" (hash-length sb-ran)))
   (set! cx-stop #f) (set! cx-steps 0)
-  (let loop ((i 0)) (if (< i n) (begin (orch:scope-spawn (string-append "cx-" (number->string i)) cx-body) (loop (+ i 1)))))
+  ;; group A: the hard cancel. orch:cancel stops the children; the steps must
+  ;; stop with them and the join reports the cancel.
+  (cx-spawn-all n)
   (let wait ((k 0)) (if (< k 200) (begin (fiber:yield) (wait (+ k 1)))))
-  (let* ((t0 (monotonic-ms)) (c (orch:scope-cancel-all)) (t1 (monotonic-ms)) (s0 cx-steps))
+  (let* ((t0 (monotonic-ms)) (c (cx-cancel-all)) (t1 (monotonic-ms)) (s0 cx-steps))
     (hash-set! m "cx-cancelled" (try (hash-ref c "cancelled-count") (catch (e) -1))) (hash-set! m "cx-cancel-ms" (- t1 t0))
     (let wait ((k 0)) (if (< k 2000) (begin (fiber:yield) (wait (+ k 1)))))
     (hash-set! m "cx-steps-after-cancel" (- cx-steps s0))
-    (let* ((t2 (monotonic-ms)) (j (orch:scope-join-all :timeout-ms 1000)))
-      (hash-set! m "cx-join-status" (str-of (hash-ref j "status"))) (hash-set! m "cx-join-ms" (- (monotonic-ms) t2)))
-    (set! cx-stop #t)
-    (let* ((t3 (monotonic-ms)) (j (orch:scope-join-all :timeout-ms 5000)))
-      (hash-set! m "cx-join2-status" (str-of (hash-ref j "status"))) (hash-set! m "cx-join2-ms" (- (monotonic-ms) t3))))
+    (let* ((t2 (monotonic-ms)) (j (cx-join-all)))
+      (hash-set! m "cx-join-status" (str-of (hash-ref j "status"))) (hash-set! m "cx-join-ms" (- (monotonic-ms) t2))))
+  ;; group B: the cooperative stop. The bodies exit on the flag; the agents are
+  ;; then stopped (their worker loop waits for the next request) and the join
+  ;; returns their value.
+  (set! cx-stop #t)
+  (cx-spawn-all n)
+  (let wait ((k 0)) (if (< k 2000) (begin (fiber:yield) (wait (+ k 1)))))
+  (hash-set! m "cx-stopped" (cx-stop-all))
+  (let* ((t3 (monotonic-ms)) (j (cx-join-all)))
+    (hash-set! m "cx-join2-status" (str-of (hash-ref j "status"))) (hash-set! m "cx-join2-ms" (- (monotonic-ms) t3)))
   (kv-dump))
 (define (kv-dump)
   (let loop ((ks (hash-keys m)) (s ""))

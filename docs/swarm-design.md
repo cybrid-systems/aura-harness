@@ -100,13 +100,19 @@ windows of a family are back it verifies and merges every subtask of that family
 A worker whose heartbeat lease expires while holding jobs is marked dead and its jobs are re-dispatched.
 
 Runners: `run-supervisor`, `run-sv-fail` (worker 0 raises after `at` jobs), `run-sv-cancel` (cooperative stop flag),
-`run-sv-ping` (channel ask/reply RTT), `orch-ask-probe` (orch:agent-ask to an in-process responder), and
-`orch-probes N` (orch:supervise-batch failure recovery with default vs `:watch-scope #f`, orch:scope-cancel-all over
-N yielding bodies). Bench: `scripts/sv_bench.py`, which writes `results/sv-bench.md`. Tests: `tests/test_supervisor.py`.
+`run-sv-ping` (channel ask/reply RTT), `orch-ask-probe` (orch:ask to an in-process responder), and
+`orch-probes N` (orch:supervise failure recovery, agent cancel/join over N yielding bodies). Bench: `scripts/sv_bench.py`,
+which writes `results/sv-bench.md`. Tests: `tests/test_supervisor.py`.
 
 Read the bench as a comparison of protocols, not a speedup claim (aura#4707). The supervisor does no gather/claim
 work and gets full fact reuse by construction (1024 jobs against 1984 swarm turns). The swarm pays for decentralized
 coordination, and the bench measures that cost. With N=1, killing the only worker cannot be recovered in either mode.
-The orch:* rows show aura#4723 (default `:watch-scope` runs nothing and reports ok 0/0), aura#4724 (`scope-join-all
-:timeout-ms 1000` returns after about 3000 ms; the bodies only exit when a cooperative flag is set), and aura#4722
-(`agent-ask :timeout-ms 500` returns timeout after about 5000 ms, and the reply gets unknown-corr).
+
+The std/orch rows replaced the old `orch:*` ones: v0.2.1 closed the v0.2.0 alias window, so `orch:compose-workflow`,
+`orch:supervise-batch` and the `orch:scope-*` family are gone and `std/orch` is the surface. The rows now measure
+`orch:supervise` (N tasks, task 0 raises, one retry: ok N-1 / err 1) and the agent lifecycle (`orch:spawn` per child,
+`orch:cancel` stops it, the join reports the cancel; a second group exits on the cooperative flag and joins "ok").
+The old rows measured aura#4723 (default `:watch-scope` ran nothing and reported ok 0/0), aura#4724
+(`scope-join-all :timeout-ms 1000` returned after about 3000 ms) and aura#4722 (`agent-ask :timeout-ms 500` returned
+timeout after about 5000 ms, and the reply got unknown-corr) — all three were defects of the removed scope / agent
+API, so `orch:ask` now answers a local agent's round trip in one hop.
