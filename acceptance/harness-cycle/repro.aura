@@ -1,5 +1,6 @@
 ;; aura-harness's own shape: a trial in a child workspace and a snapshot trial leave the root byte-identical;
 ;; a guarded keep changes exactly one define.
+;; Snapshot/restore go through (mutate :snapshot) / (mutate :restore); ast:snapshot is unbound on current main.
 (set-code "(define compress (lambda (kind) (list \"head\" 800)))\n(define context-budget (lambda () 4000))") (eval-current)
 (define src0 (current-source :workspace))
 (define w (workspace :create "trial"))
@@ -7,10 +8,10 @@
 (mutate:rebind "compress" "(lambda (kind) (list \"tail\" 800))" "trial") (eval-current)
 (define in-child (compress "test-log"))
 (workspace :switch 0) (eval-current) (workspace :delete w)
-(define s (ast:snapshot "pre"))
+(define s (mutate :snapshot "pre"))
 (mutate:rebind "compress" "(lambda (kind) (list \"summarize\" 800))" "trial2") (eval-current)
 (define in-snap (compress "test-log"))
-(ast:restore s) (eval-current)
+(mutate :restore s) (eval-current)
 (define same (equal? (current-source :workspace) src0))
 (mutate:rebind "compress" "(lambda (kind) (list \"tail\" 800))" "keep") (eval-current)
 (display (if (and same (equal? in-child (list "tail" 800)) (equal? in-snap (list "summarize" 800))
