@@ -7,6 +7,9 @@ remembered and not repeated.
 
 `LLMProposer` (optional, AURA_HARNESS_LLM_URL) may add free-form Lisp bodies for a mutable define; every one still goes
 through the guard and the gate. No number in the README uses it.
+
+The closed grammar is the baseline. ``rsi/structured.py`` searches the same failures in an explicit component / edit-kind
+taxonomy and can emit a joint edit inside one component. Select it with ``run_rsi(..., proposer_mode="structured")``.
 """
 from __future__ import annotations
 

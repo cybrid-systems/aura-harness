@@ -86,6 +86,6 @@ p5 对 RSI 的影响：server.aura 的 `merge-root!` 在 post-check 失败时用
 1. 多 actor / swarm / 用户回滚与 ws 模式 KEEP 交错时会静默丢改动（#4776，R8）。在 Aura 修复前，多 actor 场景请用 snapshot 模式，或在 KEEP 时校验 root 版本。
 2. KEEP 的 post-check 失败后，restore 会造成"审计看到的不是实际在跑的"（#4777）。
 3. 升级到 main 后长时间运行：merge 的内存与耗时增长（#4779），3000 次 KEEP 后 RSS 3.7 GB，需要定期重启。
-4. better() 会 KEEP 有害但合法的改动（R6）；统计准入又太慢（R6b）。
+4. better() 会 KEEP 有害但合法的改动（R6）；统计准入又太慢（R6b）。2026-11-12 在 v0.2.1 上复跑了这个洞，并用双门控把它收成 0 次有害 KEEP，同时干净闭语法的 63.35% 不动。见仓库 README「双门控与结构化提案」和 [`results/gates/summary.md`](../results/gates/summary.md)。历史的 R6 数字仍以本节为准，不改写成新结果。
 5. 并行 fiber worldline 在 main 上不可用（#4778）。
 6. 本机负载高，延迟绝对值偏大；main vs pin 的倍数来自同一时段，可信。

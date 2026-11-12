@@ -20,7 +20,8 @@ class M2Config:
     fresh: bool = False         # admission needs a non-loss on fresh, one-use held-out tasks
     recombine: bool = False     # add library variants of the same plugin as candidates
     archive: bool = True        # Pareto archive bookkeeping (always cheap)
-    admission: str = "better"   # "better" (window gate) | "stat" (M5b: selection/admission split + sign test)
+    admission: str = "better"   # "better" (window gate) | "stat" (M5b) | "dual" (structure + solution gates)
+    dual_thin: bool = False     # dual only: also reject thin destructive held-out wins (measured, off by default)
     alpha: float = 0.05
     swarm: bool = False         # LLM proposes -> swarm fine-tunes (rsi/localsearch.py) before the guard/gate
     swarm_rounds: int = 2
