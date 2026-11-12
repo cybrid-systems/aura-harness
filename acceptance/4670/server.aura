@@ -7,7 +7,7 @@
 ;;   D comp a b                    one decision (route|compress|retry|ttl|delegate|budget|maxsteps), for latency
 ;;   APPLY ts name body why actor  guarded mutation of the live harness (no gate): snapshot, rebind, eval, postcheck
 ;;   TRIAL mode ts n {name body why}*   one forked worldline per candidate; mode = ws (workspace :create child, the
-;;                                 live root is never touched) | snap (ast:snapshot / mutate / ast:restore on root).
+;;                                 live root is never touched) | snap (mutate :snapshot / mutate / ast:restore on root).
 ;;                                 -> per candidate: blocked reason, or its decision table
 ;;   VERDICT ts chosen scores why  KEEP candidate #chosen (ws: `workspace :merge` of its trial child + root post-check;
 ;;                                 snap: re-applied to the root through the guard) or ROLLBACK (-1)
@@ -531,12 +531,12 @@
 (define (guarded-root-apply! name body0 why)
   (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)))
     (if sr (list #f sr #f (- (now-ms) t0))
-        (let* ((snap (ast:snapshot (string-append "pre-" name)))
+        (let* ((snap (mutate :snapshot (string-append "pre-" name)))
                (ar (raw-apply name body why))
                (tb (if ar #f (materialize)))
                (pr (if ar ar (post-check tb))))
           (if pr
-              (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+              (begin (mutate :restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
               (list #t "" tb (- (now-ms) t0)))))))
 
 ;; ---------------------------------------------------------------- trials (forked worldlines)
@@ -572,22 +572,22 @@
 ;; promote a kept trial child into the root with `workspace :merge` (child defines override the parent's), then
 ;; re-run the post-check on the root under a snapshot -> (list ok? reason table ms)
 (define (merge-root! w)
-  (let* ((t0 (now-ms)) (snap (ast:snapshot "pre-merge"))
+  (let* ((t0 (now-ms)) (snap (mutate :snapshot "pre-merge"))
          (mr (try (begin (workspace :merge w) (eval-current) #f) (catch (e) "merge/eval failed")))
          (tb (if mr #f (materialize)))
          (pr (if mr mr (post-check tb))))
     (if pr
-        (begin (ast:restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
+        (begin (mutate :restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
         (list #t "" tb (- (now-ms) t0)))))
 ;; snap mode: ast:snapshot, mutate the root, materialise, ast:restore
 (define (trial-snap name body0 why)
   (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)))
     (if sr (list #f sr #f 0)
-        (let* ((snap (ast:snapshot "trial"))
+        (let* ((snap (mutate :snapshot "trial"))
                (ar (raw-apply name body why))
                (tb (if ar #f (materialize)))
                (pr (if ar ar (post-check tb))))
-          (ast:restore snap) (eval-current)
+          (mutate :restore snap) (eval-current)
           (if pr (list #f pr #f (- (now-ms) t0)) (list #t "" tb (- (now-ms) t0)))))))
 
 (define (trial-reply r i)
@@ -601,19 +601,19 @@
 (define bench-a "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 3) (else 1)))")
 (define bench-b "(lambda (tool err) (cond ((and (equal? tool \"sql\") (equal? err \"rate-limit\")) 2) (else 1)))")
 (define (bench n)
-  (let* ((v0 *version*) (l0 *log*) (s0 (ast:snapshot "bench-base"))
+  (let* ((v0 *version*) (l0 *log*) (s0 (mutate :snapshot "bench-base"))
          (r-call (us-per (* 50 n) (lambda (i) (retry-limit "sql" "rate-limit"))))
          (r-mat (us-per n (lambda (i) (materialize))))
          (r-static (us-per (* 10 n) (lambda (i) (static-check "retry-limit" bench-a))))
          (r-admit (us-per (* 10 n) (lambda (i) (admit "retry-limit" bench-a))))
          (r-rebind (us-per n (lambda (i) (mutate:rebind "retry-limit" (if (even? i) bench-a bench-b) "bench") (eval-current))))
-         (r-snap (us-per n (lambda (i) (ast:snapshot "bench"))))
-         (r-restore (us-per n (lambda (i) (ast:restore s0) (eval-current))))
+         (r-snap (us-per n (lambda (i) (mutate :snapshot "bench"))))
+         (r-restore (us-per n (lambda (i) (mutate :restore s0) (eval-current))))
          (r-apply (us-per n (lambda (i) (guarded-root-apply! "retry-limit" (if (even? i) bench-a bench-b) "bench"))))
          (r-ws (us-per n (lambda (i) (trial-ws "retry-limit" bench-a "bench"))))
          (r-snapt (us-per n (lambda (i) (trial-snap "retry-limit" bench-a "bench"))))
          (r-block (us-per (* 10 n) (lambda (i) (static-check "context-budget" "(lambda () 8000)")))))
-    (ast:restore s0) (eval-current)
+    (mutate :restore s0) (eval-current)
     (set! *version* v0) (set! *log* l0)
     (hash "n" n "decision_call_us" r-call "materialize_table_us" r-mat "static_check_us" r-static "admit_us" r-admit
           "rebind_eval_us" r-rebind "snapshot_us" r-snap "restore_eval_us" r-restore
@@ -713,6 +713,6 @@
 (set-code (string-append (read-file *seed-path*) (knobs-src) (fuel-prelude)))
 (eval-current)
 (set! *boundary* (boundary))
-(define *seed-snap* (ast:snapshot "seed"))
+(define *seed-snap* (mutate :snapshot "seed"))
 (reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary* "knobs" *nknobs* "fuel" *fuel-max*))
 (serve)
