@@ -10,6 +10,7 @@ from ..agent import better, replay_score, summarize
 from ..env import Memory, make_stream, run_task
 from ..harness import COMPONENT
 from .admission import RetentionGate, target_veto
+from .gates import admit_index
 from .m2 import (Critic, M2Config, agg, budget_k, fresh_of, pareto_insert, per_task, prune_candidates,
                  recomb_candidates)
 from .plugins import Library
@@ -22,7 +23,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             worldlines: str = "ws", jobs: int = 1, backend=None, min_heldout: int = 20,
             retention: RetentionGate | None = None, supervise: bool = True, label: str = "rsi",
             cfg: M2Config | None = None, world: str = "sim", ledger=None, proposer=None, measure: bool = False,
-            tracer=None) -> dict:
+            tracer=None, proposer_mode: str = "closed", joint_kinds=None) -> dict:
     """tracer: an obs.Tracer for a per-run trace (docs/observability.md); None = off, no overhead"""
     from .supervisor import SupervisedAura
     from ..control import AuraHarness
@@ -35,9 +36,21 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
         stream = dev_stream(seed, n, shift, v2=world == "dev2")
     else:
         stream = make_stream(seed, n, shift)
-    # proposer: None = scripted; or a factory(min_evidence=, noise=, seed=) -> Proposer (e.g. the M5 LLM proposer)
-    src = RuleSource(proposer(min_evidence=min_evidence, noise=noise, seed=seed) if proposer else None,
-                     min_evidence=min_evidence, noise=noise, seed=seed)
+    # proposer: None = scripted closed grammar, unless proposer_mode="structured".
+    # A factory(min_evidence=, noise=, seed=) -> Proposer (e.g. the M5 LLM proposer) wins over the mode.
+    if proposer is not None:
+        built = proposer(min_evidence=min_evidence, noise=noise, seed=seed)
+    elif proposer_mode == "structured":
+        from .structured import StructuredProposer
+        built = StructuredProposer(min_evidence=min_evidence, noise=noise, seed=seed)
+        if joint_kinds == "errline":
+            from ..env import ERRLINE_KINDS
+            built.joint_kinds = ERRLINE_KINDS
+        elif joint_kinds is not None:
+            built.joint_kinds = joint_kinds
+    else:
+        built = None
+    src = RuleSource(built, min_evidence=min_evidence, noise=noise, seed=seed)
     lib = Library()
     cfg = cfg or M2Config()
     m2 = cfg.any()
@@ -53,6 +66,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     spent_fresh: set = set()
     stats = {"budget_cut": 0, "critic_veto": 0, "fresh_veto": 0, "pruned": [], "recombined": 0,
              "recomb_kept": 0, "fresh_checks": 0}
+    dual_stats = {"rounds": 0, "structure_reject": 0, "solution_reject": 0, "passed": 0}
     tb = h.table()
     mem = Memory(seed)
     ckpts = {}
@@ -164,9 +178,21 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             if tr:
                 tr.gate(sc, 1000 * (time.perf_counter() - gg0))
             best, bs = -1, base
-            for r, s in zip(ok_trials, cs):
-                if better(s, bs):
-                    best, bs = r["i"], s
+            if cfg.admission == "dual":
+                # Both gates, then the same lexicographic pick. A failing candidate is
+                # not eligible; the live root is still only written by VERDICT below.
+                dual_stats["rounds"] += 1
+                best, ginfo = admit_index(cands, ok_trials, cs, base, tb, thin=cfg.dual_thin)
+                sc["gates"] = ginfo
+                dual_stats["structure_reject"] += len(ginfo["structure_reject"])
+                dual_stats["solution_reject"] += len(ginfo["solution_reject"])
+                dual_stats["passed"] += len(ginfo["passed"])
+                if best >= 0:
+                    bs = next(s for r, s in zip(ok_trials, cs) if r["i"] == best)
+            else:
+                for r, s in zip(ok_trials, cs):
+                    if better(s, bs):
+                        best, bs = r["i"], s
             if stat and best >= 0 and not hard_veto(cands[best]):
                 # M5b: selection done on the selection split; admission waits for fresh tasks after t.id
                 pv = h.verdict(t.id, -1, dict(sc, stat="selected; admission pending"), cands[0].why)
@@ -194,7 +220,12 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             # stage 4: retention gate on the gate's pick; on a veto fall back to the next-best passing candidate
             ret_info = None
             if retention is not None and best >= 0:
-                order = [best] + [r["i"] for s, r in ranked if r["i"] != best and better(s, base)]
+                if cfg.admission == "dual":
+                    passed = set(ginfo["passed"])
+                    order = [best] + [r["i"] for s, r in ranked
+                                      if r["i"] != best and cands[r["i"]].desc in passed and better(s, base)]
+                else:
+                    order = [best] + [r["i"] for s, r in ranked if r["i"] != best and better(s, base)]
                 tables = {r["i"]: r["table"] for r in ok_trials}
                 best = -1
                 for i in order:
@@ -217,6 +248,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                     why_v = "retention veto"
                 elif sc.get("fresh") and sc["fresh"]["cand"][0] < sc["fresh"]["base"][0]:
                     why_v = "fresh veto"
+                elif sc.get("gates"):
+                    why_v = "dual gate rejected every candidate"
                 else:
                     why_v = f"no candidate beats base {list(base)}"
                 tr.verdict(vr, cands[best].desc if best >= 0 else "", why_v,
@@ -253,6 +286,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                              "candidates": [c.desc for c in cands], "blocked": blocked, "scores": sc,
                              "why": cands[0].why, "gate_ms": round(1000 * gate_s[-1], 1),
                              "chosen_by": cands[best].meta.get("proposer", "rule") if best >= 0 else None,
+                             "edit": (cands[best].meta.get("taxonomy") or {}).get("edit") if best >= 0 else None,
+                             "n_joint": sum(1 for c in cands if (c.meta.get("taxonomy") or {}).get("edit") == "joint-strategy-limit"),
                              "n_llm": sum(c.meta.get("proposer", "").startswith("llm") for c in cands), "sig": sig,
                              "swarm_attempt": (cands[best].meta.get("swarm") or {}).get("attempt_id") if best >= 0 else None})
         if ledger is not None:
@@ -304,6 +339,11 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             ledger.event("metrics", n, **out["metrics"])
     if retention is not None:
         out["retention"] = {"checks": retention.checks, "vetoes": retention.vetoes, "spent": round(retention.spent, 2)}
+    if cfg.admission == "dual":
+        out["dual"] = dual_stats
+        out["proposer_mode"] = proposer_mode
+    elif proposer_mode == "structured":
+        out["proposer_mode"] = proposer_mode
     return out
 
 

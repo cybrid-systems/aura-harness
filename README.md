@@ -11,7 +11,7 @@ The self-evolution loop works like this:
 
 Everything is offline and reproducible from seeds. No LLM key is needed. There are interfaces for an LLM proposer (and the solver's model), but no number below uses them.
 
-> Status: research MVP. The task environment and the "model" are simulated and seeded. The proposer works in a closed grammar (one component, table-level edits). Aura is pinned at `a6c63aa19` (re-pinned 2026-10-22 from `e50951bff`; first published on `c8ad457c9`). Read the caveats before quoting numbers.
+> Status: research MVP. The task environment and the "model" are simulated and seeded. The default proposer is a closed grammar (one component, table-level edits). A structured taxonomy search sits beside it (`run_rsi(..., proposer_mode="structured")`); the bench table below is the closed grammar. Aura is pinned at `a6c63aa19` (re-pinned 2026-10-22 from `e50951bff`; first published on `c8ad457c9`). The 2026-11-12 gate matrix used the v0.2.1 release binary `f8e4d307b`, not a pin bump. Read the caveats before quoting numbers.
 
 ## 验证（2026-10-30，中文）：RSI 与 Aura 能力，声明 → 测试 → 结果
 
@@ -88,6 +88,39 @@ AURA_BIN=... AURA_LIB=... python3 scripts/sv_bench.py --ns 1,8
 python3 -m aura_harness.evo --seeds 0 1 2 3 4 --gens 10 --ask 10 --propose 4 --H 6
 AURA_BIN=... AURA_LIB=... python3 validation/evo_validate.py   # 一键复跑全部判据
 python3 validation/evo_report.py                              # 从原始结果生成报告
+```
+
+## 双门控与结构化提案（2026-11-12）
+
+2026-10-30 的验证已经记下 `better()` 的洞：合法但有害的 `"ttl all 0"` 会在留出窗口上多成功几个任务，于是被 KEEP。统计准入能挡住，但 n=400 时几乎不 KEEP。这一节是在同一套种子任务上的复跑，trial / KEEP / ROLLBACK 仍走 `aura/server.aura` 的 worldline 和审计日志。默认的 `run_rsi()` 没改（闭语法 + `better()`），所以上面的 63.4% 表不受影响。
+
+两条新路径都不要 LLM：
+
+- **结构门**（意图）：提案必须落在失败证据对应的分类节点上。一个组件、一种编辑，改的格子就是证据点名的那一格。整表清零、压到压缩下限以下、去动 `context-budget` / `max-steps`，或者方向和失败相反，都是 ROLLBACK。范围守卫照旧，不拿它去换一段模型评论。
+- **结果门**：留出成绩仍要过 `better()`，并且改动不能是那种“形状合法的清空”（全部 TTL 归零、全部 retry 归零、每种输出都压到下限以下）。两条都过才 KEEP；不过的候选不会写进 live root。
+- **结构化提案**：把失败映射到组件 × 编辑类型，再在这棵小树上展开。闭语法做不到的是同一组件里的组合编辑，例如 `compress service-log grep-errors/1600`（策略和上限一起变）。闭语法仍可用 `proposer_mode="closed"` 对照。
+
+复跑：5 seed × 400 任务，shift 在 200，`supervise=False`，Aura v0.2.1 `f8e4d307b`。原始行在 [`results/gates/`](results/gates/summary.md)。
+
+| 轮次 | 配置 | 成功率 | 留出 | tokens/任务 | KEEP / ROLLBACK | 有害 KEEP |
+|---|---|---:|---:|---:|---:|---:|
+| 0 | `better()`，闭语法，干净 | 63.35% | 64.00% | 8377 | 12.0 / 7.8 | 0 |
+| 0 | `better()`，混入 ttl / compress / retry 清空 | 62.20% | 62.60% | 8510 | 14.8 / 9.2 | **10**（9 次 ttl all 0，1 次 retry all 0；4/5 个 seed） |
+| 1 | 双门控，闭语法，同样的有害混入 | 63.35% | 64.00% | 8377 | 12.0 / 7.8 | **0** |
+| 1 | 结构化提案 + 双门控 | 64.70% | 65.40% | 8917 | 12.8 / 7.4 | 0 |
+| 2 | 双门控再加 thin（破坏性编辑、留出只多 ≤4 个且成本 >+5% 就拒绝） | 63.25% | 63.80% | 8329 | 11.4 / 8.2 | 0 |
+| 3 | 组合编辑只留给 test-log / service-log | 62.45% | 62.80% | 8251 | 12.4 / 8.2 | 0 |
+
+读法：
+
+- 干净的 `better()` 和 README 的基准表一致（63.35% / 64.00% / 8377 / 12.0 / 7.8）。有害 KEEP 的次数和 2026-10-30 的 8 次不完全相同：这次多注入了 `retry all 0`，并且跑在 v0.2.1 上。洞还在，4/5 个 seed 会 KEEP `"ttl all 0"`。
+- 双门控把有害 KEEP 收到 0，干净闭语法的 KEEP 和成功率不动。thin 再收紧会少 KEEP、留出掉 0.2 pt，默认关闭。
+- 结构化搜索的提案相关率是 100%（闭语法 98.1%，差的是每个 seed 一次被守卫挡住的 `context-budget` 上调）。它 KEEP 了闭语法不会一次提出的组合编辑，平均留出高 1.4 pt，token 多约 6.4%。seed 2 从 68.0% 降到 65.5%，平均值仍高。把组合编辑从 code-file 上拿掉（第 3 轮）之后留出掉到 62.8%，低于闭语法，所以默认仍对所有输出种类做组合。
+- 没有跑：noise 0.3 / 1.0、统计准入的整表、`supervise=True`、MOEA/D 的 genome 搜索。没有改 Aura pin。
+
+```sh
+python3 -m unittest tests.test_gates -v
+AURA_BIN=... AURA_LIB=... python3 validation/gate_matrix.py
 ```
 
 

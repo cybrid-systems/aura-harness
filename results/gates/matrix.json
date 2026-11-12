@@ -1,0 +1,3690 @@
+{
+  "aura_version": "aura 0.2.1 (f8e4d307b8603b3cb517221862cdaa39c61e5030)",
+  "aura_sha": "f8e4d307b8603b3cb517221862cdaa39c61e5030",
+  "n": 400,
+  "shift": 200,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "configs": {
+    "r0-better-harm": {
+      "config": "r0-better-harm",
+      "admission": "better",
+      "proposer": "closed",
+      "harm": true,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 4.21,
+          "seed": 0
+        },
+        {
+          "success": 0.56,
+          "heldout_success": 0.555,
+          "cost_per_task": 7439.9475,
+          "keep": 15,
+          "rollback": 12,
+          "proposals": 27,
+          "blocked": 1,
+          "harm_kept": 2,
+          "known_harm_kept": 2,
+          "harm_kept_desc": [
+            "HARM ttl all 0",
+            "HARM ttl all 0"
+          ],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "HARM ttl all 0",
+            "ttl db-schema=40",
+            "ttl repo-layout=160",
+            "retry grep|timeout=3",
+            "delegate refactor>=6",
+            "HARM ttl all 0",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 72,
+            "total": 73,
+            "protected": 1,
+            "rate": 0.9863013698630136
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 5.08,
+          "seed": 1
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.72,
+          "cost_per_task": 9074.5425,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 1,
+          "harm_kept": 1,
+          "known_harm_kept": 1,
+          "harm_kept_desc": [
+            "HARM ttl all 0"
+          ],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "HARM ttl all 0",
+            "retry grep|timeout=3",
+            "ttl db-schema=40",
+            "ttl repo-layout=40",
+            "ttl test-cmd=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 53,
+            "total": 54,
+            "protected": 1,
+            "rate": 0.9814814814814815
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 4.01,
+          "seed": 2
+        },
+        {
+          "success": 0.6525,
+          "heldout_success": 0.645,
+          "cost_per_task": 8154.105,
+          "keep": 22,
+          "rollback": 4,
+          "proposals": 26,
+          "blocked": 1,
+          "harm_kept": 5,
+          "known_harm_kept": 4,
+          "harm_kept_desc": [
+            "HARM retry all 0",
+            "HARM ttl all 0",
+            "HARM ttl all 0",
+            "HARM ttl all 0",
+            "HARM ttl all 0"
+          ],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "HARM retry all 0",
+            "retry grep|timeout=2",
+            "HARM ttl all 0",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2",
+            "ttl test-cmd=40",
+            "delegate refactor>=2",
+            "HARM ttl all 0",
+            "ttl test-cmd=40",
+            "route search->lsp-find",
+            "ttl db-schema=40",
+            "HARM ttl all 0",
+            "retry pytest|timeout=2",
+            "ttl repo-layout=40",
+            "HARM ttl all 0"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 66,
+            "total": 67,
+            "protected": 1,
+            "rate": 0.9850746268656716
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 5.32,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.575,
+          "cost_per_task": 8426.77,
+          "keep": 15,
+          "rollback": 9,
+          "proposals": 24,
+          "blocked": 1,
+          "harm_kept": 2,
+          "known_harm_kept": 2,
+          "harm_kept_desc": [
+            "HARM ttl all 0",
+            "HARM ttl all 0"
+          ],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "HARM ttl all 0",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "ttl test-cmd=40",
+            "HARM ttl all 0",
+            "ttl repo-layout=40",
+            "delegate refactor>=5"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 63,
+            "total": 64,
+            "protected": 1,
+            "rate": 0.984375
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 5.05,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6220000000000001,
+      "mean_heldout": 0.626,
+      "mean_cost": 8509.592999999999,
+      "mean_keep": 14.8,
+      "mean_rollback": 9.2,
+      "mean_proposals": 24.0,
+      "harm_kept": 10,
+      "known_harm_kept": 9,
+      "seeds_with_harm": 4,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9840255591054313,
+      "protected_proposals": 5,
+      "wall_s": 23.7
+    },
+    "r0-better-clean": {
+      "config": "r0-better-clean",
+      "admission": "better",
+      "proposer": "closed",
+      "harm": false,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.44,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6806.5575,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 58,
+            "total": 59,
+            "protected": 1,
+            "rate": 0.9830508474576272
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.69,
+          "seed": 1
+        },
+        {
+          "success": 0.68,
+          "heldout_success": 0.72,
+          "cost_per_task": 8890.38,
+          "keep": 11,
+          "rollback": 8,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=0",
+            "ttl repo-layout=40",
+            "ttl test-cmd=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.09,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.675,
+          "cost_per_task": 8819.9925,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "retry grep|timeout=3",
+            "delegate refactor>=5",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 1.98,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.585,
+          "cost_per_task": 7916.7975,
+          "keep": 13,
+          "rollback": 6,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "ttl test-cmd=10",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "delegate refactor>=6",
+            "ttl db-schema=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 51,
+            "total": 52,
+            "protected": 1,
+            "rate": 0.9807692307692307
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.08,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6335,
+      "mean_heldout": 0.64,
+      "mean_cost": 8377.2655,
+      "mean_keep": 12.0,
+      "mean_rollback": 7.8,
+      "mean_proposals": 19.8,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9810606060606061,
+      "protected_proposals": 5,
+      "wall_s": 11.3
+    },
+    "r1-dual-harm": {
+      "config": "r1-dual-harm",
+      "admission": "dual",
+      "proposer": "closed",
+      "harm": true,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 18
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 30,
+            "passed": 24
+          },
+          "wall_s": 4.2,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6806.5575,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 58,
+            "total": 59,
+            "protected": 1,
+            "rate": 0.9830508474576272
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 19
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 29,
+            "passed": 29
+          },
+          "wall_s": 4.48,
+          "seed": 1
+        },
+        {
+          "success": 0.68,
+          "heldout_success": 0.72,
+          "cost_per_task": 8890.38,
+          "keep": 11,
+          "rollback": 8,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=0",
+            "ttl repo-layout=40",
+            "ttl test-cmd=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 19
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 19
+            }
+          },
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 57,
+            "solution_reject": 26,
+            "passed": 22
+          },
+          "wall_s": 3.9,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.675,
+          "cost_per_task": 8819.9925,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "retry grep|timeout=3",
+            "delegate refactor>=5",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 2,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 17
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 17
+            }
+          },
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 51,
+            "solution_reject": 28,
+            "passed": 20
+          },
+          "wall_s": 3.58,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.585,
+          "cost_per_task": 7916.7975,
+          "keep": 13,
+          "rollback": 6,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "ttl test-cmd=10",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "delegate refactor>=6",
+            "ttl db-schema=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 51,
+            "total": 52,
+            "protected": 1,
+            "rate": 0.9807692307692307
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 16
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 19
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 19
+            }
+          },
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 57,
+            "solution_reject": 28,
+            "passed": 23
+          },
+          "wall_s": 3.79,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6335,
+      "mean_heldout": 0.64,
+      "mean_cost": 8377.2655,
+      "mean_keep": 12.0,
+      "mean_rollback": 7.8,
+      "mean_proposals": 19.8,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9810606060606061,
+      "protected_proposals": 5,
+      "wall_s": 19.9
+    },
+    "r1-dual-clean": {
+      "config": "r1-dual-clean",
+      "admission": "dual",
+      "proposer": "closed",
+      "harm": false,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 30,
+            "passed": 24
+          },
+          "wall_s": 2.38,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6806.5575,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 58,
+            "total": 59,
+            "protected": 1,
+            "rate": 0.9830508474576272
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 29,
+            "passed": 29
+          },
+          "wall_s": 2.48,
+          "seed": 1
+        },
+        {
+          "success": 0.68,
+          "heldout_success": 0.72,
+          "cost_per_task": 8890.38,
+          "keep": 11,
+          "rollback": 8,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=0",
+            "ttl repo-layout=40",
+            "ttl test-cmd=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 0,
+            "solution_reject": 26,
+            "passed": 22
+          },
+          "wall_s": 2.11,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.675,
+          "cost_per_task": 8819.9925,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "retry grep|timeout=3",
+            "delegate refactor>=5",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 0,
+            "solution_reject": 28,
+            "passed": 20
+          },
+          "wall_s": 1.98,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.585,
+          "cost_per_task": 7916.7975,
+          "keep": 13,
+          "rollback": 6,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "ttl test-cmd=10",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "delegate refactor>=6",
+            "ttl db-schema=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 51,
+            "total": 52,
+            "protected": 1,
+            "rate": 0.9807692307692307
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 0,
+            "solution_reject": 28,
+            "passed": 23
+          },
+          "wall_s": 2.16,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6335,
+      "mean_heldout": 0.64,
+      "mean_cost": 8377.2655,
+      "mean_keep": 12.0,
+      "mean_rollback": 7.8,
+      "mean_proposals": 19.8,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9810606060606061,
+      "protected_proposals": 5,
+      "wall_s": 11.1
+    },
+    "r1-structured-better": {
+      "config": "r1-structured-better",
+      "admission": "better",
+      "proposer": "structured",
+      "harm": false,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9449.505,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head-tail/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "reroute",
+            "reroute",
+            "lower-threshold",
+            "lower-threshold",
+            "raise-ttl",
+            "raise-retry"
+          ],
+          "joint_kept": [
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 11,
+          "relevance": {
+            "aligned": 76,
+            "total": 76,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 3.19,
+          "seed": 0
+        },
+        {
+          "success": 0.665,
+          "heldout_success": 0.665,
+          "cost_per_task": 8409.0175,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/1600",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "ttl repo-layout=40",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "retry sql|rate-limit=2",
+            "ttl test-cmd=80",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "raise-ttl",
+            "lower-threshold",
+            "raise-retry",
+            "raise-retry",
+            "raise-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 7,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.81,
+          "seed": 1
+        },
+        {
+          "success": 0.655,
+          "heldout_success": 0.675,
+          "cost_per_task": 9130.5575,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=40",
+            "ttl test-cmd=80",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=20",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            "reroute",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-ttl",
+            "raise-ttl",
+            "scale-limit-down",
+            "joint-strategy-limit",
+            "lower-threshold",
+            "raise-retry",
+            "lower-ttl",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 8,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.96,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.68,
+          "cost_per_task": 8389.7175,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/1600",
+            "ttl test-cmd=40",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "retry grep|timeout=2",
+            "delegate refactor>=5",
+            "route search->lsp-find",
+            "retry sql|rate-limit=3",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "lower-threshold",
+            "reroute",
+            "raise-retry",
+            "lower-threshold"
+          ],
+          "joint_kept": [
+            "compress test-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 63,
+            "total": 63,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.68,
+          "seed": 3
+        },
+        {
+          "success": 0.615,
+          "heldout_success": 0.615,
+          "cost_per_task": 9207.5425,
+          "keep": 16,
+          "rollback": 3,
+          "proposals": 19,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=160",
+            "retry sql|rate-limit=2",
+            "retry grep|timeout=3",
+            "delegate refactor>=6",
+            "compress test-log tail/800",
+            "ttl repo-layout=40",
+            "delegate refactor>=4",
+            "ttl db-schema=40",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "raise-retry",
+            "lower-threshold",
+            "scale-limit-down",
+            "lower-ttl",
+            "lower-threshold",
+            "lower-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 66,
+            "total": 66,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": null,
+          "wall_s": 2.79,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.647,
+      "mean_heldout": 0.654,
+      "mean_cost": 8917.268,
+      "mean_keep": 12.8,
+      "mean_rollback": 7.4,
+      "mean_proposals": 20.2,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 13,
+      "joint_proposed": 44,
+      "relevance": 1.0,
+      "protected_proposals": 0,
+      "wall_s": 14.4
+    },
+    "r1-structured-dual": {
+      "config": "r1-structured-dual",
+      "admission": "dual",
+      "proposer": "structured",
+      "harm": false,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9449.505,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head-tail/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "reroute",
+            "reroute",
+            "lower-threshold",
+            "lower-threshold",
+            "raise-ttl",
+            "raise-retry"
+          ],
+          "joint_kept": [
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 11,
+          "relevance": {
+            "aligned": 76,
+            "total": 76,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 42,
+            "passed": 34
+          },
+          "wall_s": 2.92,
+          "seed": 0
+        },
+        {
+          "success": 0.665,
+          "heldout_success": 0.665,
+          "cost_per_task": 8409.0175,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/1600",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "ttl repo-layout=40",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "retry sql|rate-limit=2",
+            "ttl test-cmd=80",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "raise-ttl",
+            "lower-threshold",
+            "raise-retry",
+            "raise-retry",
+            "raise-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 7,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 29,
+            "passed": 39
+          },
+          "wall_s": 2.94,
+          "seed": 1
+        },
+        {
+          "success": 0.655,
+          "heldout_success": 0.675,
+          "cost_per_task": 9130.5575,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=40",
+            "ttl test-cmd=80",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=20",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            "reroute",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-ttl",
+            "raise-ttl",
+            "scale-limit-down",
+            "joint-strategy-limit",
+            "lower-threshold",
+            "raise-retry",
+            "lower-ttl",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 8,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 0,
+            "solution_reject": 39,
+            "passed": 29
+          },
+          "wall_s": 2.81,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.68,
+          "cost_per_task": 8389.7175,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/1600",
+            "ttl test-cmd=40",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "retry grep|timeout=2",
+            "delegate refactor>=5",
+            "route search->lsp-find",
+            "retry sql|rate-limit=3",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "lower-threshold",
+            "reroute",
+            "raise-retry",
+            "lower-threshold"
+          ],
+          "joint_kept": [
+            "compress test-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 63,
+            "total": 63,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 0,
+            "solution_reject": 34,
+            "passed": 29
+          },
+          "wall_s": 2.51,
+          "seed": 3
+        },
+        {
+          "success": 0.615,
+          "heldout_success": 0.615,
+          "cost_per_task": 9207.5425,
+          "keep": 16,
+          "rollback": 3,
+          "proposals": 19,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=160",
+            "retry sql|rate-limit=2",
+            "retry grep|timeout=3",
+            "delegate refactor>=6",
+            "compress test-log tail/800",
+            "ttl repo-layout=40",
+            "delegate refactor>=4",
+            "ttl db-schema=40",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "raise-retry",
+            "lower-threshold",
+            "scale-limit-down",
+            "lower-ttl",
+            "lower-threshold",
+            "lower-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 66,
+            "total": 66,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 0,
+            "solution_reject": 29,
+            "passed": 37
+          },
+          "wall_s": 2.91,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.647,
+      "mean_heldout": 0.654,
+      "mean_cost": 8917.268,
+      "mean_keep": 12.8,
+      "mean_rollback": 7.4,
+      "mean_proposals": 20.2,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 13,
+      "joint_proposed": 44,
+      "relevance": 1.0,
+      "protected_proposals": 0,
+      "wall_s": 14.1
+    },
+    "r2-dual-thin-clean": {
+      "config": "r2-dual-thin-clean",
+      "admission": "dual",
+      "proposer": "closed",
+      "harm": false,
+      "thin": true,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 30,
+            "passed": 24
+          },
+          "wall_s": 2.33,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6806.5575,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 58,
+            "total": 59,
+            "protected": 1,
+            "rate": 0.9830508474576272
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 29,
+            "passed": 29
+          },
+          "wall_s": 2.45,
+          "seed": 1
+        },
+        {
+          "success": 0.675,
+          "heldout_success": 0.71,
+          "cost_per_task": 8737.5875,
+          "keep": 9,
+          "rollback": 10,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 0,
+            "solution_reject": 29,
+            "passed": 19
+          },
+          "wall_s": 2.02,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.675,
+          "cost_per_task": 8819.9925,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "retry grep|timeout=3",
+            "delegate refactor>=5",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 0,
+            "solution_reject": 28,
+            "passed": 20
+          },
+          "wall_s": 2.12,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.585,
+          "cost_per_task": 7830.22,
+          "keep": 12,
+          "rollback": 6,
+          "proposals": 18,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "delegate refactor>=6",
+            "ttl db-schema=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 50,
+            "total": 51,
+            "protected": 1,
+            "rate": 0.9803921568627451
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 18,
+            "structure_reject": 0,
+            "solution_reject": 30,
+            "passed": 20
+          },
+          "wall_s": 2.21,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6325000000000001,
+      "mean_heldout": 0.638,
+      "mean_cost": 8329.391500000002,
+      "mean_keep": 11.4,
+      "mean_rollback": 8.2,
+      "mean_proposals": 19.6,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9809885931558935,
+      "protected_proposals": 5,
+      "wall_s": 11.1
+    },
+    "r2-dual-thin-harm": {
+      "config": "r2-dual-thin-harm",
+      "admission": "dual",
+      "proposer": "closed",
+      "harm": true,
+      "thin": true,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9452.6,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/800",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=3"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 54,
+            "total": 55,
+            "protected": 1,
+            "rate": 0.9818181818181818
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 18
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 30,
+            "passed": 24
+          },
+          "wall_s": 4.12,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6806.5575,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 58,
+            "total": 59,
+            "protected": 1,
+            "rate": 0.9830508474576272
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 19
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 29,
+            "passed": 29
+          },
+          "wall_s": 4.49,
+          "seed": 1
+        },
+        {
+          "success": 0.675,
+          "heldout_success": 0.71,
+          "cost_per_task": 8737.5875,
+          "keep": 9,
+          "rollback": 10,
+          "proposals": 19,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/800",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=160",
+            "compress service-log grep-errors/800",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 19
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 19
+            }
+          },
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 57,
+            "solution_reject": 29,
+            "passed": 19
+          },
+          "wall_s": 3.82,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.675,
+          "cost_per_task": 8819.9925,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/800",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=40",
+            "retry grep|timeout=3",
+            "delegate refactor>=5",
+            "retry sql|rate-limit=3",
+            "route search->lsp-find",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 48,
+            "total": 49,
+            "protected": 1,
+            "rate": 0.9795918367346939
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 2,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 17
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 17
+            }
+          },
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 51,
+            "solution_reject": 28,
+            "passed": 20
+          },
+          "wall_s": 3.4,
+          "seed": 3
+        },
+        {
+          "success": 0.5975,
+          "heldout_success": 0.585,
+          "cost_per_task": 7830.22,
+          "keep": 12,
+          "rollback": 6,
+          "proposals": 18,
+          "blocked": 1,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/800",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/800",
+            "ttl repo-layout=160",
+            "retry sql|rate-limit=3",
+            "retry grep|timeout=3",
+            "ttl repo-layout=40",
+            "delegate refactor>=6",
+            "ttl db-schema=40"
+          ],
+          "edits_kept": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "joint_kept": [],
+          "joint_proposed": 0,
+          "relevance": {
+            "aligned": 50,
+            "total": 51,
+            "protected": 1,
+            "rate": 0.9803921568627451
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 18
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 18
+            }
+          },
+          "dual": {
+            "rounds": 18,
+            "structure_reject": 54,
+            "solution_reject": 30,
+            "passed": 20
+          },
+          "wall_s": 3.74,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6325000000000001,
+      "mean_heldout": 0.638,
+      "mean_cost": 8329.391500000002,
+      "mean_keep": 11.4,
+      "mean_rollback": 8.2,
+      "mean_proposals": 19.6,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 0,
+      "joint_proposed": 0,
+      "relevance": 0.9809885931558935,
+      "protected_proposals": 5,
+      "wall_s": 19.6
+    },
+    "r2-structured-dual-harm": {
+      "config": "r2-structured-dual-harm",
+      "admission": "dual",
+      "proposer": "structured",
+      "harm": true,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9449.505,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head-tail/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "reroute",
+            "reroute",
+            "lower-threshold",
+            "lower-threshold",
+            "raise-ttl",
+            "raise-retry"
+          ],
+          "joint_kept": [
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 11,
+          "relevance": {
+            "aligned": 76,
+            "total": 76,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 18
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 42,
+            "passed": 34
+          },
+          "wall_s": 5.08,
+          "seed": 0
+        },
+        {
+          "success": 0.665,
+          "heldout_success": 0.665,
+          "cost_per_task": 8409.0175,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/1600",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "ttl repo-layout=40",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "retry sql|rate-limit=2",
+            "ttl test-cmd=80",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "raise-ttl",
+            "lower-threshold",
+            "raise-retry",
+            "raise-retry",
+            "raise-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 7,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 19
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 29,
+            "passed": 39
+          },
+          "wall_s": 5.16,
+          "seed": 1
+        },
+        {
+          "success": 0.655,
+          "heldout_success": 0.675,
+          "cost_per_task": 9130.5575,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=40",
+            "ttl test-cmd=80",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=20",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            "reroute",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-ttl",
+            "raise-ttl",
+            "scale-limit-down",
+            "joint-strategy-limit",
+            "lower-threshold",
+            "raise-retry",
+            "lower-ttl",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 8,
+          "relevance": {
+            "aligned": 68,
+            "total": 68,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 17
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 21
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 21
+            }
+          },
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 63,
+            "solution_reject": 39,
+            "passed": 29
+          },
+          "wall_s": 4.92,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.68,
+          "cost_per_task": 8389.7175,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/1600",
+            "ttl test-cmd=40",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "retry grep|timeout=2",
+            "delegate refactor>=5",
+            "route search->lsp-find",
+            "retry sql|rate-limit=3",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "lower-threshold",
+            "reroute",
+            "raise-retry",
+            "lower-threshold"
+          ],
+          "joint_kept": [
+            "compress test-log grep-errors/1600",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 63,
+            "total": 63,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 2,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 17
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 17
+            }
+          },
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 51,
+            "solution_reject": 34,
+            "passed": 29
+          },
+          "wall_s": 4.02,
+          "seed": 3
+        },
+        {
+          "success": 0.615,
+          "heldout_success": 0.615,
+          "cost_per_task": 9207.5425,
+          "keep": 16,
+          "rollback": 3,
+          "proposals": 19,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress code-file head-tail/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=160",
+            "retry sql|rate-limit=2",
+            "retry grep|timeout=3",
+            "delegate refactor>=6",
+            "compress test-log tail/800",
+            "ttl repo-layout=40",
+            "delegate refactor>=4",
+            "ttl db-schema=40",
+            "route search->lsp-find"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "raise-retry",
+            "lower-threshold",
+            "scale-limit-down",
+            "lower-ttl",
+            "lower-threshold",
+            "lower-ttl",
+            "reroute"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 66,
+            "total": 66,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 16
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 19
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 19
+            }
+          },
+          "dual": {
+            "rounds": 19,
+            "structure_reject": 57,
+            "solution_reject": 29,
+            "passed": 37
+          },
+          "wall_s": 4.27,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.647,
+      "mean_heldout": 0.654,
+      "mean_cost": 8917.268,
+      "mean_keep": 12.8,
+      "mean_rollback": 7.4,
+      "mean_proposals": 20.2,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 13,
+      "joint_proposed": 44,
+      "relevance": 1.0,
+      "protected_proposals": 0,
+      "wall_s": 23.5
+    },
+    "r3-structured-errline": {
+      "config": "r3-structured-errline",
+      "admission": "dual",
+      "proposer": "structured",
+      "harm": false,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9449.505,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2"
+          ],
+          "edits_kept": [
+            "scale-limit-up",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "reroute",
+            "reroute",
+            "lower-threshold",
+            "lower-threshold",
+            "raise-ttl",
+            "raise-retry"
+          ],
+          "joint_kept": [
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 74,
+            "total": 74,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 42,
+            "passed": 32
+          },
+          "wall_s": 3.07,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6764.6675,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=2",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            "switch-strategy",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "switch-strategy",
+            "raise-ttl",
+            "lower-threshold",
+            "raise-retry",
+            "reroute",
+            "scale-limit-up",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 5,
+          "relevance": {
+            "aligned": 71,
+            "total": 71,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 0,
+            "solution_reject": 33,
+            "passed": 38
+          },
+          "wall_s": 2.94,
+          "seed": 1
+        },
+        {
+          "success": 0.655,
+          "heldout_success": 0.675,
+          "cost_per_task": 9130.5575,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/1600",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=40",
+            "ttl test-cmd=80",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=20",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            "reroute",
+            "joint-strategy-limit",
+            "scale-limit-up",
+            "raise-ttl",
+            "raise-ttl",
+            "raise-ttl",
+            "scale-limit-down",
+            "joint-strategy-limit",
+            "lower-threshold",
+            "raise-retry",
+            "lower-ttl",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 6,
+          "relevance": {
+            "aligned": 66,
+            "total": 66,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 0,
+            "solution_reject": 38,
+            "passed": 28
+          },
+          "wall_s": 2.82,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.68,
+          "cost_per_task": 8389.7175,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/1600",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "retry grep|timeout=2",
+            "delegate refactor>=5",
+            "route search->lsp-find",
+            "retry sql|rate-limit=3",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "scale-limit-up",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "lower-threshold",
+            "reroute",
+            "raise-retry",
+            "lower-threshold"
+          ],
+          "joint_kept": [
+            "compress test-log grep-errors/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 7,
+          "relevance": {
+            "aligned": 61,
+            "total": 61,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 0,
+            "solution_reject": 33,
+            "passed": 28
+          },
+          "wall_s": 2.66,
+          "seed": 3
+        },
+        {
+          "success": 0.5775,
+          "heldout_success": 0.565,
+          "cost_per_task": 7521.3125,
+          "keep": 14,
+          "rollback": 7,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=160",
+            "ttl test-cmd=10",
+            "retry sql|rate-limit=2",
+            "retry grep|timeout=3",
+            "compress code-file head-tail/800",
+            "delegate refactor>=3",
+            "ttl repo-layout=40",
+            "compress code-file summarize/800"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "lower-ttl",
+            "raise-retry",
+            "raise-retry",
+            "switch-strategy",
+            "lower-threshold",
+            "lower-ttl",
+            "switch-strategy"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 6,
+          "relevance": {
+            "aligned": 71,
+            "total": 71,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {},
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 0,
+            "solution_reject": 40,
+            "passed": 31
+          },
+          "wall_s": 3.08,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6245,
+      "mean_heldout": 0.628,
+      "mean_cost": 8251.152,
+      "mean_keep": 12.4,
+      "mean_rollback": 8.2,
+      "mean_proposals": 20.6,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 8,
+      "joint_proposed": 33,
+      "relevance": 1.0,
+      "protected_proposals": 0,
+      "wall_s": 14.6
+    },
+    "r3-structured-errline-harm": {
+      "config": "r3-structured-errline-harm",
+      "admission": "dual",
+      "proposer": "structured",
+      "harm": true,
+      "thin": false,
+      "seeds": [
+        {
+          "success": 0.6175,
+          "heldout_success": 0.635,
+          "cost_per_task": 9449.505,
+          "keep": 10,
+          "rollback": 12,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file head/1600",
+            "ttl test-cmd=40",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "route edit->apply-patch",
+            "route search->rg-json",
+            "delegate refactor>=6",
+            "delegate refactor>=4",
+            "ttl repo-layout=40",
+            "retry sql|rate-limit=2"
+          ],
+          "edits_kept": [
+            "scale-limit-up",
+            "raise-ttl",
+            "switch-strategy",
+            "joint-strategy-limit",
+            "reroute",
+            "reroute",
+            "lower-threshold",
+            "lower-threshold",
+            "raise-ttl",
+            "raise-retry"
+          ],
+          "joint_kept": [
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 9,
+          "relevance": {
+            "aligned": 74,
+            "total": 74,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 18
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 42,
+            "passed": 32
+          },
+          "wall_s": 5.09,
+          "seed": 0
+        },
+        {
+          "success": 0.59,
+          "heldout_success": 0.585,
+          "cost_per_task": 6764.6675,
+          "keep": 14,
+          "rollback": 8,
+          "proposals": 22,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress code-file summarize/800",
+            "compress test-log tail/800",
+            "ttl db-schema=40",
+            "route edit->apply-patch",
+            "ttl test-cmd=40",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "compress code-file tail/800",
+            "ttl repo-layout=80",
+            "delegate refactor>=2",
+            "retry sql|rate-limit=2",
+            "route search->lsp-find",
+            "compress code-file tail/1600",
+            "ttl test-cmd=80"
+          ],
+          "edits_kept": [
+            "switch-strategy",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "switch-strategy",
+            "raise-ttl",
+            "lower-threshold",
+            "raise-retry",
+            "reroute",
+            "scale-limit-up",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 5,
+          "relevance": {
+            "aligned": 71,
+            "total": 71,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 19
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 22
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 22
+            }
+          },
+          "dual": {
+            "rounds": 22,
+            "structure_reject": 66,
+            "solution_reject": 33,
+            "passed": 38
+          },
+          "wall_s": 4.73,
+          "seed": 1
+        },
+        {
+          "success": 0.655,
+          "heldout_success": 0.675,
+          "cost_per_task": 9130.5575,
+          "keep": 12,
+          "rollback": 9,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "compress test-log tail/1600",
+            "compress code-file head/1600",
+            "ttl db-schema=40",
+            "ttl test-cmd=40",
+            "ttl test-cmd=80",
+            "compress test-log tail/800",
+            "compress service-log grep-errors/1600",
+            "delegate refactor>=2",
+            "retry grep|timeout=3",
+            "ttl test-cmd=20",
+            "ttl repo-layout=40"
+          ],
+          "edits_kept": [
+            "reroute",
+            "joint-strategy-limit",
+            "scale-limit-up",
+            "raise-ttl",
+            "raise-ttl",
+            "raise-ttl",
+            "scale-limit-down",
+            "joint-strategy-limit",
+            "lower-threshold",
+            "raise-retry",
+            "lower-ttl",
+            "raise-ttl"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 6,
+          "relevance": {
+            "aligned": 66,
+            "total": 66,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 4,
+              "clears memory the evidence does not name": 17
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 21
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 21
+            }
+          },
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 63,
+            "solution_reject": 38,
+            "passed": 28
+          },
+          "wall_s": 4.52,
+          "seed": 2
+        },
+        {
+          "success": 0.6825,
+          "heldout_success": 0.68,
+          "cost_per_task": 8389.7175,
+          "keep": 12,
+          "rollback": 5,
+          "proposals": 17,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "route edit->apply-patch",
+            "ttl db-schema=40",
+            "compress test-log grep-errors/1600",
+            "ttl test-cmd=40",
+            "compress code-file head/1600",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=40",
+            "retry grep|timeout=2",
+            "delegate refactor>=5",
+            "route search->lsp-find",
+            "retry sql|rate-limit=3",
+            "delegate refactor>=2"
+          ],
+          "edits_kept": [
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "scale-limit-up",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "raise-retry",
+            "lower-threshold",
+            "reroute",
+            "raise-retry",
+            "lower-threshold"
+          ],
+          "joint_kept": [
+            "compress test-log grep-errors/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 7,
+          "relevance": {
+            "aligned": 61,
+            "total": 61,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 2,
+              "clears memory the evidence does not name": 15
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 17
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 17
+            }
+          },
+          "dual": {
+            "rounds": 17,
+            "structure_reject": 51,
+            "solution_reject": 33,
+            "passed": 28
+          },
+          "wall_s": 3.99,
+          "seed": 3
+        },
+        {
+          "success": 0.5775,
+          "heldout_success": 0.565,
+          "cost_per_task": 7521.3125,
+          "keep": 14,
+          "rollback": 7,
+          "proposals": 21,
+          "blocked": 0,
+          "harm_kept": 0,
+          "known_harm_kept": 0,
+          "harm_kept_desc": [],
+          "kept": [
+            "compress test-log tail/1600",
+            "compress code-file summarize/800",
+            "ttl test-cmd=40",
+            "route edit->apply-patch",
+            "ttl db-schema=160",
+            "compress service-log grep-errors/1600",
+            "ttl repo-layout=160",
+            "ttl test-cmd=10",
+            "retry sql|rate-limit=2",
+            "retry grep|timeout=3",
+            "compress code-file head-tail/800",
+            "delegate refactor>=3",
+            "ttl repo-layout=40",
+            "compress code-file summarize/800"
+          ],
+          "edits_kept": [
+            "joint-strategy-limit",
+            "switch-strategy",
+            "raise-ttl",
+            "reroute",
+            "raise-ttl",
+            "joint-strategy-limit",
+            "raise-ttl",
+            "lower-ttl",
+            "raise-retry",
+            "raise-retry",
+            "switch-strategy",
+            "lower-threshold",
+            "lower-ttl",
+            "switch-strategy"
+          ],
+          "joint_kept": [
+            "compress test-log tail/1600",
+            "compress service-log grep-errors/1600"
+          ],
+          "joint_proposed": 6,
+          "relevance": {
+            "aligned": 71,
+            "total": 71,
+            "protected": 0,
+            "rate": 1.0
+          },
+          "harm_reject_reasons": {
+            "HARM ttl all 0": {
+              "no-op edit": 3,
+              "clears memory the evidence does not name": 18
+            },
+            "HARM compress all head/50": {
+              "compress policy is under the floor for every kind": 21
+            },
+            "HARM retry all 0": {
+              "clears retries the evidence does not name": 21
+            }
+          },
+          "dual": {
+            "rounds": 21,
+            "structure_reject": 63,
+            "solution_reject": 40,
+            "passed": 31
+          },
+          "wall_s": 4.66,
+          "seed": 4
+        }
+      ],
+      "mean_success": 0.6245,
+      "mean_heldout": 0.628,
+      "mean_cost": 8251.152,
+      "mean_keep": 12.4,
+      "mean_rollback": 8.2,
+      "mean_proposals": 20.6,
+      "harm_kept": 0,
+      "known_harm_kept": 0,
+      "seeds_with_harm": 0,
+      "joint_kept": 8,
+      "joint_proposed": 33,
+      "relevance": 1.0,
+      "protected_proposals": 0,
+      "wall_s": 23.0
+    }
+  }
+}
