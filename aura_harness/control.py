@@ -152,6 +152,28 @@ class AuraHarness:
             return self.pipe.call("PROV", n or "", metrics_mode)
         return self.pipe.call("PROV", n or "")
 
+    # ---- Aura bus face (aura-harness#4, aura#5128). Opt-in via
+    # AURA_HARNESS_BUS_WORKSPACE; without it the server never loads std/bus
+    # and these calls report ok=False. Read failures and "no metrics" stay
+    # distinguishable (status error vs none), PROV parity.
+    def bus_attach(self) -> dict:
+        return self.pipe.call("BUSATTACH")
+
+    def bus_metrics(self, since_gen: int = 0, since_count: int = 0) -> dict:
+        return self.pipe.call("BUSMETRICS", since_gen, since_count)
+
+    def bus_worldlines(self) -> dict:
+        return self.pipe.call("BUSWORLDLINES")
+
+    def bus_verdict(self, wl: int, release: bool, ok_count: int = 0, n: int = 0) -> dict:
+        return self.pipe.call("BUSVERDICT", wl, "release" if release else "reject", ok_count, n)
+
+    def bus_audit(self, worldline: int = 0) -> dict:
+        return self.pipe.call("BUSAUDIT", worldline)
+
+    def bus_finish(self) -> dict:
+        return self.pipe.call("BUSFINISH")
+
     def close(self):
         self.pipe.close()
 

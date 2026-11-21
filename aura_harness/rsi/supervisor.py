@@ -153,5 +153,26 @@ class SupervisedAura:
     def prov(self, n: int = 0) -> dict:
         return dict(self._call(lambda: self.h.prov(n), None) or {}, restarts=self.restarts)
 
+    # ---- bus face (aura-harness#4): delegated with the same crash tolerance;
+    # a restart respawns the server, which re-attaches from the env, so the
+    # session survives crashes the same way the workspace does.
+    def bus_attach(self) -> dict:
+        return self._call(lambda: self.h.bus_attach(), None) or {"ok": False}
+
+    def bus_metrics(self, since_gen: int = 0, since_count: int = 0) -> dict:
+        return self._call(lambda: self.h.bus_metrics(since_gen, since_count), None) or {"status": "error"}
+
+    def bus_worldlines(self) -> dict:
+        return self._call(lambda: self.h.bus_worldlines(), None) or {"status": "error"}
+
+    def bus_verdict(self, wl: int, release: bool, ok_count: int = 0, n: int = 0) -> dict:
+        return self._call(lambda: self.h.bus_verdict(wl, release, ok_count, n), None) or {"ok": False}
+
+    def bus_audit(self, worldline: int = 0) -> dict:
+        return self._call(lambda: self.h.bus_audit(worldline), None) or {"ok": False}
+
+    def bus_finish(self) -> dict:
+        return self._call(lambda: self.h.bus_finish(), None) or {}
+
     def close(self):
         self.h.close()

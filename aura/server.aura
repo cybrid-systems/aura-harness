@@ -27,6 +27,13 @@
 ;; Every attempt, blocked or not, is appended to the audit log with actor, reason and harness version.
 
 (define *seed-path* (if (getenv "AURA_HARNESS_SEED") (getenv "AURA_HARNESS_SEED") "aura/harness_seed.aura"))
+;; The bus face (aura-harness#4) is opt-in via AURA_HARNESS_BUS_WORKSPACE.
+;; require is compile-time, so the module is pulled in only when enabled;
+;; the pin (no std/bus) never resolves it. The attach itself happens after
+;; the seed workspace exists (bottom of this file).
+(if (let ((v (getenv "AURA_HARNESS_BUS_WORKSPACE")))
+      (and (string? v) (string->number v) (> (string->number v) 0)))
+    (require "aura/bus" all:))
 
 (define needs (list "search" "read" "edit" "test" "query-db" "logs"))
 (define kinds (list "search-results" "code-file" "test-log" "service-log" "sql-rows" "patch-result" "config"))
@@ -82,7 +89,10 @@
                        ;; a body must not catch the fuel error or jump out of the metered code (R5)
                        "try" "catch" "raise" "error" "guard" "call/cc" "call-with-current-continuation"
                        "with-exception-handler" "dynamic-wind"))
-(define *banned-prefixes* (list "%" "mutate:" "ast:" "workspace" "agent:" "fiber:" "query:" "file:" "net:" "process:"))
+(define *banned-prefixes* (list "%" "mutate:" "ast:" "workspace" "agent:" "fiber:" "query:" "file:" "net:" "process:"
+                              ;; the bus is the inter-tool control plane; a candidate body must not reach it
+                              ;; (aura-harness#4): verdicts and constraints stay outside the workspace
+                              "bus:" "hbus:"))
 
 (define (n->s n) (number->string n))
 (define (join xs sep) (if (null? xs) "" (if (null? (cdr xs)) (car xs) (string-append (car xs) sep (join (cdr xs) sep)))))
@@ -607,7 +617,7 @@
     (if pr
         (begin (mutate :restore snap) (eval-current) (list #f pr #f (- (now-ms) t0)))
         (list #t "" tb (- (now-ms) t0)))))
-;; snap mode: ast:snapshot, mutate the root, materialise, ast:restore
+;; snap mode: mutate :snapshot, mutate the root, materialise, mutate :restore
 (define (trial-snap name body0 why)
   (let* ((t0 (now-ms)) (ad (admit name body0)) (sr (car ad)) (body (cadr ad)))
     (if sr (list #f sr #f 0)
@@ -730,6 +740,14 @@
           ((equal? c "maxsteps") (max-steps))
           (else "__unknown__"))))
 
+;; The bus face is opt-in: AURA_HARNESS_BUS_WORKSPACE=N attaches this
+;; process as the harness peer of the target workspace's bus. Without it
+;; nothing bus-related is loaded and every reply is byte-identical.
+(define *bus-ws*
+  (let ((v (getenv "AURA_HARNESS_BUS_WORKSPACE")))
+    (if (and (string? v) (string->number v)) (string->number v) 0)))
+(define *bus-loaded* #f)
+
 (define (handle fs)
   (let ((cmd (field fs 0)))
     (cond
@@ -790,12 +808,60 @@
       ((equal? cmd "GUARD") (reply (hash "mutable" *mutable* "protected" *protected* "boundary" *boundary*)))
       ((equal? cmd "BENCH") (reply (bench (fnum fs 1))))
       ((equal? cmd "PING") (reply (hash "pong" #t "version" *version*)))
+      ;; ---- Aura bus face (aura-harness#4, aura#5128); loaded only when
+      ;; AURA_HARNESS_BUS_WORKSPACE is set, so the pin (no std/bus) is unaffected.
+      ((equal? cmd "BUSATTACH")
+       (if *bus-loaded*
+           (reply (hash "ok" #t "attached" (hbus:attached?) "workspace" *bus-ws*))
+           (let ((r (if (= *bus-ws* 0)
+                        (list "error" "no-workspace" "set AURA_HARNESS_BUS_WORKSPACE")
+                        (try (begin (load "aura/bus.aura") (set! *bus-loaded* #t) (hbus:start *bus-ws*))
+                             (catch (e) (list "error" "load-failed" (string-append "" e)))))))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "attached" (and *bus-loaded* (hbus:attached?))
+                          "workspace" *bus-ws*
+                          "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ((equal? cmd "BUSMETRICS")
+       (if (not *bus-loaded*) (reply (hash "ok" #t "status" "error" "code" "no-bus" "rows" (list) "generation" 0 "count" 0))
+           (let* ((g (let ((v (fnum fs 1))) (if v v 0))) (cnt (let ((v (fnum fs 2))) (if v v 0)))
+                  (raw (hbus:read 1 g cnt))
+                  (r (hbus:metrics g cnt)))
+             (reply (hash "ok" #t "status" (car r)
+                          "generation" (if (bus:ok? raw) (car (cdr raw)) 0)
+                          "count" (if (bus:ok? raw) (car (cdr (cdr raw))) 0)
+                          "rows" (if (equal? (car r) "ok") (cadr r) (list))
+                          "code" (if (equal? (car r) "error") (cadr r) "")
+                          "message" (if (and (equal? (car r) "error") (pair? (cddr r))) (caddr r) ""))))))
+      ((equal? cmd "BUSWORLDLINES")
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let ((r (hbus:worldlines)))
+             (reply (hash "ok" #t "status" (car r)
+                          "rows" (if (equal? (car r) "ok") (cadr r) (list))
+                          "code" (if (equal? (car r) "error") (cadr r) ""))))))
+      ((equal? cmd "BUSVERDICT")
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let* ((wl (fnum fs 1)) (release? (equal? (field fs 2) "release"))
+                  (ok-count (let ((v (fnum fs 3))) (if v v 0))) (n (let ((v (fnum fs 4))) (if v v 0)))
+                  (r (hbus:verdict wl release? ok-count n)))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ((equal? cmd "BUSAUDIT")
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let ((r (hbus:audit (let ((v (fnum fs 1))) (if v v 0)))))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "count" (if (and (pair? r) (equal? (car r) "ok")) (cadr r) 0)
+                          "events" (if (and (pair? r) (equal? (car r) "ok"))
+                                       (let ((xs (cadddr r))) (if (list? xs) xs (list))) (list))
+                          "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ((equal? cmd "BUSFINISH")
+       (if (not *bus-loaded*) (reply (hash "ok" #t "audit" 0))
+           (let ((r (hbus:finish)))
+             (reply (hash "ok" #t "audit" (cadr r) "lines" (hbus:lines))))))
       (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
-
 (define (serve)
   (let ((line (read-line)))
     (if (or (eof-object? line) (equal? line "QUIT"))
-        #t
+        (begin (if *bus-loaded* (hbus:finish)) #t)
         (let ((fs (string-split line "\t")))
           (handle fs)
           (if (member (field fs 0) (list "APPLY" "TRIAL" "VERDICT")) (note-root-mut!))
@@ -805,5 +871,12 @@
 (eval-current)
 (set! *boundary* (boundary))
 (define *seed-snap* (mutate :snapshot "seed"))
+;; Attach after the seed workspace exists: the peer session belongs to
+;; the live workspace. The module was required at the top when enabled.
+(if (> *bus-ws* 0)
+    (let ((r (try (begin (set! *bus-loaded* #t) (hbus:start *bus-ws*))
+                  (catch (e) (list "error" "load-failed" (string-append "" e))))))
+      (if (and (pair? r) (equal? (car r) "error"))
+          (begin (display "bus attach-failed: ") (display r) (newline)))))
 (reply (hash "ready" #t "seed" *seed-path* "boundary" *boundary* "knobs" *nknobs* "fuel" *fuel-max*))
 (serve)

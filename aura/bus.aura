@@ -1,0 +1,117 @@
+;; bus.aura — aura-harness on the Aura bus (aura-harness#4, aura#5128).
+;;
+;; Loaded at runtime by server.aura ONLY when AURA_HARNESS_BUS_WORKSPACE=N
+;; (the pin a6c63aa19 has no std/bus; a static require would break it).
+;; The harness peer attaches to the TARGET workspace's bus — the host is
+;; the workspace owner (aura-perf's parent, or a coordinator script), not
+;; this process. Role 2 (harness), caps read|publish = 3: the harness
+;; subscribes to trials/metrics/worldlines and publishes regression and
+;; release verdicts; it does not open trials and does not KEEP. KEEP stays
+;; with the proposer under the coordinator's constraint gate — there is
+;; no local path around it.
+;;
+;; Read semantics (PROV parity): a failed read is an error record with a
+;; code, "no metrics" is an ok record with count 0. They are never merged.
+;;
+;; Channel mapping (shared with aura-perf's docs/bus.md):
+;;   metrics    perf hypothesis key K -> base-ms; summary 900001/900002.
+;;              harness verdicts: 910000 + wl -> 1 release / 0 reject;
+;;              regression evidence: 920000 + wl -> held-out ok count,
+;;              930000 + wl -> held-out task count.
+;;   worldlines one record per trial (id, parent, state, constraint,
+;;              patch range); state 0 pending / 1 kept / 2 rolled / 3 rejected.
+;;   audit      the coordinator's log; every tool reads the same one.
+
+(require "std/bus" all:)
+
+(define *bus-sid* #f)
+(define *bus-ws* 0)
+(define *bus-lines* (list))
+
+(define (bus-say! line) (set! *bus-lines* (cons line *bus-lines*)))
+
+;; Attach + subscribe metrics(1), cct(2), patches(3), worldlines(4).
+;; -> (ok session workspace) | (error code message); never raises.
+(define (hbus:start ws)
+  (let ((s (bus:attach "" ws 2 3 255)))
+    (if (not (bus:ok? s))
+        (begin (bus-say! (string-append "bus attach-failed " (bus:code s) ": " (bus:message s))) s)
+        (begin
+          (set! *bus-sid* (car (cdr s)))
+          (set! *bus-ws* ws)
+          (bus:subscribe *bus-sid* 1)
+          (bus:subscribe *bus-sid* 2)
+          (bus:subscribe *bus-sid* 3)
+          (bus:subscribe *bus-sid* 4)
+          (bus-say! (string-append "bus attached ws=" (number->string ws)
+                                   " role=harness session=" (number->string *bus-sid*)))
+          s))))
+
+(define (hbus:attached?) (if *bus-sid* #t #f))
+
+;; One channel read, cursor-aware. -> (ok generation count snapshot rows)
+;; or the error record unchanged. Rows: metrics (key value), cct (parent
+;; mid node samples self-ns), patches (node field value worldline gen),
+;; worldlines (id parent state constraint patch-off patch-len).
+(define (hbus:read channel since-gen since-count)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (bus:query *bus-sid* channel since-gen since-count)))
+
+;; The metrics face with PROV parity: three distinguishable outcomes.
+;;   (ok rows)            rows = ((key value) ...), possibly empty
+;;   (none)               ok read, zero records — "no metrics"
+;;   (error code message) the read itself failed — never mapped to none
+(define (hbus:rows r)
+  (let ((xs (list-ref r 4))) (if (list? xs) xs (list))))
+
+(define (hbus:metrics since-gen since-count)
+  (let ((r (hbus:read 1 since-gen since-count)))
+    (cond ((bus:error? r) r)
+          ((= (list-ref r 2) 0) (list "none"))
+          (else (list "ok" (hbus:rows r))))))
+
+;; The worldline table (state of every trial the coordinator knows).
+(define (hbus:worldlines)
+  (let ((r (hbus:read 4 0 0)))
+    (if (bus:error? r) r (list "ok" (hbus:rows r)))))
+
+;; The shared audit. worldline 0 = all events.
+(define (hbus:audit worldline)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (bus:audit *bus-sid* worldline)))
+
+;; Publish the regression/release verdict for one worldline. release? is
+;; the gate's decision (held-out regression passed); ok-count/n are the
+;; held-out evidence. The coordinator's constraint gate is NOT bypassed:
+;; this is evidence + verdict, KEEP itself stays with the trial's owner.
+;; -> (ok generation count) | error record.
+(define (hbus:verdict wl release? ok-count n)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:publish *bus-sid* (+ 910000 wl) (if release? 1 0))))
+        (if (bus:ok? r)
+            (begin
+              (bus:publish *bus-sid* (+ 920000 wl) ok-count)
+              (bus:publish *bus-sid* (+ 930000 wl) n)
+              (bus-say! (string-append "bus-verdict wl=" (number->string wl)
+                                       " " (if release? "release" "reject")
+                                       " heldout=" (number->string ok-count) "/" (number->string n)))
+              r)
+            (begin (bus-say! (string-append "bus verdict-failed " (bus:code r) ": " (bus:message r))) r)))))
+
+;; Detach: the coordinator rolls back this session's pending trials (none
+;; for a read|publish peer) and reclaims its loans; the host keeps serving
+;; and the committed evidence stays for the next tool.
+(define (hbus:finish)
+  (if (not *bus-sid*)
+      (list "ok" 0)
+      (let ((a (bus:audit *bus-sid* 0))
+            (n (length *bus-lines*)))
+        (bus:detach *bus-sid*)
+        (set! *bus-sid* #f)
+        (bus-say! "bus detached (host stays for perf/maintainer)")
+        (list "ok" (if (bus:ok? a) (car (cdr a)) -1) n))))
+
+(define (hbus:lines) (reverse *bus-lines*))

@@ -29,6 +29,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     from ..control import AuraHarness
     t_start = time.perf_counter()
     h = backend or (SupervisedAura(worldlines) if supervise else AuraHarness(worldlines))
+    from ..bus import BusFace
+    bus = BusFace(h)                      # opt-in: AURA_HARNESS_BUS_WORKSPACE; off = no-op
     pool = ProcessPoolExecutor(jobs) if jobs > 1 else None
     pmap = pool.map if pool else map
     if world in ("dev", "dev2"):
@@ -237,6 +239,11 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
                 sc["retention"] = ret_info
             v0 = time.perf_counter()
             vr = h.verdict(t.id, best, sc, cands[0].why)
+            if bus.attached:
+                # the release/reject verdict + held-out evidence go on the bus
+                # (aura-harness#4); KEEP itself stays with the proposer's gate
+                chosen_s = bs if best >= 0 else base
+                bus.verdict(t.id, best, vr["verdict"] == "KEEP", chosen_s[0], chosen_s[1])
             change_s.append(time.perf_counter() - v0)
             if tr:
                 if best >= 0:
@@ -303,6 +310,7 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
             tr.close(src, audit, prov)
         lat = {k: v for k, v in h.lat.items()}
     finally:
+        bus_summary = bus.finish()
         h.close()
         if pool:
             pool.shutdown()
@@ -316,6 +324,8 @@ def run_rsi(seed: int, n: int = 400, shift: int = 200, window: int = 80, min_evi
     out["final_table"] = tb
     out["m2"] = dict(stats, archive=len(archive), archive_members=archive)
     out["restarts"] = getattr(h, "restarts", 0)
+    if bus_summary.get("attached"):
+        out["bus"] = bus_summary
     out["keep_tables"] = keep_tables
     if stat:
         out["stat"] = {"log": sa.log, "pending_at_end": bool(sa.pending), "queue": dict(queue.n, left=len(queue))}
