@@ -319,6 +319,19 @@
             (list "ok" (list-ref r 5))
             r))))
 
+;; The coordinator's own admission verdict for a worldline: verdict 1 =
+;; keep, 2 = reject; adjusted is the deflated mean in parts per
+;; million. The judge reads it back so a nightly can report what the
+;; statistics decided, not what the judge claimed.
+;; -> (ok verdict adjusted family) | error record.
+(define (hbus:gate-verdict wl)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:gate-evidence *bus-sid* wl)))
+        (if (bus:ok? r)
+            (list "ok" (list-ref r 1) (list-ref r 3) (list-ref r 2))
+            r))))
+
 (define (hbus:bind-gate wl round workload seed verifier folds threshold control verdict windows)
   (if (not *bus-sid*)
       (list "error" "no-bus" "not attached")

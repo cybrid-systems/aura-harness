@@ -996,8 +996,13 @@
                  (reply (hash "ok" #f "reason" "BUSGATE needs a worldline id"))
                  (let ((r (hbus:bind-gate wl round workload seed verifier folds
                                         threshold control verdict ws)))
-                   (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
-                                "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))))
+                   ;; The coordinator recomputes the verdict from the raw
+                   ;; windows; the judge reads it back so a nightly can
+                   ;; report what the statistics decided.
+                   (let ((gv (hbus:gate-verdict wl)))
+                     (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                                  "detail" (if (and (pair? r) (equal? (car r) "error")) r #f)
+                                  "verdict" gv))))))))
       ((equal? cmd "BUSREPRO")
        ; the reproduction package of a worldline (aura#5397): the five
        ; tuple, the held-out windows, the policy snapshot and the
@@ -1023,12 +1028,20 @@
            (let ((r (hbus:finish)))
              (reply (hash "ok" #t "audit" (cadr r) "lines" (hbus:lines))))))
       (else (reply (hash "error" (string-append "unknown command: " cmd)))))))
+;; A handler that raises must not take the whole server down: the peer
+;; waits for a reply, and a dead server reads as a transport failure.
+;; The error becomes an error reply instead.
 (define (serve)
   (let ((line (read-line)))
     (if (or (eof-object? line) (equal? line "QUIT"))
         (begin (if *bus-loaded* (hbus:finish)) #t)
         (let ((fs (string-split line "\t")))
-          (handle fs)
+          (let ((r (try (handle fs)
+                        (catch (e) (list "error" "harness-error"
+                                         (if (string? e) e (string-append "" e)))))))
+            (if (and (pair? r) (equal? (car r) "error"))
+                (reply (hash "error" (cadr r) "detail" (if (pair? (cdr r)) (cadr (cdr r)) "")))
+                #f))
           (if (member (field fs 0) (list "APPLY" "TRIAL" "VERDICT")) (note-root-mut!))
           (serve)))))
 
