@@ -153,7 +153,8 @@
                         "worldline" wl "state" state "state_name" (hbus:state-name state)
                         "evidence" (if (bus:ok? ev) (cdr ev) (list))
                         "patches" patches
-                        "reason" (if (bus:ok? r) "" (bus:code r)))))))))
+                        "reason" (if (bus:ok? r) "" (bus:code r))
+                        "message" (if (bus:ok? r) "" (bus:message r)))))))))
 
 ;; The host's define names and their node ids (aura#5397): the node ids
 ;; belong to the host's own workspace AST, so a peer that wants to

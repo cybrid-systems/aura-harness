@@ -102,7 +102,7 @@ class Probe:
         return self.call("EVICT").decode("utf-8", "replace").strip()
 
     def measure(self, prefix: str, policy: str, hidden: int = 64,
-                churn: int = 500, rounds: int = 4) -> list[int]:
+                churn: int = 3000, rounds: int = 16) -> list[int]:
         """The hits per round the hidden key set scores under one policy.
 
         Each round is an independent fold: the hidden set is written
@@ -149,8 +149,8 @@ class Probe:
 
 
 def heldout_delta(host: str, port: int, candidate_kernel: str,
-                  prefix: str, hidden: int = 64, churn: int = 500,
-                  rounds: int = 4) -> dict:
+                  prefix: str, hidden: int = 512, churn: int = 3000,
+                  rounds: int = 16) -> dict:
     """The candidate's held-out effect against the live policy.
 
     The baseline is the kernel the server runs now: the candidate is

@@ -721,6 +721,13 @@
 (define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
 
 ; Split a comma-separated field: "1,2,3" -> ("1" "2" "3").
+;; The comma-separated windows as numbers.
+(define (hbus:numbers xs)
+  (if (null? xs)
+      '()
+      (let ((v (string->number (car xs))))
+        (cons (if (number? v) v 0) (hbus:numbers (cdr xs))))))
+
 (define (split-commas s)
   (let loop ((i 0) (cur "") (acc '()))
     (if (>= i (string-length s))
@@ -980,8 +987,11 @@
            (let* ((wl (fnum fs 1)) (round (fnum fs 2)) (workload (fnum fs 3))
                   (seed (fnum fs 4)) (verifier (fnum fs 5)) (folds (fnum fs 6))
                   (threshold (fnum fs 7)) (control (fnum fs 8)) (verdict (fnum fs 9))
-                  (wins (field fs 10))
-                  (ws (split-commas wins)))
+                   (wins (field fs 10))
+                  ; the windows ride in one comma-separated field (the
+                  ; request line is tab-separated); the coordinator wants
+                  ; numbers.
+                  (ws (hbus:numbers (split-commas wins))))
              (if (not wl)
                  (reply (hash "ok" #f "reason" "BUSGATE needs a worldline id"))
                  (let ((r (hbus:bind-gate wl round workload seed verifier folds

@@ -192,8 +192,8 @@ class AuraHarness:
         vec = list(vector or [0] * 9)
         return self.pipe.call("BUSKERNEL", wl, target, *vec)
 
-    def bus_heldout(self, wl: int, host: str, port: int, hidden: int = 64,
-                    churn: int = 500, target: str = "choose-fn",
+    def bus_heldout(self, wl: int, host: str, port: int, hidden: int = 512,
+                    churn: int = 3000, target: str = "choose-fn",
                     control_wl: int = 0) -> dict:
         """Measure the candidate (and the round's control) on the held-out
         set (aura#5397).
