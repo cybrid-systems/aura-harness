@@ -6,9 +6,12 @@
 ;; the workspace owner (aura-perf's parent, or a coordinator script), not
 ;; this process. Role 2 (harness), caps read|publish = 3: the harness
 ;; subscribes to trials/metrics/worldlines and publishes regression and
-;; release verdicts; it does not open trials and does not KEEP. KEEP stays
-;; with the proposer under the coordinator's constraint gate — there is
-;; no local path around it.
+;; release verdicts; it does not open trials. KEEP/ROLLBACK needs the
+;; host's scoped grant, activated via hbus:accept-grant (aura#5377/#5382):
+;; the session keeps its read/publish bits and gains keep+rollback scoped
+;; to one worldline. Without an active grant scoped to it, a judge
+;; keep/rollback is refused permission — there is no local path around
+;; the grant.
 ;;
 ;; Read semantics (PROV parity): a failed read is an error record with a
 ;; code, "no metrics" is an ok record with count 0. They are never merged.
@@ -19,7 +22,8 @@
 ;;              regression evidence: 920000 + wl -> held-out ok count,
 ;;              930000 + wl -> held-out task count.
 ;;   worldlines one record per trial (id, parent, state, constraint,
-;;              patch range); state 0 pending / 1 kept / 2 rolled / 3 rejected.
+;;              patch range); state 0 pending / 1 kept / 2 rolled /
+;;              3 rejected / 4 canary (observation window, aura#5381).
 ;;   audit      the coordinator's log; every tool reads the same one.
 
 (require "std/bus" all:)
@@ -71,10 +75,82 @@
           ((= (list-ref r 2) 0) (list "none"))
           (else (list "ok" (hbus:rows r))))))
 
-;; The worldline table (state of every trial the coordinator knows).
+;; The worldline table (state of every trial the coordinator knows):
+;; 0 pending / 1 kept / 2 rolled / 3 rejected / 4 canary (aura#5381).
+(define (hbus:state-name s)
+  (cond ((= s 0) "pending") ((= s 1) "kept") ((= s 2) "rolled")
+        ((= s 3) "rejected") ((= s 4) "canary")
+        (else (string-append "state-" (number->string s)))))
+
 (define (hbus:worldlines)
   (let ((r (hbus:read 4 0 0)))
     (if (bus:error? r) r (list "ok" (hbus:rows r)))))
+
+;; The last record the ledger appended for one worldline id (the channel
+;; is append-only: a settled trial appears again with its final state).
+(define (hbus:wl-record wl)
+  (let ((r (hbus:worldlines)))
+    (if (bus:error? r) r
+        (let loop ((rows (cadr r)) (found #f))
+          (if (null? rows)
+              (if found (list "ok" found) (list "error" "unregistered-id" "worldline has no committed record"))
+              (loop (cdr rows) (if (= (car (car rows)) wl) (car rows) found)))))))
+
+;; ── scoped-grant judge (aura#5377/#5382) ─────────────────────────
+;; The host derives a keep+rollback token scoped to one worldline and
+;; hands it over out-of-band (control-plane BUSGRANT). Activation keeps
+;; this session's read/publish bits and gains the delegated keep+rollback
+;; on the token's worldline only. -> (ok bits worldline) | error record.
+(define *bus-grant-wl* #f)
+
+(define (hbus:accept-grant token)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:grant-activate *bus-sid* token)))
+        (if (bus:ok? r)
+            (begin
+              (set! *bus-grant-wl* (car (cdr (cdr r))))
+              (bus-say! (string-append "bus grant-activated wl=" (number->string *bus-grant-wl*)
+                                       " bits=" (number->string (car (cdr r)))))
+              r)
+            (begin (bus-say! (string-append "bus grant-failed " (bus:code r) ": " (bus:message r))) r)))))
+
+;; Judge one worldline: read its ledger record (channel 4), its evidence
+;; five-tuple (bus:evidence) and its committed patch records (channel 3),
+;; run the hidden-set replay (the host's existing regression logic —
+;; server.aura's bench; its pass/fail arrives as pass?), then KEEP on pass
+;; or ROLLBACK on fail. Never keeps without an active grant scoped to wl:
+;; the check is local AND the coordinator re-checks the capability.
+;; The evidence tail is projected with the verdict record: a pending
+;; trial's record carries zeros until KEEP/ROLLBACK re-projects it, so
+;; the reported five-tuple is read AFTER the verdict (the coordinator
+;; enforced the bound tuple at KEEP either way).
+;; -> verdict hash with the worldline's final state.
+(define (hbus:judge wl pass?)
+  (if (not *bus-sid*)
+      (hash "ok" #f "verdict" "none" "reason" "no-bus")
+      (if (not (and (number? *bus-grant-wl*) (= *bus-grant-wl* wl)))
+          (hash "ok" #f "verdict" "none" "reason" "no-grant" "worldline" wl)
+          (let ((wr0 (hbus:wl-record wl))
+                (pr (hbus:read 3 0 0)))
+            (if (bus:error? wr0)
+                (hash "ok" #f "verdict" "none" "reason" (bus:code wr0) "worldline" wl)
+                (let* ((patches (if (bus:ok? pr)
+                                    (filter (lambda (row) (= (list-ref row 3) wl)) (hbus:rows pr))
+                                    (list)))
+                       (r (if pass? (bus:keep *bus-sid* wl 0 0) (bus:rollback *bus-sid* wl)))
+                       (ev (bus:evidence *bus-sid* wl))
+                       (wr (hbus:wl-record wl))
+                       (state (if (bus:ok? wr) (list-ref (cadr wr) 2) -1)))
+                  (bus-say! (string-append "bus-judge wl=" (number->string wl)
+                                           " " (if pass? "pass" "fail")
+                                           " -> " (if (bus:ok? r) (hbus:state-name state) (bus:code r))))
+                  (hash "ok" (bus:ok? r)
+                        "verdict" (if (bus:ok? r) (if pass? "KEEP" "ROLLBACK") "none")
+                        "worldline" wl "state" state "state_name" (hbus:state-name state)
+                        "evidence" (if (bus:ok? ev) (cdr ev) (list))
+                        "patches" patches
+                        "reason" (if (bus:ok? r) "" (bus:code r)))))))))
 
 ;; The shared audit. worldline 0 = all events.
 (define (hbus:audit worldline)
@@ -102,8 +178,9 @@
             (begin (bus-say! (string-append "bus verdict-failed " (bus:code r) ": " (bus:message r))) r)))))
 
 ;; Detach: the coordinator rolls back this session's pending trials (none
-;; for a read|publish peer) and reclaims its loans; the host keeps serving
-;; and the committed evidence stays for the next tool.
+;; for a read|publish peer; a judge's un-kept grant worldline belongs to
+;; the proposer) and reclaims its loans; the host keeps serving and the
+;; committed evidence stays for the next tool.
 (define (hbus:finish)
   (if (not *bus-sid*)
       (list "ok" 0)

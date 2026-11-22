@@ -181,5 +181,221 @@ class BusTests(unittest.TestCase):
             h.close()
 
 
+# ── scoped-grant judge (aura#5377/#5382) ─────────────────────────────
+# Host: owns a live workspace define (score), hosts the bus, self-attaches
+# as maintainer (role 3, full caps), opens the trial itself and publishes
+# the source-carrier patch + evidence five-tuple. Commands on stdin:
+#   grant <wl>   derive scoped keep+rollback (bits 24) -> token=<n>|
+#   metric <v>   publish metric key 9 value v (canary ticks)
+#   score        report (score 5), the live workload result
+JHOST = """(require "std/bus" all:)
+(set-code "(define (score x) (+ x 1))")
+(eval-current)
+(define h (bus:host {ws}))
+(define ms (bus:attach "" {ws} 3 127 255))
+(define msid (car (cdr ms)))
+(bus:project-nodes msid)
+(define tr (bus:trial msid 3))
+(define wl (car (cdr tr)))
+(define src (bus:publish-source msid "(lambda (x) (+ x 10))"))
+(bus:publish-patch msid {node} bus:source-field (car (cdr src)) wl 0)
+(define d (car (cdr (bus:candidate-digest msid wl))))
+(bus:bind-evidence msid wl 0 d 7 42 1)
+(display "wl=") (display wl) (display "|") (newline)
+(display "JHOST-READY") (newline)
+(let loop ()
+  (let ((l (read-line)))
+    (cond
+      ((eof-object? l) #f)
+      ((and (>= (string-length l) 6) (string=? (substring l 0 6) "grant "))
+       (define gwl (string->number (substring l 6 (string-length l))))
+       (define g (bus:grant msid 24 255 0 0 gwl))
+       (display "token=") (display (car (cdr g))) (display "|") (newline)
+       (loop))
+      ((and (>= (string-length l) 7) (string=? (substring l 0 7) "metric "))
+       (define v (string->number (substring l 7 (string-length l))))
+       (bus:publish msid 9 v)
+       (display "metric-ok|") (newline)
+       (loop))
+      ((string=? l "score")
+       (display "score=") (display (score 5)) (display "|") (newline)
+       (loop))
+      (else (loop)))))
+(bus:detach msid)
+(bus:unhost {ws})
+"""
+
+
+class JudgeHost:
+    """The workspace-owner host process with one pending, evidence-bound trial."""
+
+    def __init__(self, test, ws, node=5, canary=False):
+        env = _env(ws, test.xdg)
+        env["AURA_BUS_EVIDENCE"] = "1"
+        if canary:
+            env["AURA_BUS_CANARY_WINDOW"] = "3"
+            env["AURA_BUS_CANARY_FLOOR"] = "50"
+            env["AURA_BUS_CANARY_KEY"] = "9"
+        self.p = subprocess.Popen(
+            [_aura(), "-e", JHOST.format(ws=ws, node=node)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, env=env)
+        self.out = ""
+        out = self._until("wl=")
+        self.wl = int(out[out.rfind("wl=") + 3:].split("|")[0])
+        if "JHOST-READY" not in self._until("JHOST-READY"):
+            raise unittest.SkipTest("aura has no v0.3.1 closed-loop bus")
+
+    def _until(self, marker):
+        deadline = time.time() + 30
+        while marker not in self.out:
+            if time.time() > deadline:
+                raise AssertionError(f"host never said {marker!r}: {self.out!r}")
+            line = self.p.stdout.readline()
+            if not line:
+                raise AssertionError(f"host exited (rc={self.p.poll()}): {self.out!r}")
+            self.out += line
+        return self.out
+
+    def cmd(self, line, marker):
+        self.p.stdin.write(line + "\n")
+        self.p.stdin.flush()
+        return self._until(marker)
+
+    def grant(self):
+        out = self.cmd(f"grant {self.wl}", "token=")
+        return int(out[out.rfind("token=") + 6:].split("|")[0])
+
+    def score(self):
+        out = self.cmd("score", "score=")
+        return int(out[out.rfind("score=") + 6:].split("|")[0])
+
+    def close(self):
+        try:
+            self.p.stdin.close()
+            self.p.wait(timeout=10)
+        except Exception:
+            self.p.kill()
+
+
+@unittest.skipUnless(HAVE, "needs AURA_BIN")
+class JudgeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory(prefix="hjudge-")
+        cls.xdg = cls.tmp.name
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def _server(self, ws):
+        from aura_harness.control import AuraHarness
+        os.environ["AURA_HARNESS_BUS_WORKSPACE"] = str(ws)
+        os.environ["XDG_RUNTIME_DIR"] = self.xdg
+        return AuraHarness("ws")
+
+    @staticmethod
+    def _state(rows, wl):
+        """last ledger record for wl (append-only channel) -> state"""
+        return [r for r in rows if r[0] == wl][-1][2]
+
+    def test_judge_without_grant_refused(self):
+        host = JudgeHost(self, 993)
+        h = self._server(993)
+        try:
+            self.assertTrue(h.bus_attach()["attached"])
+            r = h.bus_judge(host.wl)
+            self.assertFalse(r["ok"], r)
+            self.assertEqual(r["reason"], "no-grant")
+            # the coordinator refuses the bare keep bit too: permission
+            rows = h.bus_worldlines()["rows"]
+            self.assertEqual(self._state(rows, host.wl), 0)   # still pending
+            # a raw keep attempt (same session, no grant): the coordinator
+            # itself refuses — permission, and the trial stays pending
+            probe = subprocess.run(
+                [_aura(), "-e",
+                 f'(require "std/bus" all:)\n'
+                 f'(define s (bus:attach "" 993 2 3 255))\n'
+                 f'(define k (bus:keep (car (cdr s)) {host.wl} 0 0))\n'
+                 f'(display "keep=") (display (bus:code k)) (newline)\n'
+                 f'(bus:detach (car (cdr s)))\n'],
+                env=_env(993, self.xdg), capture_output=True, text=True, timeout=60)
+            self.assertIn("keep=permission", probe.stdout, probe.stdout + probe.stderr)
+            rows = h.bus_worldlines()["rows"]
+            self.assertEqual(self._state(rows, host.wl), 0)
+        finally:
+            h.close()
+            host.close()
+
+    def test_grant_activate_keep(self):
+        host = JudgeHost(self, 994)
+        token = host.grant()
+        h = self._server(994)
+        try:
+            self.assertTrue(h.bus_attach()["attached"])
+            g = h.bus_grant(token, host.wl)
+            self.assertTrue(g["ok"], g)
+            self.assertEqual(g["worldline"], host.wl)
+            self.assertEqual(g["bits"] & 24, 24)              # keep+rollback gained
+            self.assertEqual(g["bits"] & 3, 3)                # read|publish kept
+            r = h.bus_judge(host.wl)
+            self.assertTrue(r["ok"], r)
+            self.assertEqual(r["verdict"], "KEEP")
+            self.assertEqual(r["state"], 1)                   # kept
+            self.assertEqual(r["state_name"], "kept")
+            self.assertEqual(len(r["evidence"]), 5)           # five-tuple read back
+            self.assertEqual(r["evidence"][0], 0)             # baseline gen
+            self.assertNotEqual(r["evidence"][1], 0)          # candidate digest
+            self.assertEqual(r["evidence"][2:], [7, 42, 1])   # workload seed verifier
+            self.assertEqual(len(r["patches"]), 1)            # the source-carrier patch
+            self.assertEqual(r["patches"][0][1], 4294967280)  # bus:source-field
+            rows = h.bus_worldlines()["rows"]
+            self.assertEqual(self._state(rows, host.wl), 1)
+            # KEEP applied the candidate to the host's live AST (#5378)
+            self.assertEqual(host.score(), 15)
+        finally:
+            h.close()
+            host.close()
+
+    def test_grant_keep_canary_seal(self):
+        host = JudgeHost(self, 995, canary=True)
+        token = host.grant()
+        h = self._server(995)
+        try:
+            self.assertTrue(h.bus_attach()["attached"])
+            self.assertTrue(h.bus_grant(token, host.wl)["ok"])
+            r = h.bus_judge(host.wl)
+            self.assertTrue(r["ok"], r)
+            self.assertEqual(r["state"], 4)                   # canary observation
+            self.assertEqual(r["state_name"], "canary")
+            # drive the window: 3 above-floor metric ticks seal the canary
+            for _ in range(3):
+                host.cmd("metric 100", "metric-ok|")
+            rows = h.bus_worldlines()["rows"]
+            self.assertEqual(self._state(rows, host.wl), 1)   # sealed -> kept
+            self.assertEqual(host.score(), 15)
+        finally:
+            h.close()
+            host.close()
+
+    def test_grant_fail_rollback(self):
+        host = JudgeHost(self, 996)
+        token = host.grant()
+        h = self._server(996)
+        try:
+            self.assertTrue(h.bus_attach()["attached"])
+            self.assertTrue(h.bus_grant(token, host.wl)["ok"])
+            r = h.bus_judge(host.wl, "fail")
+            self.assertTrue(r["ok"], r)
+            self.assertEqual(r["verdict"], "ROLLBACK")
+            self.assertEqual(r["state"], 2)                   # rolled
+            rows = h.bus_worldlines()["rows"]
+            self.assertEqual(self._state(rows, host.wl), 2)
+            self.assertEqual(host.score(), 6)                 # live AST untouched
+        finally:
+            h.close()
+            host.close()
+
 if __name__ == "__main__":
     unittest.main()

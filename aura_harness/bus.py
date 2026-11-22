@@ -4,9 +4,10 @@ workspace's Aura bus, next to perf's CCT/hypotheses and the shared audit.
 
 Opt-in: AURA_HARNESS_BUS_WORKSPACE=N (the server attaches as role harness,
 caps read|publish). Without it every method is a no-op and a run is
-byte-identical to the bus-off path. The harness never opens trials and
-never KEEPs: KEEP stays with the proposer under the coordinator's
-constraint gate — there is no local path around it.
+byte-identical to the bus-off path. The harness never opens trials; it
+KEEPs/ROLLBACKs only under the host's scoped grant (bus_grant/bus_judge,
+aura#5377/#5382) — without a grant scoped to the worldline the coordinator
+refuses permission and there is no local path around it.
 
 Read semantics (PROV parity): a failed read is {"status": "error", code,
 message}; "no metrics" is {"status": "none"}. They are never merged.

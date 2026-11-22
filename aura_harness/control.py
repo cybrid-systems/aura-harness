@@ -168,6 +168,16 @@ class AuraHarness:
     def bus_verdict(self, wl: int, release: bool, ok_count: int = 0, n: int = 0) -> dict:
         return self.pipe.call("BUSVERDICT", wl, "release" if release else "reject", ok_count, n)
 
+    def bus_grant(self, token: int, wl: int) -> dict:
+        """Activate the host's scoped keep+rollback grant (aura#5377/#5382)."""
+        return self.pipe.call("BUSGRANT", token, wl)
+
+    def bus_judge(self, wl: int, verdict: str = "") -> dict:
+        """Judge one worldline: regression replay + KEEP/ROLLBACK under the
+        active scoped grant. verdict 'pass'/'fail' forces the replay outcome;
+        empty runs the harness's regression replay."""
+        return self.pipe.call("BUSJUDGE", wl, verdict)
+
     def bus_audit(self, worldline: int = 0) -> dict:
         return self.pipe.call("BUSAUDIT", worldline)
 

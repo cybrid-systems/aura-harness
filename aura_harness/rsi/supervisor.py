@@ -168,6 +168,12 @@ class SupervisedAura:
     def bus_verdict(self, wl: int, release: bool, ok_count: int = 0, n: int = 0) -> dict:
         return self._call(lambda: self.h.bus_verdict(wl, release, ok_count, n), None) or {"ok": False}
 
+    def bus_grant(self, token: int, wl: int) -> dict:
+        return self._call(lambda: self.h.bus_grant(token, wl), None) or {"ok": False}
+
+    def bus_judge(self, wl: int, verdict: str = "") -> dict:
+        return self._call(lambda: self.h.bus_judge(wl, verdict), None) or {"ok": False}
+
     def bus_audit(self, worldline: int = 0) -> dict:
         return self._call(lambda: self.h.bus_audit(worldline), None) or {"ok": False}
 

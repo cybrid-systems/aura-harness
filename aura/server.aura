@@ -856,6 +856,36 @@
                   (r (hbus:verdict wl release? ok-count n)))
              (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
                           "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ;; ---- scoped-grant judge (aura#5377/#5382): BUSGRANT activates the
+      ;; host's delegated keep+rollback token (out-of-band delivery);
+      ;; BUSJUDGE runs the regression replay and KEEP/ROLLBACKs the one
+      ;; worldline the grant is scoped to. Without a matching grant the
+      ;; judge refuses locally (no-grant) and the coordinator refuses
+      ;; permission — there is no local path around the grant.
+      ((equal? cmd "BUSGRANT")
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let* ((token (fnum fs 1)) (wl (fnum fs 2))
+                  (r (if token (hbus:accept-grant token)
+                         (list "error" "validation-failed" "BUSGRANT needs a token"))))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "bits" (if (and (pair? r) (equal? (car r) "ok")) (cadr r) 0)
+                          "worldline" (if (and (pair? r) (equal? (car r) "ok")) (caddr r) (if wl wl 0))
+                         "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ((equal? cmd "BUSJUDGE")
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let ((wl (fnum fs 1)))
+             (if (not wl)
+                 (reply (hash "ok" #f "reason" "BUSJUDGE needs a worldline id"))
+                 (let* ((v (field fs 2))
+                        (pass? (cond ((equal? v "fail") #f)
+                                     ((equal? v "pass") #t)
+                                     ;; the hidden-set replay: the harness's existing
+                                     ;; regression logic (bench exercises the guard +
+                                     ;; trial paths and restores itself); pass/fail
+                                     ;; forces the outcome for tests
+                                     (else (hash? (try (bench 1) (catch (e) #f))))))
+                        (r (hbus:judge wl pass?)))
+                   (reply r))))))
       ((equal? cmd "BUSAUDIT")
        (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
            (let ((r (hbus:audit (let ((v (fnum fs 1))) (if v v 0)))))
