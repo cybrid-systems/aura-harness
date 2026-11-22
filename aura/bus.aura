@@ -67,7 +67,10 @@
 ;;   (none)               ok read, zero records — "no metrics"
 ;;   (error code message) the read itself failed — never mapped to none
 (define (hbus:rows r)
-  (let ((xs (list-ref r 4))) (if (list? xs) xs (list))))
+  (if (and (pair? r) (pair? (cdr r)) (pair? (cddr r)) (pair? (cdddr r))
+           (pair? (cdr (cdddr r))))
+      (let ((xs (list-ref r 4))) (if (list? xs) xs (list)))
+      (list)))
 
 (define (hbus:metrics since-gen since-count)
   (let ((r (hbus:read 1 since-gen since-count)))
@@ -151,6 +154,195 @@
                         "evidence" (if (bus:ok? ev) (cdr ev) (list))
                         "patches" patches
                         "reason" (if (bus:ok? r) "" (bus:code r)))))))))
+
+;; The host's define names and their node ids (aura#5397): the node ids
+;; belong to the host's own workspace AST, so a peer that wants to
+;; measure a named function asks the host instead of guessing an id.
+;; -> (ok node) | (error code message).
+(define (hbus:define-node name)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((d (bus:defines *bus-sid*)))
+        (if (not (bus:ok? d))
+            (list "error" "no-defines" "the host does not publish its define names")
+            (let loop ((rows (list-ref d 3)) (acc #f))
+              (if (null? rows)
+                  (if acc
+                      (list "ok" acc)
+                      (list "error" "no-define" (string-append "unknown define " name)))
+                  (if (string=? (car (car rows)) name)
+                      (loop (cdr rows) (cadr (car rows)))
+                      (loop (cdr rows) acc))))))))
+
+;; The candidate's committed source (aura#5397): the patches channel
+;; carries the source-carrier record, and the string table holds the
+;; text. The judge needs the body to measure it on held-out data.
+;;
+;; The candidate rewrites several functions at once, so the judge names
+;; the one it measures: the node id comes from the host.
+;; -> (ok source) | (error code message).
+(define (hbus:candidate-source wl node)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (hbus:read 3 0 0)))
+        (if (bus:error? r)
+            r
+            (let loop ((rows (hbus:rows r)) (acc #f))
+              (if (null? rows)
+                  (if acc
+                      (list "ok" acc)
+                      (list "error" "no-source" "the candidate has no source record"))
+                  (let ((row (car rows)))
+                    ; patches rows: (node field value worldline gen)
+                    (if (and (= (list-ref row 3) wl)
+                             (= (list-ref row 1) 4294967280)
+                             (= (list-ref row 0) node))
+                        (loop (cdr rows) (hbus:source-text (list-ref row 2)))
+                        (loop (cdr rows) acc)))))))))
+
+;; One string-table entry by index -> the text | #f.
+(define (hbus:source-text index)
+  (if (not *bus-sid*)
+      #f
+      (let ((r (bus:source-read *bus-sid* index)))
+        (if (bus:ok? r) (cadr r) #f))))
+
+;; The candidate's eviction kernel (aura#5397): the candidate body is a
+;; choose-fn — a pure function of the metric vector that picks an
+;; eviction kernel. The judge evaluates it on the host's published metric
+;; vector to learn the kernel the candidate would run; the measurement
+;; itself runs on the judge's own hidden key set (the probe lives in the
+;; harness's Python layer, which drives the real RESP data plane).
+;;
+;; The index of the first occurrence of needle in hay, or -1.
+(define (hbus:find-substr hay needle start)
+  (let ((h (string-length hay)) (n (string-length needle)))
+    (let loop ((i start))
+      (if (> (+ i n) h)
+          -1
+          (if (string=? (substring hay i (+ i n)) needle)
+              i
+              (loop (+ i 1)))))))
+
+;; The eviction kernel a choose-fn choice names: "lfu|flat|pin" -> "lfu".
+(define (hbus:kernel-of choice)
+  (if (not (string? choice))
+      ""
+      (let ((bar (hbus:find-substr choice "|" 0)))
+        (if (< bar 0) choice (substring choice 0 bar)))))
+
+;; The last metric vector the host published: the choose-fn inputs.
+(define (hbus:last-vector rows)
+  (let loop ((rs rows) (acc (list 0 0 0 0 0 0 0 0 0)))
+    (if (null? rs)
+        acc
+        (let ((row (car rs)))
+          (if (and (pair? row) (= (length row) 2) (number? (car row)))
+              (let* ((k (car row)) (v (cadr row))
+                     (next (if (and (>= k 1) (<= k 5))
+                                (hbus:replace-at acc (- k 1) v)
+                                acc)))
+                (loop (cdr rs) next))
+              (loop (cdr rs) acc))))))
+
+(define (hbus:replace-at xs i v)
+  (let loop ((ys xs) (i i) (acc '()))
+    (if (null? ys)
+        (reverse acc)
+        (loop (cdr ys) (- i 1)
+              (cons (if (= i 0) v (car ys)) acc)))))
+
+;; Evaluate a choose-fn body string against one metric vector -> the
+;; chosen policy string ("" when the body refuses).
+;;
+;; The body is a pure function of the metric vector, so the judge binds
+;; it under a scratch name in a forked workspace (the live root is never
+;; touched) and calls it. The judge never applies the candidate to the
+;; host: it only measures it.
+(define (hbus:eval-body body vec)
+  (if (not (string? body))
+      ""
+      ; The body is a pure function of the metric vector: the judge
+      ; evaluates it and reads the choice. It runs in a forked
+      ; workspace, so the live root is never touched.
+      (let* ((w (workspace :create (string-append "heldout-" (number->string *hbus-probe-count*)))))
+        (set! *hbus-probe-count* (+ *hbus-probe-count* 1))
+        (workspace :switch w)
+        (let ((r (try
+                   (eval (string-append "(" body " "
+                                       (hbus:vec->args vec) ")"))
+                   (catch (e) (begin (set! *hbus-eval-error* e) #f)))))
+          (workspace :switch 0)
+          (eval-current)
+          (workspace :delete w)
+          (if (string? r) r "")))))
+
+;; The probe counter: each forked workspace gets its own name.
+(define *hbus-probe-count* 0)
+
+;; The last evaluation error, for the debug view.
+(define *hbus-eval-error* "")
+
+;; The metric vector as an argument list: "1 2 3 4 5 6 7 8 9".
+(define (hbus:vec->args vec)
+  (let loop ((xs vec) (acc '()))
+    (if (null? xs)
+        (hbus:join-nums (reverse acc))
+        (loop (cdr xs) (cons (list-ref xs 0) acc)))))
+
+(define (hbus:join-nums xs)
+  (if (null? xs)
+      ""
+      (let ((head (number->string (car xs))))
+        (if (null? (cdr xs))
+            head
+            (string-append head " " (hbus:join-nums (cdr xs)))))))
+
+;; Bind the held-out evidence of a candidate (aura#5391): the windows
+;; are the per-fold out-of-sample metric deltas in parts per million, and
+;; the round groups the candidates of one admission round. The
+;; coordinator keeps the raw windows and recomputes the verdict, so the
+;; judge cannot claim a verdict it did not earn.
+;; -> (ok worldline) | error record.
+;; The reproduction package of a worldline (aura#5397): the evidence
+;; five-tuple, the held-out windows, the policy snapshot and the
+;; coordinator's own verdict, as one JSON line. A nightly archives it
+;; and re-runs the decision offline.
+;; -> (ok json) | (error code message).
+(define (hbus:repro wl)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:repro *bus-sid* wl)))
+        (if (bus:ok? r)
+            ;; the JSON line is the last element of the package
+            (list "ok" (list-ref r 5))
+            r))))
+
+(define (hbus:bind-gate wl round workload seed verifier folds threshold control verdict windows)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:bind-gate *bus-sid* wl round workload seed verifier folds
+                            threshold control verdict windows)))
+        (if (bus:ok? r)
+            (begin (bus-say! (string-append "bus-gate-bound wl=" (number->string wl)
+                                            " round=" (number->string round)
+                                            " folds=" (number->string folds)))
+                   r)
+            (begin (bus-say! (string-append "bus gate-bind-failed " (bus:code r) ": " (bus:message r))) r)))))
+
+;; The reproduction package of a worldline (aura#5397): the evidence
+;; five-tuple, the held-out windows, the policy snapshot and the
+;; coordinator's own verdict, as one JSON line. A nightly archives it
+;; and re-runs the decision offline (`aura bus-repro FILE`).
+;; -> (ok json) | error record.
+(define (hbus:repro-json wl)
+  (if (not *bus-sid*)
+      (list "error" "no-bus" "not attached")
+      (let ((r (bus:repro *bus-sid* wl)))
+        (if (bus:ok? r)
+            ;; the JSON line is the last element of the package
+            (list "ok" (list-ref r 5))
+            r))))
 
 ;; The shared audit. worldline 0 = all events.
 (define (hbus:audit worldline)

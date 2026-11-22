@@ -16,6 +16,8 @@ import subprocess
 import sys
 import tempfile
 import time
+
+from . import probe
 from pathlib import Path
 
 from .harness import COMPONENT, MUTABLE, PROTECTED, Candidate, normalize, post_check, to_python
@@ -177,6 +179,79 @@ class AuraHarness:
         active scoped grant. verdict 'pass'/'fail' forces the replay outcome;
         empty runs the harness's regression replay."""
         return self.pipe.call("BUSJUDGE", wl, verdict)
+
+    def bus_kernel(self, wl: int, target: str = "choose-fn",
+                   vector: list[int] | None = None) -> dict:
+        """The candidate's eviction kernel (aura#5397).
+
+        The harness evaluates the candidate body on the live metric
+        vector: the candidate is a choose-fn, a pure function of the
+        metrics that picks the eviction kernel. The target is the
+        host's define name — the node ids are host-local.
+        """
+        vec = list(vector or [0] * 9)
+        return self.pipe.call("BUSKERNEL", wl, target, *vec)
+
+    def bus_heldout(self, wl: int, host: str, port: int, hidden: int = 64,
+                    churn: int = 500, target: str = "choose-fn",
+                    control_wl: int = 0) -> dict:
+        """Measure the candidate (and the round's control) on the held-out
+        set (aura#5397).
+
+        The judge owns a hidden key set on the real data plane and
+        measures each candidate's eviction kernel against the live
+        policy. The result is the metric delta in parts per million.
+
+        Both kernels are evaluated *before* any probe: the probe's own
+        traffic is part of the host's published metrics, so a kernel
+        read after a probe would see the probe's regime, not the
+        workload's.
+        """
+        kernels = {}
+        out: dict = {"ok": True}
+        # The live metric vector, read from the data plane: the
+        # candidate is evaluated under the workload's real state.
+        vector = probe.metrics(host, port)
+        out["vector"] = vector
+        for name, target_wl in (("candidate", wl), ("control", control_wl)):
+            if not target_wl:
+                continue
+            reply = self.bus_kernel(target_wl, target, vector)
+            if not reply.get("ok"):
+                return {"ok": False, "window": 0, "detail": reply.get("detail"),
+                        "kernel_reply": reply}
+            kernels[name] = reply.get("kernel", "")
+            out[f"{name}_kernel_reply"] = reply
+        prefix = probe.hidden_prefix(f"{time.time_ns()}")
+        for name, kernel in kernels.items():
+            out[name] = probe.heldout_delta(host, port, kernel, prefix, hidden, churn)
+            out[name]["kernel"] = kernel
+        out["window"] = out.get("candidate", {}).get("window", 0)
+        out["control_window"] = out.get("control", {}).get("window", 0)
+        out["windows"] = out.get("candidate", {}).get("windows", [])
+        out["control_windows"] = out.get("control", {}).get("windows", [])
+        return out
+
+    def bus_source(self, wl: int) -> dict:
+        """The committed source of a candidate define (aura#5397)."""
+        return self.pipe.call("BUSSOURCE", wl)
+
+    def bus_gate(self, wl: int, round: int, workload: int, seed: int,
+                 verifier: int, folds: int, threshold: int, control: int,
+                 verdict: int, windows) -> dict:
+        """Bind the held-out evidence of a candidate (aura#5391). The
+        coordinator keeps the raw windows and recomputes the verdict."""
+        # The windows ride in one comma-separated field: the request
+        # line is tab-separated, so a list would arrive as many fields.
+        joined = ",".join(str(int(w)) for w in (windows or ()))
+        return self.pipe.call("BUSGATE", wl, round, workload, seed, verifier,
+                               folds, threshold, control, verdict, joined)
+
+    def bus_repro(self, wl: int) -> dict:
+        """The reproduction package of a worldline (aura#5397): the
+        five-tuple, the held-out windows, the policy snapshot and the
+        coordinator's verdict, as one JSON line."""
+        return self.pipe.call("BUSREPRO", wl)
 
     def bus_audit(self, worldline: int = 0) -> dict:
         return self.pipe.call("BUSAUDIT", worldline)

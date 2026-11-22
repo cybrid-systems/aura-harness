@@ -719,6 +719,16 @@
 ;; ---------------------------------------------------------------- protocol
 (define (reply h) (display "R ") (display (json-encode h)) (newline))
 (define (field fs i) (if (< i (length fs)) (list-ref fs i) ""))
+
+; Split a comma-separated field: "1,2,3" -> ("1" "2" "3").
+(define (split-commas s)
+  (let loop ((i 0) (cur "") (acc '()))
+    (if (>= i (string-length s))
+        (reverse (if (string=? cur "") acc (cons cur acc)))
+        (let ((c (string-ref s i)))
+          (if (char=? c #\,)
+              (loop (+ i 1) "" (cons cur acc))
+              (loop (+ i 1) (string-append cur (substring s i (+ i 1))) acc))))))
 (define (fnum fs i) (string->number (field fs i)))
 (define (take-trials fs i n acc)
   (if (= n 0) (reverse acc)
@@ -758,6 +768,60 @@
   (let ((v (getenv "AURA_HARNESS_BUS_WORKSPACE")))
     (if (and (string? v) (string->number v)) (string->number v) 0)))
 (define *bus-loaded* #f)
+
+;; The candidate's eviction kernel (aura#5397): the candidate body is a
+;; choose-fn — a pure function of the metric vector that picks an
+;; eviction kernel. The judge evaluates it on the host's published metric
+;; vector to learn the kernel the candidate would run; the measurement
+;; itself runs on the judge's own hidden key set (the probe lives in the
+;; harness's Python layer, which drives the real RESP data plane).
+;;
+;; (hbus:kernel wl) -> (ok kernel) | (error code message)
+(define (hbus:kernel wl target vec)
+  (let* ((node (hbus:define-node target))
+         (src (if (and (pair? node) (equal? (car node) "ok"))
+                   (hbus:candidate-source wl (cadr node))
+                   (list "error" "no-define" (string-append "unknown define " target)))))
+    (if (or (not (pair? src)) (not (equal? (car src) "ok")))
+        (list "error" "no-source" "the candidate has no committed source")
+        (let* ((body (cadr src))
+               (choice (hbus:eval-body body vec))
+               (kernel (hbus:kernel-of choice)))
+          (if (= (string-length kernel) 0)
+              (list "error" "no-kernel" "the candidate picks no eviction kernel")
+              (list "ok" kernel))))))
+
+;; The metric vector from the request fields: the nine choose-fn
+;; inputs, read by the judge from the data plane.
+(define (hbus:vector-from fs start)
+  (let loop ((i 0) (acc (list 0 0 0 0 0 0 0 0 0)))
+    (if (>= i 9)
+        acc
+        (loop (+ i 1)
+              (hbus:replace-at acc i (let ((v (string->number (field fs (+ start i)))))
+                                     (if (number? v) v 0)))))))
+
+;; The debug view of the kernel evaluation: the source, the metric
+;; vector and the choice the body produced.
+(define (hbus:eval-error) *hbus-eval-error*)
+
+;; The host's define names, for the debug view.
+(define (hbus:define-rows)
+  (let ((d (bus:defines *bus-sid*)))
+    (if (bus:ok? d) (list-ref d 3) (list "no-defines"))))
+
+(define (hbus:debug-kernel wl target vec)
+  (let* ((node (hbus:define-node target))
+         (src (if (and (pair? node) (equal? (car node) "ok"))
+                   (hbus:candidate-source wl (cadr node))
+                   (list "error" "no-define" target)))
+         (m (hbus:metrics 0 0)))
+    (list (if (pair? src) (car src) "none")
+          (if (pair? src) (if (string? (cadr src)) (cadr src) (cadr src)) "")
+          (if (equal? (car m) "ok") (hbus:last-vector (hbus:rows m)) "no-metrics")
+          (hbus:rows m)
+          *hbus-eval-error*
+          (hbus:define-rows))))
 
 (define (handle fs)
   (let ((cmd (field fs 0)))
@@ -843,6 +907,26 @@
                           "rows" (if (equal? (car r) "ok") (cadr r) (list))
                           "code" (if (equal? (car r) "error") (cadr r) "")
                           "message" (if (and (equal? (car r) "error") (pair? (cddr r))) (caddr r) ""))))))
+      ((equal? cmd "BUSSOURCE")
+       ; the committed source of a candidate define (aura#5397): the
+       ; judge measures the body on held-out data, so it must see the
+       ; text the proposer committed.
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let* ((wl (fnum fs 1)) (r (hbus:candidate-source wl)))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "source" (if (and (pair? r) (equal? (car r) "ok")) (cadr r) "")
+                          "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
+      ((equal? cmd "BUSKERNEL")
+       ; the candidate's eviction kernel (aura#5397): the judge
+       ; evaluates the candidate body on the host's metric vector.
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let* ((wl (fnum fs 1)) (target (field fs 2))
+                  (vec (hbus:vector-from fs 3))
+                  (r (hbus:kernel wl target vec)))
+             (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                          "kernel" (if (and (pair? r) (equal? (car r) "ok")) (cadr r) "")
+                          "dbg" (hbus:debug-kernel wl target vec)
+                          "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))
       ((equal? cmd "BUSWORLDLINES")
        (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
            (let ((r (hbus:worldlines)))
@@ -886,6 +970,36 @@
                                      (else (hash? (try (bench 1) (catch (e) #f))))))
                         (r (hbus:judge wl pass?)))
                    (reply r))))))
+      ((equal? cmd "BUSGATE")
+       ; ---- the judge binds the held-out evidence (aura#5391) and reads
+       ; back the reproduction package (aura#5397). The judge measures the
+       ; hidden folds and hands the raw windows to the coordinator, which
+       ; recomputes the verdict; the package lets a nightly re-run that
+       ; decision offline.
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let* ((wl (fnum fs 1)) (round (fnum fs 2)) (workload (fnum fs 3))
+                  (seed (fnum fs 4)) (verifier (fnum fs 5)) (folds (fnum fs 6))
+                  (threshold (fnum fs 7)) (control (fnum fs 8)) (verdict (fnum fs 9))
+                  (wins (field fs 10))
+                  (ws (split-commas wins)))
+             (if (not wl)
+                 (reply (hash "ok" #f "reason" "BUSGATE needs a worldline id"))
+                 (let ((r (hbus:bind-gate wl round workload seed verifier folds
+                                        threshold control verdict ws)))
+                   (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                                "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))))
+      ((equal? cmd "BUSREPRO")
+       ; the reproduction package of a worldline (aura#5397): the five
+       ; tuple, the held-out windows, the policy snapshot and the
+       ; coordinator's own verdict, as one JSON line.
+       (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
+           (let ((wl (fnum fs 1)))
+             (if (not wl)
+                 (reply (hash "ok" #f "reason" "BUSREPRO needs a worldline id"))
+                 (let ((r (hbus:repro-json wl)))
+                   (reply (hash "ok" (and (pair? r) (equal? (car r) "ok"))
+                                "json" (if (and (pair? r) (equal? (car r) "ok")) (cadr r) "")
+                                "detail" (if (and (pair? r) (equal? (car r) "error")) r #f))))))))
       ((equal? cmd "BUSAUDIT")
        (if (not *bus-loaded*) (reply (hash "ok" #f "reason" "bus not loaded"))
            (let ((r (hbus:audit (let ((v (fnum fs 1))) (if v v 0)))))
