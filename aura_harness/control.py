@@ -44,7 +44,20 @@ def _clean(s) -> str:
 
 class _Pipe:
     def __init__(self, argv, env=None, cwd=None):
-        self.p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        # A crash report is longer than the tail a pipe keeps: with
+        # AURA_HARNESS_STDERR_FILE the child's stderr goes to a file, so
+        # the whole report survives.
+        self.errfile = None
+        stderr = subprocess.PIPE
+        path = os.environ.get("AURA_HARNESS_STDERR_FILE")
+        if path:
+            try:
+                self.errfile = open(path, "ab", buffering=0)
+                stderr = self.errfile
+            except OSError:
+                self.errfile = None
+                stderr = subprocess.PIPE
+        self.p = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr,
                                   text=True, bufsize=1, env=env, cwd=cwd)
         self.lat: dict[str, list[float]] = {}
 
@@ -52,7 +65,16 @@ class _Pipe:
         while True:
             line = self.p.stdout.readline()
             if not line:
-                err = self.p.stderr.read()[-2000:] if self.p.stderr else ""
+                err = ""
+                if self.p.stderr is not None:
+                    err = self.p.stderr.read()[-2000:]
+                elif self.errfile is not None:
+                    self.errfile.flush()
+                    try:
+                        with open(self.errfile.name, "r", errors="replace") as fh:
+                            err = fh.read()[-2000:]
+                    except OSError:
+                        err = ""
                 raise RuntimeError(f"harness process exited (rc={self.p.poll()}): {err}")
             if line.startswith("R "):
                 return json.loads(line[2:])
