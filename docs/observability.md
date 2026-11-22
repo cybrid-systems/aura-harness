@@ -36,13 +36,15 @@ the same id in each entry's `prov` field. The `PROV` command returns Aura's root
 
 `metrics` is `(stats:get "query:orch-module-stats")` when that impl returns a hash. On the CLI backend the
 control plane actually runs, that hash is populated (`agents-spawned`, `agent-ask-total`, and the rest of the
-orch-module counters). `(orch:metrics)` is not a primitive here; the same name is a stats impl,
-`(stats:get "orch:metrics")`, and on the CLI it stays void until the orch scheduler has been started
-(aura#5054). PROV falls back to that stats impl, then to a bare `(orch:metrics)` call, for builds that
-return the scheduler JSON string or that re-bind the deprecated name (aura#5118). A completed read with
-no value is JSON `false` (no metrics). A read that raises is `{"error": "<message>", "status": "read-failed"}`.
-`false` is not used for both. `AuraHarness.prov()` returns that field as-is and still returns the mutation
-log when the metrics read fails. `obs.validate_rsi` does not consult `metrics`.
+orch-module counters). Since Aura#5131 (aura-harness#5), `orch:metrics` is a live `std/orch` library function
+(the kernel alias was deregistered); `server.aura` requires `std/orch`, and its body reads the scheduler
+counters via `(stats:get "orch:metrics")`, which on the CLI stays void until the orch scheduler has been started
+(aura#5054). PROV's source order is the module hash, then that scheduler stats impl, then the live
+`(orch:metrics)` library call (same counters; kept last so a build that surfaces scheduler JSON still wins).
+A completed read with no value is JSON `false` (no metrics). A read that raises is
+`{"error": "<message>", "status": "read-failed"}`. `false` is not used for both. `AuraHarness.prov()` returns
+that field as-is and still returns the mutation log when the metrics read fails. `obs.validate_rsi` does not
+consult `metrics`.
 
 **Per-task rows in Aura.** `aura/swarm.aura` has a `trace-on` flag (default `#f`). When it is on, each worker counts the
 evals and rebinds it spends on its claimed task in its own fiber-private state, and writes one row on merge or rollback:

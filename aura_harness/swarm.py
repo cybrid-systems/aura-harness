@@ -225,7 +225,7 @@ def run_supervisor(n: int, k: int, f: int, max_iters: int = 2000000, timeout: fl
 def validate_supervisor(n: int, k: int, f: int, max_iters: int = 2000000, kill_at: int = 3, cancel_ms: int = 300,
                         ping_reps: int = 50) -> dict:
     """Supervisor-mode counterparts of validate(): worker failure (lease -> re-dispatch), cooperative cancel,
-    channel ask/reply ping RTT, and the orch:* primitives (supervise-batch recovery, scope-cancel-all) at N."""
+    channel ask/reply ping RTT, and the std/orch fan-out probes (orch:supervise recovery, orch:cancel/orch:join) at N."""
     return {
         "fail": run_expr(f"(run-sv-fail {n} {k} {f} {max_iters} {kill_at})", {"exp": "sv-fail", "N": n}, supervisor=True),
         "cancel": run_expr(f"(run-sv-cancel {n} {k} {f} {max_iters} {cancel_ms})", {"exp": "sv-cancel", "N": n}, supervisor=True),

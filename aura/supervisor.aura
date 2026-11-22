@@ -9,9 +9,13 @@
 ;; Workers hold no shared state: receive job -> scan window -> reply. A worker whose heartbeat lease
 ;; expires with outstanding jobs is marked dead and its jobs are re-dispatched.
 ;;
-;; The orchestration probes use std/orch (the v0.2.1 alias window closed the
-;; non-kernel orch: names, so orch:compose-workflow / orch:supervise-batch /
-;; orch:scope-* are gone; std/orch is the surface now).
+;; The orchestration probes use std/orch (orch:spawn / orch:ask / orch:supervise
+;; / orch:cancel / orch:stop / orch:join). Aura#5131 (aura-harness#5) settled the
+;; surface: orch:metrics moved into std/orch; the scope/workflow verbs
+;; (orch:scope-spawn / orch:scope-join-all / orch:scope-cancel-all /
+;; orch:compose-workflow / orch:supervise-batch) stay kernel-resident as the live
+;; orchestration surface, not deprecated aliases. These probes build on the
+;; std/orch fan-out layer rather than the scope API.
 (require "std/orch" all:)
 (define SV-Q 2)
 (define sv-res #f)          ; result channel (worker -> supervisor)

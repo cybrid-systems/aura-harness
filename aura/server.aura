@@ -35,6 +35,14 @@
       (and (string? v) (string->number v) (> (string->number v) 0)))
     (require "aura/bus" all:))
 
+;; aura-harness#5 (Aura#5131): orch:metrics is a live std/orch library function
+;; now — the kernel alias was deregistered. Require the module so the PROV
+;; metrics chain resolves the live name instead of reading an unbound variable.
+;; The scope/workflow verbs (orch:scope-spawn, orch:compose-workflow, …) and
+;; orch:spawn-agent stay kernel-resident as the live surface; std/orch builds
+;; on the same five primitives and does not shadow them.
+(require "std/orch" all:)
+
 (define needs (list "search" "read" "edit" "test" "query-db" "logs"))
 (define kinds (list "search-results" "code-file" "test-log" "service-log" "sql-rows" "patch-result" "config"))
 (define tools (list "grep" "rg-json" "lsp-find" "cat" "sed" "apply-patch" "pytest" "pytest-q" "sql" "journal"))
@@ -659,19 +667,22 @@
           "guarded_apply_us" r-apply "trial_ws_us" r-ws "trial_snap_us" r-snapt "blocked_check_us" r-block)))
 
 ;; ---------------------------------------------------------------- PROV metrics
-;; (orch:metrics) is not a primitive on current Aura: the counters live in the stats impl
-;; "orch:metrics", read with (stats:get "orch:metrics"). On the CLI backend that impl returns
-;; void until orch_sched_holder starts the scheduler (aura#5054); this control plane never
-;; starts it, so that read is void for a normal PROV. (stats:get "query:orch-module-stats")
-;; is a hash of live counters on the CLI backend (agents-spawned, agent-ask-total, ...).
-;; aura#5118 may put the bare name back as a deprecated alias, so it is the last fallback.
-;; A read that completes with void / #f / "" is no metrics: #f. A read that raises is not
-;; the same result: {"error": msg, "status": "read-failed"}. #f is returned only when at
-;; least one source completed with no value. If every source raises, the error hash is
-;; returned. PROV's optional second field is a test seam:
+;; Aura#5131 (aura-harness#5): orch:metrics is a live std/orch library function
+;; (required at the top of this file). Its body reads the scheduler counters via
+;; (stats:get "orch:metrics"); on the CLI backend that impl returns void until
+;; orch_sched_holder starts the scheduler (aura#5054), which this control plane
+;; never does, so a normal PROV reads no scheduler value. The module-hash source
+;; (stats:get "query:orch-module-stats") is a hash of live counters on the CLI
+;; backend (agents-spawned, agent-ask-total, ...). The source order is: module
+;; hash, then the scheduler stats impl, then the live (orch:metrics) library call
+;; (same counters; kept last so a build that surfaces scheduler JSON still wins).
+;; A read that completes with void / #f / "" is no metrics: #f. A read that raises
+;; is not the same result: {"error": msg, "status": "read-failed"}. #f is returned
+;; only when at least one source completed with no value. If every source raises,
+;; the error hash is returned. PROV's optional second field is a test seam:
 ;;   fail       the read raises (read-failed hash)
 ;;   empty      the read completes with no value (#f)
-;;   bare       only the deprecated (orch:metrics) name
+;;   bare       only the live (orch:metrics) std/orch name
 ;;   scheduler  spawn one agent, then read stats:get "orch:metrics" (skip the module hash)
 ;;   orch       spawn one agent, then the normal source order
 (define (metric-usable? x)

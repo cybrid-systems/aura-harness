@@ -139,14 +139,14 @@ class AuraHarness:
         ``mutation_log`` is ``(query :mutation-log)``, ``last`` is ``query:last-mutation-provenance``, and
         ``version`` is the control-plane version. ``metrics`` is the orch snapshot from ``prov-metrics``:
         a dict (``stats:get "query:orch-module-stats"``) or a non-empty string (scheduler JSON from
-        ``stats:get "orch:metrics"``, or a bare ``orch:metrics`` if that deprecated name is bound).
+        ``stats:get "orch:metrics"`` / the live ``std/orch`` ``orch:metrics``, Aura#5131).
         ``False`` means a source completed and had no value. A dict with ``status`` ``"read-failed"``
         and ``error`` means the read raised. Those two are different results; this method returns both
         and does not raise for a metrics failure, so the log and provenance are still delivered.
 
         ``metrics_mode`` is empty in normal use. Tests pass ``"orch"`` (spawn one probe agent, then
-        read), ``"scheduler"`` (that spawn, then only ``orch:metrics``), ``"bare"`` (the deprecated
-        name alone), ``"fail"`` (forced read-failed hash) or ``"empty"`` (forced no-metrics ``False``).
+        read), ``"scheduler"`` (that spawn, then only the scheduler stats), ``"bare"`` (the live
+        ``std/orch`` ``orch:metrics`` alone), ``"fail"`` (forced read-failed hash) or ``"empty"`` (forced no-metrics ``False``).
         """
         if metrics_mode:
             return self.pipe.call("PROV", n or "", metrics_mode)

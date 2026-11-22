@@ -189,12 +189,13 @@ class AuraTraceTests(unittest.TestCase):
         self.assertIn("forced failure", failed["metrics"].get("error", ""))
         self.assertIn("version", failed)
         bm = bare["metrics"]
-        # Unbound on current builds (read-failed). A build that re-binds the name (aura#5118)
-        # must surface that value, not a silent false.
+        # Aura#5131 (aura-harness#5): orch:metrics is a live std/orch function. On the
+        # CLI backend the scheduler is not started, so the live read completes with no
+        # value (False = no metrics) — NOT a read-failed unbound-variable error. A build
+        # that surfaces scheduler JSON must surface that value, not a silent false.
         if isinstance(bm, dict) and bm.get("status") == "read-failed":
-            self.assertIn("orch:metrics", bm.get("error", ""))
-        else:
-            self.assertTrue(isinstance(bm, (dict, str)) and bm not in (False, "", None))
+            self.fail(f"live orch:metrics must resolve, got read-failed: {bm.get('error')}")
+        self.assertTrue(bm is False or (isinstance(bm, (dict, str)) and bm not in ("", None)))
         self.assertIs(empty["metrics"], False)
         self.assertIn("version", empty)
         self.assertNotEqual(failed["metrics"], empty["metrics"])
